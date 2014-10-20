@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+  <head><meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <title>Test Page</title>
+    <link rel="stylesheet" type="text/css" href="jp3d.css">
+    <script src="Pattern.js"> </script>
+    <script src="State.js"> </script>
+  </head>
+  
+  <body>
+    <h1> Test Page </h1>
+    <div id="div1"> - </div>
+    <div id="div2"> - </div>
+    <div id="div3"> - </div>
+    <div> <script>
+	var pat = [[ [[0,1]], [[0,5]] ]];
+	var state = new State(pat, 3);
+	console.log("pat=" + pat);
+	console.log("pat[0]=" + pat[0]);
+	console.log("pat[0][0]=" + pat[0][0]);
+	console.log("pat[0][0][0]=" + pat[0][0][0]);
+	console.log("pat[0][0][0][0]=" + pat[0][0][0][0]);
+	console.log("pat[0][0][0][1]=" + pat[0][0][0][1]);
+	console.log("State=" + state);
+	console.log("state=" + state.state);
+	$("#div1").html(state.toString());
+    </script> </div>
+  </body>
+</html>
