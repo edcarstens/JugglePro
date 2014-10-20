@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000000;
+    color: #40f0c0;
+}
+
+/* MHN Table */
+table,td {
+    border:1px solid white;
+    text-align:center;
+}
+th {
+    background-color:#505050;
+    border:2px solid white;
+}
+#first_col,#last_col {
+    background-color:#505050;
+}
