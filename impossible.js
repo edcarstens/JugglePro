@@ -1,20 +1,22 @@
 
 // New juggling viewer
-var viewer = new Viewer(30); // set beat period
-viewer.dwell_ratio = 0.33; // set global dwell ratio to 1/3
+var viewer = new Viewer(10); // set beat period
+viewer.dwell_ratio = 0.22; // set global dwell ratio to 1/3
 var scale = viewer.view.scale;
 
 // Setup hands
 Handfun.scale = scale;
-var LeftHand = Handfun.rev_casc_l(new Vec(0,500,100), -90);
-var RightHand = Handfun.rev_casc_r(new Vec(0,500,100), -90);
+//var LeftHand = Handfun.stationary_l(new Vec(0,500,-200), -90);
+//var RightHand = Handfun.stationary_r(new Vec(0,500,-200), -90);
+var LeftHand = Handfun.rev_casc_l(new Vec(0,400,-310), -90);
+var RightHand = Handfun.rev_casc_r(new Vec(0,400,-310), -90);
 
 var lh = new Hand(viewer, LeftHand, 'LH', 2, 2, 0);
 var rh = new Hand(viewer, RightHand, 'RH', 2, 2, 1);
 
 var cascade = new Pattern([[ [[0,19]], [[0,17]], [[0,15]] ]],   // (17 balls)
 			  [[lh,rh]], -1);      // hands alternate throws
-cascade.beat_period = 11;
+cascade.beat_period = 10;
 
 // Add patterns to a new Routine
 var routine = new Routine([cascade]);
