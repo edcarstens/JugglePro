@@ -6,8 +6,8 @@ var scale = viewer.view.scale;
 
 // Setup hands
 Handfun.scale = scale;
-var LeftHand = Handfun.rev_casc_l(new Vec(0,200,100), -90);
-var RightHand = Handfun.rev_casc_r(new Vec(0,200,100), -90);
+var LeftHand = Handfun.rev_casc_l(new Vec(0,500,100), -90);
+var RightHand = Handfun.rev_casc_r(new Vec(0,500,100), -90);
 
 var lh = new Hand(viewer, LeftHand, 'LH', 2, 2, 0);
 var rh = new Hand(viewer, RightHand, 'RH', 2, 2, 1);
