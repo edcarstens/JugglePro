@@ -9,12 +9,8 @@ Handfun.scale = scale;
 var LeftHand = Handfun.rev_casc_l(new Vec(0,0,0), 90);
 var RightHand = Handfun.rev_casc_r(new Vec(0,0,0), 90);
 
-var lh = new Hand(viewer, LeftHand, 'LH', 2, 2, 'lhand_2x.png');
-lh.my_sprite.scale.x = 1;
-lh.my_sprite.scale.y = 0.1;
-var rh = new Hand(viewer, RightHand, 'RH', 2, 2, 'rhand_2x.png');
-rh.my_sprite.scale.x = 1;
-rh.my_sprite.scale.y = 0.1;
+var lh = new Hand(viewer, LeftHand, 'LH', 2, 2, 0);
+var rh = new Hand(viewer, RightHand, 'RH', 2, 2, 1);
 
 var cascade = new Pattern([[ [[0,19]], [[0,17]], [[0,15]] ]],   // (17 balls)
 			  [[lh,rh]], -1);      // hands alternate throws
