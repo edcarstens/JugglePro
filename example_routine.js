@@ -7,10 +7,10 @@ viewer.view.g.z = -10; // increase gravity
 
 // Setup hands
 Handfun.scale = scale;
-//var LeftHand = Handfun.stationary_l(new Vec(0,200,100), -90);
-//var RightHand = Handfun.stationary_r(new Vec(0,200,100), -90);
-var LeftHand = Handfun.experiment_l(new Vec(0,200,100), -90);
-var RightHand = Handfun.experiment_r(new Vec(0,200,100), -90);
+var LeftHand = Handfun.rev_casc_l(new Vec(0,200,100), -90);
+var RightHand = Handfun.rev_casc_r(new Vec(0,200,100), -90);
+//var LeftHand = Handfun.experiment_l(new Vec(0,200,100), -90);
+//var RightHand = Handfun.experiment_r(new Vec(0,200,100), -90);
 
 var lh = new Hand(viewer, LeftHand, 'LH', 2, 2, 0);
 var rh = new Hand(viewer, RightHand, 'RH', 2, 2, 1);
@@ -30,9 +30,9 @@ var ss3_state = new State(ss3.mhn, ss3.props);
 var ss51_state = new State(ss51.mhn, ss51.props);
 console.log('ss3 state = ' + ss3_state.toString());
 console.log('ss51 state = ' + ss51_state.toString());
-var ss3_15_up = ss3_state.get_transition(ss51_state);
-console.log('ss3_15_up = ' + ss3_state.mhn_toString(ss3_15_up));
-var ss3_to_ss15 = new Pattern(ss3_15_up, [[lh,rh]], 1);
+var ss3_15_up_tmp = ss3_state.get_transition(ss51_state);
+var ss3_15_up = new Pattern(ss3_15_up_tmp.mhn, [[lh,rh]], 1);
+console.log('ss3_15_up = ' + ss3_15_up.to_string());
 
 ss441.beat_period = 25;
 ss531.beat_period = 20;
@@ -43,12 +43,12 @@ ss4.beat_period = 20;
 ss41.beat_period = 25;
 
 // Add patterns to a new Routine
-//var routine = new Routine([ss3, ss441, ss42, ss531, ss3_to_ss15, ss51, ss41]);
+//var routine = new Routine([ss3, ss441, ss42, ss531, ss3_15_up, ss51, ss41]);
 var routine0 = new Routine([ss3, ss42]);
 routine0.iters = 0;
 var routine1 = new Routine([ss3, ss441, ss42]);
 routine1.iters = 1;
-var routine2 = new Routine([ss531, ss3_to_ss15, ss51, ss41]);
+var routine2 = new Routine([ss531, ss3_15_up, ss51, ss41]);
 routine2.iters = 1;
 //var routine = new Routine([routine0, routine1, routine0, ss441, routine0]);
 routine = new Routine([routine0, ss3, routine2]);

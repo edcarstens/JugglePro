@@ -195,7 +195,7 @@ function State(mhn, props) {
 	// push transition seq throws
 	trans_seq = this.push_trans_throws(trans_seq, cs, ts, tlen);
 	console.log("1 trans_seq = " + this.mhn_toString(trans_seq));
-	return trans_seq;
+	return new Throwseq(trans_seq);
     }
     
     function unreachable(cs, csi, ts, tsi) {
