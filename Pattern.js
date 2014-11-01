@@ -105,6 +105,7 @@ function Pattern(mhn, row_hands, iters) {
     this.select = select;
     this.get_selected_throws = get_selected_throws;
     this.clear_selections = clear_selections;
+    this.get_transition = get_transition;
 
     this.props = this.calc_props();
 
@@ -548,6 +549,12 @@ function Pattern(mhn, row_hands, iters) {
 		this.selections--;
 //	    }
 	}
+    }
+
+    function get_transition(dest_pat) {
+	var dest_state = new State(dest_pat.mhn, dest_pat.props);
+	var my_state = new State(this.mhn, this.props);
+	my_state.get_transition(dest_state);
     }
 }
 
