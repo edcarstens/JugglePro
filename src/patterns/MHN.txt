@@ -1,0 +1,47 @@
+// MHN (Multi-Hand Notation)
+// MHN is a 2D matrix of hand/throw pairs. Each row of the matrix is a list of
+// throws that a particular hand is to make in the juggling pattern. A column
+// corresponds to a time at which throws occur. The hand/throw pair tells the
+// hand the destination of the ball. It specifies the destination hand, which
+// could even be the same hand, and the destination time (obviously a future
+// time). It is up to the person controlling the hand to make the proper throw
+// to make this happen. Accurate throws are crucial to juggling.
+
+// MHN+ (Multi-Hand Notation extended to support multiplexing)
+// MHN+ is a 3D matrix of hand/throw pairs. Instead of allowing only one ball
+// to be thrown at a time from a hand, multiple balls are allowed. This adds
+// a third dimension to the matrix called multiplex slot. For example, suppose
+// you are holding two balls in one hand. Then the MHN+ matrix would be
+// [[[ [0,1], [0,1] ]]].
+// If you hold two balls in each hand, another row is used to represent the
+// other (right) hand:
+// [[[ [0,1], [0,1] ]],
+//  [[ [1,1], [1,1] ]]]
+// Now suppose you juggle all four balls in a synchronized fountain.
+// [[[ [0,2], [0,0] ]],
+//  [[ [1,2], [1,0] ]]]
+// The hand/throw pairs with 0 throw-height can be discarded now. That makes
+// sense because this is no longer a multiplex pattern, so there should be no
+// need for multiplex slots.
+// [[[ [0,2] ]],
+//  [[ [1,2] ]]]
+//
+// Phases, Rows, and Hands
+// So what if you juggle four balls in an asynchronous fountain? In this pattern,
+// your hands never throw at the same time, they alternate throws. How is this
+// going to be notated? We could insert those ugly zero-throw-height pairs if
+// forced to represent each hand with a row. But this is not only ugly, it is
+// wasteful. We are all for simplification here. So what if the pattern consists
+// of just one row and this row now corresponds to both hands. The two hands
+// share the row (alternating each column) and agree on which hand goes first.
+// Naturally, the destination hand becomes a function of time as well as
+// the row, so it is a bit harder to figure out how to make each throw.
+// But look how simple our pattern becomes now!
+// [[[ [0,4] ]]]   (with 2 phases)
+// Yes, we changed the 2's to a single 4. It would be very hard to juggle this
+// pattern with only one hand. Thankfully, God gave us two. 
+// This is a simple of example of a multi-phase pattern, in this case there are
+// two phases, one for each hand. But if you juggle with someone else, you now
+// have four hands and could have four phases.  Or, if you like you can have
+// three phases. You just have to agree on an order and then figure out where
+// each throw must go to execute the pattern. Oh, the possibilities!
