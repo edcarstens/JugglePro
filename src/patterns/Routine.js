@@ -173,3 +173,24 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
 	return this.enable;
     }
 };
+
+/**
+ * Returns string representation of this routine
+ *
+ * @method toString
+ * @param routine {Routine}
+ * @return {String} representation of this routine 
+*/
+JPRO.Routine.prototype.toString = function() {
+    var patterns = this.patterns;
+    var i;
+    var rv = "[";
+    for (i=0; i<patterns.length; i++) {
+	if (i > 0) {
+	    rv = rv + ", ";
+	}
+	rv = rv + patterns[i].toString();
+    }
+    rv = rv + "]";
+    return rv;
+};

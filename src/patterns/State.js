@@ -23,7 +23,7 @@
 JPRO.State = function(mhn, props) {
     
     /**
-     * MHN (Multi-hand notation) throw matrix
+     * MHN+ (Multi-hand notation) throw matrix
      *
      * @property mhn
      * @type Array
@@ -38,16 +38,7 @@ JPRO.State = function(mhn, props) {
      */
     this.props = props;
     
-    /**
-     * A 2D matrix of non-negative integers
-     * representing the state.
-     *
-     * @property state
-     * @type Array
-     */
-    this.state = getState(mhn, props);
-
-    function getState(mhn, props) {
+    var getState = function(mhn, props) {
 	var i,j,k;
 	var n = props;
 	var state = [[]]; // 2D matrix
@@ -84,7 +75,33 @@ JPRO.State = function(mhn, props) {
 	    } // while
 	} // for i
 	return state;
-    }
+    };
+
+    var getMaxThrowHeight = function(mhn) {
+	var i,j,k,throwHeight;
+	var maxTh = 0;
+	for (i=0; i<mhn.length; i++) {
+	    for (j=0; j<mhn[i].length; j++) {
+		for (k=0; k<mhn[i][j].length; k++) {
+		    throwHeight = mhn[i][j][k][1];
+		    if (throwHeight > maxTh) {
+			maxTh = throwHeight;
+		    } // if
+		} // for k
+	    } // for j
+	} // for i
+	return maxTh;
+    };
+
+    /**
+     * A 2D matrix of non-negative integers
+     * representing the state.
+     *
+     * @property state
+     * @type Array
+     */
+    this.state = getState(mhn, props);
+
 };
 
 JPRO.State.prototype.constructor = JPRO.State;
@@ -261,7 +278,7 @@ JPRO.State.prototype.getTransition = function(tso) {
     // push transition seq throws
     transSeq = this.pushTransThrows(transSeq, cs, ts, tlen);
     console.log("1 transSeq = " + this.mhnToString(transSeq));
-    return new ThrowSeq(transSeq);
+    return new JPRO.ThrowSeq(transSeq);
 };
     
 /**
@@ -521,7 +538,7 @@ JPRO.State.prototype.mhnToString = function(mhn) {
 */
 JPRO.State.prototype.copy = function() {
     var i,j;
-    var rv = new State(this.mhn, this.props);
+    var rv = new JPRO.State(this.mhn, this.props);
     rv.state = [];
     for (i=0; i<this.state.length; i++) {
 	rv.state[i] = this.state[i].slice(0); // copies array

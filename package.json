@@ -1,0 +1,46 @@
+{
+    "name": "JugglePro",
+    "version": "0.0.1",
+    "description": "JugglePro is a juggling pattern viewer.",
+    "keywords": ["juggle","throw","catch","throwing","catching",
+		 "siteswap","MHN","state","transition",
+		 "pass","passing","cascade","shower"],
+    "author": "Ed Carstens",
+
+    "logo": "http://www.goodboydigital.com/pixijs/logo_small.png",
+    "homepage": "http://www.wealthygames.com/",
+    "bugs": "https://github.com/edcarstens/JugglePro/issues",
+    "license": "MIT",
+    "licenseUrl": "http://www.opensource.org/licenses/mit-license.php",
+
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/edcarstens/JugglePro.git"
+    },
+
+    "main": "bin/jpro.js",
+
+    "scripts": {
+        "test": "grunt travis --verbose"
+    },
+
+    "dependencies": {},
+    "devDependencies": {
+        "grunt": "~0.4.1",
+        "grunt-contrib-jshint": "~0.8",
+        "grunt-contrib-uglify": "~0.2",
+        "grunt-contrib-connect": "~0.5",
+        "grunt-contrib-yuidoc": "~0.5",
+        "grunt-concat-sourcemap": "~0.4",
+        "grunt-contrib-concat": "~0.3",
+        "mocha": "~1.15",
+        "chai": "~1.8",
+        "karma": "~0.12",
+        "karma-chrome-launcher": "~0.1",
+        "karma-firefox-launcher": "~0.1",
+        "karma-mocha": "~0.1",
+        "karma-spec-reporter": "~0.0.6",
+        "grunt-contrib-watch": "~0.5.3",
+	"Pixi.js": "~2.0.0"
+    }
+}

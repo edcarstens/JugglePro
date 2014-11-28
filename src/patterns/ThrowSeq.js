@@ -54,54 +54,59 @@ JPRO.ThrowSeq = function(mhn) {
 JPRO.ThrowSeq.prototype.constructor = JPRO.ThrowSeq;
 
 /**
- * 
+ * Indicates whether this object is to be repeated
  *
- * @method 
- * @param  
+ * @method repeat
+ * @return {Boolean} 1=repeat, null=finished
  */
 JPRO.ThrowSeq.prototype.repeat = function() {
-    console.log('ThrowSeq.repeat: iter_cnt=' + this.iter_cnt);
+    //console.log('ThrowSeq.repeat: iterCnt=' + this.iterCnt);
     if (this.iters < 0) {
 	return 1; // restart pattern indefinitely
     }
-    else if (this.iter_cnt < this.iters-1) {
-	this.iter_cnt++;
-	console.log('Pattern.repeat: iter_cnt=' + this.iter_cnt);
+    else if (this.iterCnt < this.iters-1) {
+	this.iterCnt++;
+	console.log('Pattern.repeat: iterCnt=' + this.iterCnt);
 	return 1; // restart pattern
     }
     else {
-	this.iter_cnt = 0; // reset for next time
+	this.iterCnt = 0; // reset for next time
 	return null; // finished
     }
 };
 
 /**
- * 
+ * Returns string representation of this throw sequence
  *
- * @method 
- * @param  
+ * @method toString
+ * @param mhn {Array} optional MHN+ matrix; if omitted, use this.mhn
+ * @return {String} string representation of this throw sequence
  */
-JPRO.ThrowSeq.prototype.toString = function() {
-    var rv, i, j, k;
+JPRO.ThrowSeq.prototype.toString = function(mhn) {
+    var rv, i, j, k, mhn_tmp;
+    mhn_tmp = mhn;
+    if (mhn == null) {
+	mhn_tmp = this.mhn;
+    }
     rv = '[';
-    for (i=0; i<this.mhn.length; i++) {
+    for (i=0; i<mhn_tmp.length; i++) {
 	if (i > 0) {
 	    rv = rv + ', ';
 	}
 	rv = rv + '[';
-	for (j=0; j<this.mhn[i].length; j++) {
+	for (j=0; j<mhn_tmp[i].length; j++) {
 	    if (j > 0) {
 		rv = rv + ', ';
 	    }
 	    rv = rv + '[';
-	    for (k=0; k<this.mhn[i][j].length; k++) {
+	    for (k=0; k<mhn_tmp[i][j].length; k++) {
 		if (k > 0) {
 		    rv = rv + ', ';
 		}
 		rv = rv.concat('[');
-		rv = rv.concat(this.mhn[i][j][k][0]);
+		rv = rv.concat(mhn_tmp[i][j][k][0]);
 		rv = rv.concat(',');
-		rv = rv.concat(this.mhn[i][j][k][1]);
+		rv = rv.concat(mhn_tmp[i][j][k][1]);
 		rv = rv.concat(']');
 	    }
 	    rv = rv + ']';

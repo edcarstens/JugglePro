@@ -31,13 +31,7 @@ JPRO.Pattern = function(mhn, rowHands, iters) {
      */
     this.type = "Pattern";
 
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.mhn = mhn;
+//    this.mhn = mhn;
 
     /**
      * 
@@ -74,7 +68,7 @@ JPRO.Pattern = function(mhn, rowHands, iters) {
      * @property 
      * @type 
      */
-    this.rows = mhn.length;
+    this.rows = this.mhn.length;
 
     /**
      * 
@@ -82,7 +76,7 @@ JPRO.Pattern = function(mhn, rowHands, iters) {
      * @property 
      * @type 
      */
-    this.period = mhn[0].length;
+    this.period = this.mhn[0].length;
     console.log('rows=' + this.rows + ' period=' + this.period);
 
     /**
@@ -239,7 +233,7 @@ JPRO.Pattern.prototype.makeArray = function(sz, val) {
 };
     
 /**
- * 
+ * Swap two throws in MHN+ matrix
  *
  * @method swap
  * @param loc1 {Array}
@@ -264,10 +258,11 @@ JPRO.Pattern.prototype.swap = function(loc1, loc2) {
 };
 
 /**
- * 
+ * Adds an offset to all throws in the throw matrix
  *
  * @method translateAll
  * @param offset {Number}
+ * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.translateAll = function(offset) {
     var i,j,k;
@@ -286,11 +281,12 @@ JPRO.Pattern.prototype.translateAll = function(offset) {
 };
 
 /**
- * 
+ * Adds multiple of the period to a throw
  *
  * @method translateThrow
  * @param loc {Array}
  * @param mult {Number}
+ * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.translateThrow = function(loc, mult) {
     var r = loc[0];
@@ -303,10 +299,11 @@ JPRO.Pattern.prototype.translateThrow = function(loc, mult) {
 };
 
 /**
- * 
+ * Adds multiple of the period to selected throws
  *
  * @method translateThrowsSelected
  * @param mult {Number}
+ * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.translateThrowsSelected = function(mult) {
     var a,i;
@@ -340,25 +337,28 @@ JPRO.Pattern.prototype.multiplexTranslate = function(row, offset) {
 };
 
 /**
- * 
+ * Rotates throws so that column x becomes column 1
  *
  * @method rotateThrows
  * @param x {Number}
+ * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.rotateThrows = function(x) {
     var i;
     for (i=0; i<this.rows; i++) {
-	this.mhn[i] = rotateRow(x, this.mhn[i]);
+	this.mhn[i] = this.rotateRow(x, this.mhn[i]);
     }
     return this;
 };
 
 /**
- * 
+ * Rotates throws only in specified row so that column x
+ * of that row becomes column 1 of that row
  *
  * @method rotateRow
  * @param x {Number}
  * @param mhnRow {Array}
+ * @return {Array} new rotated row
  */
 JPRO.Pattern.prototype.rotateRow = function(x, mhnRow) {
     var j, idx;
@@ -371,10 +371,12 @@ JPRO.Pattern.prototype.rotateRow = function(x, mhnRow) {
 };
     
 /**
- * 
+ * Rotates rows in MHN+ so that row x becomes the
+ * first row
  *
  * @method rotateRows
  * @param x {Number}
+ * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.rotateRows = function(x) {
     var i, j, k, idx;
@@ -384,18 +386,20 @@ JPRO.Pattern.prototype.rotateRows = function(x) {
     var mhn = this.mhn.slice(0); // shallow clone
     for (i=0; i<this.rows; i++) {
 	idx = (i + x + this.rows) % this.rows;
-	this.mhn[i] = rotateRowsAdjust(mhn[idx], i-idx, this.rows);
+	this.mhn[i] = this.rotateRowsAdjust(mhn[idx], i-idx, this.rows);
     }
     return this;
 };
 
 /**
- * 
+ * Adjusts all throws in a given row so that the relative
+ * row destination stays the same when rotating rows.
  *
  * @method rotateRowsAdjust
  * @param row {Array}
  * @param adjustment {Number}
  * @param rows {Number}
+ * @return {Array} adjusted row
  */
 JPRO.Pattern.prototype.rotateRowsAdjust = function(row, adjustment, rows) {
     var j, k;
@@ -406,11 +410,12 @@ JPRO.Pattern.prototype.rotateRowsAdjust = function(row, adjustment, rows) {
     }
     return row;
 };
-    
+
 /**
- * 
+ * Extends period by one, choosing legal throw-heights
  *
  * @method extendPeriod
+ * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.extendPeriod = function() {
     //console.log('extendPeriod called');
@@ -457,13 +462,15 @@ JPRO.Pattern.prototype.extendPeriod = function() {
 	this.mhn[i].push(msThrows); // new column
     } // for i
     this.period++; // increment period
+    return this;
 };
 
 /**
- * 
+ * Extends rows by one, using specified throw-height
  *
  * @method extendRows
  * @param throwHeight {Number}
+ * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.extendRows = function(throwHeight) {
     var t = throwHeight || 0;
@@ -478,13 +485,13 @@ JPRO.Pattern.prototype.extendRows = function(throwHeight) {
     }
     this.mhn.push(row); // append new row
     this.rows++; // increment rows
+    return this;
 };
 
 /**
- * 
+ * Resets the pattern to [[[[0,0]]]]
  *
- * @method 
- * @param  
+ * @method reset
  */
 JPRO.Pattern.prototype.reset = function() {
     this.period = 1;
@@ -494,10 +501,11 @@ JPRO.Pattern.prototype.reset = function() {
 };
     
 /**
- * 
+ * Calculate and return number of props juggled
+ * in this pattern.
  *
- * @method 
- * @param  
+ * @method calcProps
+ * @return {Number} calculated number of props
  */
 JPRO.Pattern.prototype.calcProps = function() {
     var i,j,k,sum,rv;
@@ -517,10 +525,11 @@ JPRO.Pattern.prototype.calcProps = function() {
 };
 
 /**
- * 
+ * Displays this MHN+ pattern in HTML as a table
+ * which has a number of clickable fields.
  *
- * @method 
- * @param  
+ * @method toHtml
+ * @return {String} HTML tabular representation of this pattern
  */
 JPRO.Pattern.prototype.toHtml = function() {
     var i, j, k, rows, cols, pairs, pair, item, rv, bcolor;
@@ -587,20 +596,21 @@ JPRO.Pattern.prototype.toHtml = function() {
 };
 
 /**
- * 
+ * Convert row number to capital letter
  *
- * @method 
- * @param  
+ * @method toHandSymbol
+ * @param row {Number}
+ * @return {String} capital letter representing row number
  */
 JPRO.Pattern.prototype.toHandSymbol = function(row) {
     return String.fromCharCode(65 + row); // A,B,..
 };
     
 /**
- * 
+ * Increments rowBeats variables, which are used to
+ * determine destination hands
  *
- * @method 
- * @param  
+ * @method nextBeat
  */
 JPRO.Pattern.prototype.nextBeat = function() {
     var i;
@@ -615,10 +625,13 @@ JPRO.Pattern.prototype.nextBeat = function() {
 };
 
 /**
- * 
+ * Returns the destination hand specified by row and
+ * number of beats relative to current beat.
  *
- * @method 
- * @param  
+ * @method getHand
+ * @param row {Number}
+ * @param beatRel {Number}
+ * @return {Hand} the destination hand
  */
 JPRO.Pattern.prototype.getHand = function(row, beatRel) {
     var beatRel1 = beatRel || 0;
@@ -628,28 +641,6 @@ JPRO.Pattern.prototype.getHand = function(row, beatRel) {
     var i = (this.rowBeats[row] + beatRel1) % rhands.length;
     console.log('Pattern.getHand: rhands[' + i + '] = ' + rhands[i].name);
     return rhands[i];
-};
-
-/**
- * 
- *
- * @method 
- * @param  
- */
-JPRO.Pattern.prototype.repeat = function() {
-    console.log('Pattern.repeat: iterCnt=' + this.iterCnt);
-    if (this.iters < 0) {
-	return 1; // restart pattern indefinitely
-    }
-    else if (this.iterCnt < this.iters-1) {
-	this.iterCnt++;
-	console.log('Pattern.repeat: iterCnt=' + this.iterCnt);
-	return 1; // restart pattern
-    }
-    else {
-	this.iterCnt = 0; // reset for next time
-	return null; // finished
-    }
 };
 
 // bp = base beat period
@@ -666,8 +657,7 @@ JPRO.Pattern.prototype.repeat = function() {
 /**
  * 
  *
- * @method 
- * @param  
+ * @method clean
  */
 JPRO.Pattern.prototype.clean = function() {
     var i,j;
@@ -681,8 +671,10 @@ JPRO.Pattern.prototype.clean = function() {
 /**
  * 
  *
- * @method 
- * @param  
+ * @method cleanList
+ * @param pairs {Array}
+ * @param row {Number}
+ * @return {Array}
  */
 JPRO.Pattern.prototype.cleanList = function(pairs, row) {
     var rv = [];
@@ -696,10 +688,12 @@ JPRO.Pattern.prototype.cleanList = function(pairs, row) {
 };
 
 /**
- * 
+ * Keeps track of throw selection ordered list
  *
- * @method 
- * @param  
+ * @method select
+ * @param row {Number}
+ * @param col {Number}
+ * @param ms {Number}
  */
 JPRO.Pattern.prototype.select = function(row, col, ms) {
     var k = row + ',' + col + ',' + ms; // hash key
@@ -718,8 +712,8 @@ JPRO.Pattern.prototype.select = function(row, col, ms) {
 /**
  * 
  *
- * @method 
- * @param  
+ * @method getSelectedThrows
+ * @return {Array} selected throws
  */
 JPRO.Pattern.prototype.getSelectedThrows = function() {
     var a,k,aa,i;
@@ -737,8 +731,7 @@ JPRO.Pattern.prototype.getSelectedThrows = function() {
 /**
  * 
  *
- * @method 
- * @param  
+ * @method clearSelections
  */
 JPRO.Pattern.prototype.clearSelections = function() {
     var k;
@@ -753,10 +746,13 @@ JPRO.Pattern.prototype.clearSelections = function() {
 };
 
 /**
- * 
+ * Finds a minimum throw sequence to transition from
+ * this pattern to the specified one.
  *
- * @method 
- * @param  
+ * @method getTranstion
+ * @param destPat {Pattern}
+ * @return {ThrowSeq} throw sequence to get from this pattern
+ *     to destination pattern
  */
 JPRO.Pattern.prototype.getTransition = function(destPat) {
     var destState = new JPRO.State(destPat.mhn, destPat.props);
@@ -764,13 +760,13 @@ JPRO.Pattern.prototype.getTransition = function(destPat) {
     return myState.getTransition(destState);
 };
 
+// Global functions for onclick events
+
 /**
  * 
  *
- * @method 
- * @param  
+ * @method _ac
  */
-// Global functions for onclick events
 JPRO._ac = function() {
     viewer.pattern.clearSelections();
     $("#div1").html(viewer.pattern.toHtml());
@@ -779,8 +775,8 @@ JPRO._ac = function() {
 /**
  * 
  *
- * @method 
- * @param  
+ * @method _ta
+ * @param x {Number} offset
  */
 JPRO._ta = function(x) {
     viewer.pattern.translateAll(x);
@@ -790,7 +786,7 @@ JPRO._ta = function(x) {
 /**
  * 
  *
- * @method 
+ * @method _ts
  * @param  
  */
 JPRO._ts = function(x) {
@@ -802,7 +798,7 @@ JPRO._ts = function(x) {
 /**
  * 
  *
- * @method 
+ * @method _rt
  * @param  
  */
 JPRO._rt = function(x) {
@@ -813,7 +809,7 @@ JPRO._rt = function(x) {
 /**
  * 
  *
- * @method 
+ * @method _ep
  * @param  
  */
 JPRO._ep = function() {

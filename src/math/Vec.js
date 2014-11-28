@@ -143,7 +143,7 @@ JPRO.Vec.prototype.scale = function(sc) {
  * @param v {Vec} the other vector
 */
 JPRO.Vec.prototype.add = function(v) {
-    return new Vec(
+    return new JPRO.Vec(
 	this.x + v.x,
 	this.y + v.y,
 	this.z + v.z
