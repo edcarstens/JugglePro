@@ -11,8 +11,9 @@
  * @param pos {Vec} optional initial position
  *
  */
+(function () {
 
-"use strict";
+'use strict';
 
 JPRO.Prop = function(viewer, pos) {
 
@@ -41,7 +42,7 @@ JPRO.Prop = function(viewer, pos) {
      * @type Vec
      * @default (0,0,0)
      */
-    this.pos = pos || new Vec(); // xyz position
+    this.pos = pos || new JPRO.Vec(); // xyz position
 
     /**
      * Velocity
@@ -50,7 +51,7 @@ JPRO.Prop = function(viewer, pos) {
      * @type Vec
      * @default (0,0,0)
      */
-    this.vel = new Vec(); // velocity
+    this.vel = new JPRO.Vec(); // velocity
 
     /**
      * Projected position (to 2D view screen)
@@ -111,15 +112,15 @@ JPRO.Prop.prototype.constructor = JPRO.Prop;
 */
 JPRO.Prop.prototype.updatePos = function(updateTimer) {
     var updateTimer1 = updateTimer || 0; // default is to update timer
-    if (this.inPlay == null) { return this; }
+    if (this.inPlay === null) { return this; }
     if (this.inHand) {
-	this.pos.setv(this.inHand.pos);
+	this.pos.setV(this.inHand.pos);
     }
     else {
 	this.pos.acc(this.vel.acc(this.view.g)); // v=v+g; x=x+v
     }
-    this.posProjected = this.view.project(pos); // x,y, and depth
-    if ((updateTimer1 == 0) && (this.timer > 0)) {
+    this.posProjected = this.view.project(this.pos); // x,y, and depth
+    if ((updateTimer1 === 0) && (this.timer > 0)) {
 	this.timer--;
 	if (this.timer <= 0) {
 	    this.caughtBy(this.destHand);
@@ -180,7 +181,7 @@ JPRO.Prop.prototype.throw2Pos = function(dest, time) {
 */
 JPRO.Prop.prototype.throw2Hand = function(destHand, destBeatRel) {
     // Calculate throw time
-    var beat = this.viewer.beat;
+    //var beat = this.viewer.beat;
     var destBeat = (destHand.movementBeat + destBeatRel) % destHand.movementPeriod;
     var dwell = destHand.getDwell(destBeat); // todo - change to get_dwell(dest_beat_rel)
     var time = destBeatRel * this.viewer.beatPeriod - dwell;
@@ -215,8 +216,9 @@ JPRO.Prop.prototype.throw2Hand = function(destHand, destBeatRel) {
 JPRO.Prop.prototype.caughtBy = function(hand, updateHandN) {
     var updateHandN1 = updateHandN || 0;
     this.inHand = hand;
-    if (updateHandN1 == 0) hand.catchProp(this, 1);
-    this.pos.setv(hand.pos); // the ball should land in this hand
+    if (updateHandN1 === 0) hand.catchProp(this, 1);
+    this.pos.setV(hand.pos); // the ball should land in this hand
     return this;
 };
 
+})();

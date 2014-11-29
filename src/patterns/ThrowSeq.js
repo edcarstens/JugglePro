@@ -14,7 +14,9 @@
  *
  */
 
-"use strict";
+(function () {
+
+'use strict';
 
 JPRO.ThrowSeq = function(mhn) {
     
@@ -24,7 +26,7 @@ JPRO.ThrowSeq = function(mhn) {
      * @property type
      * @type String
      */
-    this.type = "ThrowSeq";
+    this.type = 'ThrowSeq';
     
     /**
      * MHN throw matrix
@@ -83,30 +85,32 @@ JPRO.ThrowSeq.prototype.repeat = function() {
  * @return {String} string representation of this throw sequence
  */
 JPRO.ThrowSeq.prototype.toString = function(mhn) {
-    var rv, i, j, k, mhn_tmp;
-    mhn_tmp = mhn;
-    if (mhn == null) {
-	mhn_tmp = this.mhn;
+    var rv, i, j, k, mhnTmp;
+    mhnTmp = mhn;
+    if ((mhn === null) || (mhn === undefined)) {
+	mhnTmp = this.mhn;
     }
     rv = '[';
-    for (i=0; i<mhn_tmp.length; i++) {
+    console.log(mhn);
+    console.log(mhnTmp);
+    for (i=0; i<mhnTmp.length; i++) {
 	if (i > 0) {
 	    rv = rv + ', ';
 	}
 	rv = rv + '[';
-	for (j=0; j<mhn_tmp[i].length; j++) {
+	for (j=0; j<mhnTmp[i].length; j++) {
 	    if (j > 0) {
 		rv = rv + ', ';
 	    }
 	    rv = rv + '[';
-	    for (k=0; k<mhn_tmp[i][j].length; k++) {
+	    for (k=0; k<mhnTmp[i][j].length; k++) {
 		if (k > 0) {
 		    rv = rv + ', ';
 		}
 		rv = rv.concat('[');
-		rv = rv.concat(mhn_tmp[i][j][k][0]);
+		rv = rv.concat(mhnTmp[i][j][k][0]);
 		rv = rv.concat(',');
-		rv = rv.concat(mhn_tmp[i][j][k][1]);
+		rv = rv.concat(mhnTmp[i][j][k][1]);
 		rv = rv.concat(']');
 	    }
 	    rv = rv + ']';
@@ -116,3 +120,5 @@ JPRO.ThrowSeq.prototype.toString = function(mhn) {
     rv = rv + ']';
     return rv;
 };
+
+})();

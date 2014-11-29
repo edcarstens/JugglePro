@@ -24,10 +24,11 @@ module.exports = function(grunt) {
 	'<%= dirs.src %>/patterns/State.js',
 	'<%= dirs.src %>/props/Prop.js',
 	'<%= dirs.src %>/props/Ball.js',
+	'<%= dirs.src %>/props/Sprite3D.js',
 	'<%= dirs.src %>/viewer/View.js',
 	'<%= dirs.src %>/viewer/Viewer.js'
     ];
-    banner = [
+    var banner = [
         '/**',
         ' * @license',
         ' * <%= pkg.name %> - v<%= pkg.version %>',
@@ -55,7 +56,7 @@ module.exports = function(grunt) {
 	    testBlob: '<%= dirs.test %>/**/*.js',
 	    testConf: '<%= dirs.test %>/karma.conf.js',
 	    build: '<%= dirs.build %>/jpro.dev.js',
-	    buildMin: '<%= dirs.build %>/pixi.js'
+	    buildMin: '<%= dirs.build %>/jpro.js'
 	},
 	concat: {
 	    options: {
@@ -67,6 +68,7 @@ module.exports = function(grunt) {
 	    }
 	},
         /* jshint -W106 */
+	/* jshint -W097 */
         concat_sourcemap: {
             dev: {
                 files: {

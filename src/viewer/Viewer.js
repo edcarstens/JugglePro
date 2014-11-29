@@ -243,7 +243,7 @@ JPRO.Viewer.prototype.initAnimation = function() {
 JPRO.Viewer.prototype.grabNewProp = function() {
     var p;
     console.log('grabbing new prop');
-    if (this.props.length == 0) {
+    if (this.props.length === 0) {
 	console.log('No props left to grab!');
 	return null;
     }
@@ -298,13 +298,14 @@ JPRO.Viewer.prototype.updateProps = function() {
  * @method updateClock
 */
 JPRO.Viewer.prototype.updateClock = function(pattern) {
+    var i;
     if (this.t >= this.beatPeriod-1) {
 	this.t = 0;
 	if (this.beat >= pattern.period-1) {
 	    this.beat = 0;
 	    //this.enable = pattern.repeat();
 	    this.enable = pattern.repeat() || this.routine.nextPat();
-	    if (this.enable) console.log("restart pattern");
+	    if (this.enable) console.log('restart pattern');
 	}
 	else {
 	    this.beat++;
@@ -337,8 +338,8 @@ JPRO.Viewer.prototype.throwProps = function(pattern) {
 	    if (pairs[k][1] > 0) {
 		destRow = pairs[k][0];
 		destHand = pattern.getHand(destRow, pairs[k][1]);
-		if ((destHand != rowHand) || (pairs[k][1] != rowHand.period) ||
-		    (rowHand.nprops() == 0)) {
+		if ((destHand !== rowHand) || (pairs[k][1] !== rowHand.period) ||
+		    (rowHand.nprops() === 0)) {
 		    rowHand.throwProp(destHand, pairs[k][1]);
 		}
 		else {
@@ -361,7 +362,6 @@ JPRO.Viewer.prototype.throwProps = function(pattern) {
  * @method update
 */
 JPRO.Viewer.prototype.update = function() {
-    var i;
     
     this.grfx.clear(); // clear graphics
     
@@ -372,7 +372,9 @@ JPRO.Viewer.prototype.update = function() {
     this.rotateViewWhenEnabled(this.aerialTurn, this.zoomIn, this.zoomOut);
     
     // Do throws once every beat period
-    this.updateClock(this.pattern) && this.throwProps(this.pattern);
+    if ( this.updateClock(this.pattern) ) {
+	this.throwProps(this.pattern);
+    }
     
     // render the stage
     this.renderer.render(this.stage);
@@ -401,15 +403,15 @@ JPRO.Viewer.prototype.rotateViewWhenEnabled = function(rot, zoomIn, zoomOut) {
  * @method rotateView
 */
 JPRO.Viewer.prototype.rotateView = function(rot, zoomIn, zoomOut) {
-    var x,y,handScaleLb,rotRad,i;
+    var handScaleLb,rotRad;
     handScaleLb = 0.3;
-    function hsbound(xx, limit) {
-	var x = xx;
-	if (Math.abs(x) < limit) {
-	    x = limit;
-	}
-	return x;
-    }
+//    function hsbound(xx, limit) {
+//	var x = xx;
+//	if (Math.abs(x) < limit) {
+//	    x = limit;
+//	}
+//	return x;
+//    }
     
     this.view.translateMe(zoomIn);
     this.view.rotateMe(rot);

@@ -13,7 +13,9 @@
  * @param iters {Number} number of iterations of pattern to be executed
  *
  */
-"use strict";
+(function () {
+
+'use strict';
 
 //JPRO.Pattern = function(mhn, rowHands, iters, get_bp_xfun, get_tbb_xfun) {
 JPRO.Pattern = function(mhn, rowHands, iters) {
@@ -29,7 +31,7 @@ JPRO.Pattern = function(mhn, rowHands, iters) {
      * @property 
      * @type 
      */
-    this.type = "Pattern";
+    this.type = 'Pattern';
 
 //    this.mhn = mhn;
 
@@ -47,11 +49,11 @@ JPRO.Pattern = function(mhn, rowHands, iters) {
      * @property 
      * @type 
      */
-    this.iters = (iters == null) ? -1 : iters; // -1 means repeat forever
+    this.iters = (iters === null) ? -1 : iters; // -1 means repeat forever
 
     // Unusual external functions for timing beats for throws
-    //this.get_beat_period = (get_bp_xfun == null) ? get_beat_period : get_bp_xfun;
-    //this.get_time_between_beats = (get_tbb_xfun == null) ? get_time_between_beats : get_tbb_xfun;
+    //this.get_beat_period = (get_bp_xfun === null) ? get_beat_period : get_bp_xfun;
+    //this.get_time_between_beats = (get_tbb_xfun === null) ? get_time_between_beats : get_tbb_xfun;
     
 
     /**
@@ -152,7 +154,7 @@ JPRO.Pattern = function(mhn, rowHands, iters) {
      * @property 
      * @type 
      */
-    this.isSelected = new Object; // hash
+    this.isSelected = {}; // hash
     
 
     /**
@@ -266,7 +268,7 @@ JPRO.Pattern.prototype.swap = function(loc1, loc2) {
  */
 JPRO.Pattern.prototype.translateAll = function(offset) {
     var i,j,k;
-    var offset1 = (offset == null) ? 1 : offset; // default to 1
+    var offset1 = (offset === null) ? 1 : offset; // default to 1
     var sum = 0;
     for (i=0; i<this.rows; i++) {
 	for (j=0; j<this.period; j++) {
@@ -292,7 +294,7 @@ JPRO.Pattern.prototype.translateThrow = function(loc, mult) {
     var r = loc[0];
     var t = loc[1];
     var ms = loc[2];
-    var mult1 = (mult == null) ? 1 : mult; // default to 1
+    var mult1 = (mult === null) ? 1 : mult; // default to 1
     this.mhn[r][t][ms][1] += mult1*this.period;
     this.props += mult1;
     return this;
@@ -324,9 +326,9 @@ JPRO.Pattern.prototype.translateThrowsSelected = function(mult) {
 JPRO.Pattern.prototype.multiplexTranslate = function(row, offset) {
     var j;
     var row1 = row || 0; // default row to zero
-    var offset1 = (offset == null) ? 1 : offset; // default offset to 1
+    var offset1 = (offset === null) ? 1 : offset; // default offset to 1
     if (this.mhn[row1][0].length >= 4) { // button-happy kid proof this
-	alert("No more than 4 multiplex slots allowed per row");
+	alert('No more than 4 multiplex slots allowed per row');
 	return this;
     }
     for (j=0; j<this.period; j++) {
@@ -379,7 +381,7 @@ JPRO.Pattern.prototype.rotateRow = function(x, mhnRow) {
  * @return {Pattern} this pattern
  */
 JPRO.Pattern.prototype.rotateRows = function(x) {
-    var i, j, k, idx;
+    var i, idx;
     if (this.rows < 2) {
 	return this;
     }
@@ -423,7 +425,7 @@ JPRO.Pattern.prototype.extendPeriod = function() {
     var sum = 0;
     var n = 0; // amount subtracted from each throw
     if (this.period >= this.maxPeriod) { // kid proofed
-	alert("Period upper limit is " + this.maxPeriod);
+	alert('Period upper limit is ' + this.maxPeriod);
 	return this;
     }
     while (sum < this.props*this.period) {
@@ -477,7 +479,7 @@ JPRO.Pattern.prototype.extendRows = function(throwHeight) {
     var row = [];
     var j;
     if (this.rows >= this.maxRows) { // kid proofed
-	alert("Rows upper limit is " + this.maxRows);
+	alert('Rows upper limit is ' + this.maxRows);
 	return this;
     }
     for (j=0; j<this.period; j++) {
@@ -532,66 +534,66 @@ JPRO.Pattern.prototype.calcProps = function() {
  * @return {String} HTML tabular representation of this pattern
  */
 JPRO.Pattern.prototype.toHtml = function() {
-    var i, j, k, rows, cols, pairs, pair, item, rv, bcolor;
+    var i, j, k, rv, bcolor;
     var swapEnable, call, r, t;
-    swapEnable = (this.selections == 2) ? '' : 'disabled';
-    call = this.selections ? "JPRO._ts" : "JPRO._ta"; // translate selected by +-period or all throws by +-1
-    rv = "<table><colgroup>";
-    rv += "<col span=\"1\" id='first_col'>";
-    rv += "<col span=\"" + this.period + "\">";
-    rv += "<col span=\"1\" id='last_col'>";
-    rv += "</colgroup>";
-    rv += "<tr><th><button onclick=\"JPRO._ac()\">AC</button></th>"; // start heading row
-    rv += "<th><button onclick=\"" + call + "(1)\">0<sup>+</sup></button></th>"; // heading col0
+    swapEnable = (this.selections === 2) ? '' : 'disabled';
+    call = this.selections ? 'JPRO._ts' : 'JPRO._ta'; // translate selected by +-period or all throws by +-1
+    rv = '<table><colgroup>';
+    rv += '<col span=\'1\' id="first_col">';
+    rv += '<col span=\'' + this.period + '\'>';
+    rv += '<col span=\'1\' id="last_col">';
+    rv += '</colgroup>';
+    rv += '<tr><th><button onclick=\"JPRO._ac()\">AC</button></th>'; // start heading row
+    rv += '<th><button onclick=\"' + call + '(1)\">0<sup>+</sup></button></th>'; // heading col0
     for (j=1; j<this.period; j++) {
-	rv += "<th><button onclick=\"JPRO._rt(" + j + ")\">" + j + "</button></th>";
+	rv += '<th><button onclick=\"JPRO._rt(' + j + ')\">' + j + '</button></th>';
     }
-    rv += "<th><button onclick=\"JPRO._ep()\">" + this.period + "</button></th>";
-    rv += "</tr>"; // finish heading row
-    call += "(-1)";
+    rv += '<th><button onclick=\"JPRO._ep()\">' + this.period + '</button></th>';
+    rv += '</tr>'; // finish heading row
+    call += '(-1)';
     for (i=0; i<this.rows; i++) {
-	rv += "<tr><td><button onclick=\"" + call + "\">"; // start row
-	call = "JPRO._rr(" + (i+1) + ")";
-	rv += toHandSymbol(i);
-	if (i == 0) {
-	    rv += "<sup>-</sup>";
+	rv += '<tr><td><button onclick=\'' + call + '\'>'; // start row
+	call = 'JPRO._rr(' + (i+1) + ')';
+	rv += this.toHandSymbol(i);
+	if (i === 0) {
+	    rv += '<sup>-</sup>';
 	}
-	rv += "</button></td>";
+	rv += '</button></td>';
 	for (j=0; j<this.period; j++) {
-	    rv += "<td>";
+	    rv += '<td>';
 	    for (k=0; k<this.mhn[i][j].length; k++) {
 		r = this.mhn[i][j][k][0]; // destination row
 		t = this.mhn[i][j][k][1]; // destination beat (relative)
-		if (k > 0) rv += ",";
-		bcolor = this.isSelected[i + "," + j + "," + k] ? "#0022dd" :
-		    ((t > this.maxThrowHeight) || (t < 0) || (t == 0) && (r != i)) ? "red" :
-		    (t > this.highThrowHeight) ? "yellow" : "black";
-		rv += "<span style=\"background-color:" + bcolor +
-		    "\" onclick=\"JPRO._table(" + i + "," + j + "," + k + ")\">";
-		rv += toHandSymbol(r);
+		if (k > 0) rv += ',';
+		bcolor = this.isSelected[i + ',' + j + ',' + k] ? '#0022dd' :
+		    ((t > this.maxThrowHeight) || (t < 0) || (t === 0) && (r !== i)) ? 'red' :
+		    (t > this.highThrowHeight) ? 'yellow' : 'black';
+		rv += '<span style=\"background-color:' + bcolor +
+		    '\" onclick=\"JPRO._table(' + i + ',' + j + ',' + k + ')\">';
+		rv += this.toHandSymbol(r);
 		rv += t;
-		rv += "</span>";
+		rv += '</span>';
 	    }
-	    rv += "</td>"; // finish column element
+	    rv += '</td>'; // finish column element
 	}
-	rv += "<td>";
-	rv += "<button onclick=\"JPRO._mp(" + i + ")\"> Multiplex </button>";
-	rv += "</td>";
-	rv += "</tr>"; // finish row
+	rv += '<td>';
+	rv += '<button onclick=\"JPRO._mp(' + i + ')\"> Multiplex </button>';
+	rv += '</td>';
+	rv += '</tr>'; // finish row
     }
     // Final row
-    rv += "<tr style=\"background-color:#505050\">"; // start row
-    rv += "<td><button onclick=\"JPRO._er()\">";
-    rv += toHandSymbol(this.rows);
-    rv += "</button></td>";
-    rv += "<td><button onclick=\"JPRO._swap()\"" + swapEnable + "> Swap </button></td>";
+    rv += '<tr style=\"background-color:#505050\">'; // start row
+    rv += '<td><button onclick=\"JPRO._er()\">';
+    rv += this.toHandSymbol(this.rows);
+    rv += '</button></td>';
+    rv += '<td><button onclick=\"JPRO._swap()\"' + swapEnable + '> Swap </button></td>';
     for (j=1; j<this.period; j++) {
-	rv += "<td></td>";
+	rv += '<td></td>';
     }
     // bottom right cell
-    rv += "<td><button onclick=\"JPRO._reset()\"> Reset </button></td>";
-    rv += "</tr>"; // finish row
-    rv += "</table>";
+    rv += '<td><button onclick=\"JPRO._reset()\"> Reset </button></td>';
+    rv += '</tr>'; // finish row
+    rv += '</table>';
     return rv;
 };
 
@@ -663,7 +665,7 @@ JPRO.Pattern.prototype.clean = function() {
     var i,j;
     for (i=0; i<this.rows; i++) {
 	for (j=0; j<this.period; j++) {
-	    this.mhn[i,j] = this.cleanList(this.mhn[i,j], i);
+	    this.mhn[i][j] = this.cleanList(this.mhn[i][j], i);
 	}
     } // end for i	
 };
@@ -680,8 +682,8 @@ JPRO.Pattern.prototype.cleanList = function(pairs, row) {
     var rv = [];
     var pair;
     while (pair=pairs.shift) {
-	if ((pair[1] != 0) || (pair[0] != row)) {
-	    push(rv, pair);
+	if ((pair[1] !== 0) || (pair[0] !== row)) {
+	    rv.push(pair);
 	}
     } // end while
     return rv;
@@ -719,7 +721,7 @@ JPRO.Pattern.prototype.getSelectedThrows = function() {
     var a,k,aa,i;
     a = [];
     for (k in this.isSelected) {
-	aa = k.split(",");
+	aa = k.split(',');
 	for (i=0; i<aa.length; i++) {
 	    aa[i] = parseInt(aa[i]); // convert to int
 	}
@@ -737,8 +739,8 @@ JPRO.Pattern.prototype.clearSelections = function() {
     var k;
 //	var aa;
     for (k in this.isSelected) {
-//	    aa = k.split(",");
-//	    if (parseInt(aa[0]) == row) {
+//	    aa = k.split(',');
+//	    if (parseInt(aa[0]) === row) {
 	delete this.isSelected[k];
 	this.selections--;
 //	    }
@@ -769,7 +771,7 @@ JPRO.Pattern.prototype.getTransition = function(destPat) {
  */
 JPRO._ac = function() {
     viewer.pattern.clearSelections();
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -780,7 +782,7 @@ JPRO._ac = function() {
  */
 JPRO._ta = function(x) {
     viewer.pattern.translateAll(x);
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -792,7 +794,7 @@ JPRO._ta = function(x) {
 JPRO._ts = function(x) {
     viewer.pattern.translateThrowsSelected(x);
     viewer.pattern.clearSelections();
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -803,7 +805,7 @@ JPRO._ts = function(x) {
  */
 JPRO._rt = function(x) {
     viewer.pattern.rotateThrows(x);
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -814,7 +816,7 @@ JPRO._rt = function(x) {
  */
 JPRO._ep = function() {
     viewer.pattern.extendPeriod();
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -826,7 +828,7 @@ JPRO._ep = function() {
 JPRO._mp = function(row) {
     viewer.pattern.multiplexTranslate(row, 1);
     viewer.pattern.clearSelections();
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -837,7 +839,7 @@ JPRO._mp = function(row) {
  */
 JPRO._rr = function(x) {
     viewer.pattern.rotateRows(x);
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -848,7 +850,7 @@ JPRO._rr = function(x) {
  */
 JPRO._er = function() {
     viewer.pattern.extendRows(0);
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -861,7 +863,7 @@ JPRO._swap = function() {
     var a = viewer.pattern.getSelectedThrows();
     viewer.pattern.swap(a[0], a[1]);
     viewer.pattern.clearSelections();
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -872,7 +874,7 @@ JPRO._swap = function() {
  */
 JPRO._table = function(row, col, ms) {
     viewer.pattern.select(row, col, ms);
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
 
 /**
@@ -883,5 +885,7 @@ JPRO._table = function(row, col, ms) {
  */
 JPRO._reset = function() {
     viewer.pattern.reset();
-    $("#div1").html(viewer.pattern.toHtml());
+    $('#div1').html(viewer.pattern.toHtml());
 };
+
+})();

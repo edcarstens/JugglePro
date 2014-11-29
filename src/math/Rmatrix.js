@@ -14,7 +14,9 @@
  *
  */
 
-"use strict";
+(function () {
+
+'use strict';
 
 JPRO.Rmatrix = function(degrees, axis) {
     this.degrees = degrees || 0;
@@ -24,10 +26,10 @@ JPRO.Rmatrix = function(degrees, axis) {
     var s = Math.sin(radians);
     var c = Math.cos(radians);
     var m = [c,-s,0,s,c,0,0,0,1];
-    if (axis == JPRO.XAXIS) {
+    if (axis === JPRO.XAXIS) {
 	m = [1,0,0,0,c,-s,0,s,c];
     }
-    else if (axis == JPRO.YAXIS) {
+    else if (axis === JPRO.YAXIS) {
 	m = [c,0,s,0,1,0,-s,0,c];
     }
     var r1 = new JPRO.Vec(m[0],m[1],m[2]);
@@ -39,3 +41,5 @@ JPRO.Rmatrix = function(degrees, axis) {
 // constructor
 JPRO.Rmatrix.prototype = Object.create( JPRO.Matrix.prototype );
 JPRO.Rmatrix.prototype.constructor = JPRO.Rmatrix;
+
+})();

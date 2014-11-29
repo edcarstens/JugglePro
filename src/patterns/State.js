@@ -17,8 +17,9 @@
  * @param props {Number} number of props juggled
  *
  */
+(function () {
 
-"use strict";
+'use strict';
 
 JPRO.State = function(mhn, props) {
     
@@ -44,14 +45,14 @@ JPRO.State = function(mhn, props) {
 	var state = [[]]; // 2D matrix
 	var destRow, destTimeRel, scol, timeIdx, maxThrowHeight;
 	maxThrowHeight = getMaxThrowHeight(mhn);
-	console.log("maxThrowHeight=" + maxThrowHeight);
+	console.log('maxThrowHeight=' + maxThrowHeight);
 	for (i=0; i<mhn.length; i++) {
 	    // proceed from end of pattern backwards in time
 	    // repeating the pattern until all props accounted for
 	    timeIdx = 1; // beats relative to final state
 	    while (n > 0) {
 		if (timeIdx > maxThrowHeight) {
-		    console.log("State: ERROR - Unable to determine state for MHN pattern");
+		    console.log('State: ERROR - Unable to determine state for MHN pattern');
 		    return;
 		}
 		for (j=mhn[i].length-1; j>=0; j--) {
@@ -59,9 +60,9 @@ JPRO.State = function(mhn, props) {
 			destRow = mhn[i][j][k][0];
 			destTimeRel = mhn[i][j][k][1];
 			scol = destTimeRel - timeIdx;
-			console.log("i=" + i + " j=" + j + " k=" + k + " th=" + destTimeRel + " scol=" + scol);
+			console.log('i=' + i + ' j=' + j + ' k=' + k + ' th=' + destTimeRel + ' scol=' + scol);
 			if (scol >= 0) {
-			    if ((state[destRow] == undefined) || (state[destRow][scol] == undefined)) {
+			    if ((state[destRow] === undefined) || (state[destRow][scol] === undefined)) {
 				state[destRow][scol] = 1;
 			    }
 			    else {
@@ -114,12 +115,12 @@ JPRO.State.prototype.constructor = JPRO.State;
  * @param col {Number} column of state matrix
 */
 JPRO.State.prototype.incr = function(row, col) {
-    if (this.state[row] == undefined) {
+    if (this.state[row] === undefined) {
 	this.state[row] = [];
 	this.state[row][col] = 1;
 	return;
     }
-    if (this.state[row][col] == undefined) {
+    if (this.state[row][col] === undefined) {
 	this.state[row][col] = 1;
 	return;
     }
@@ -137,17 +138,17 @@ JPRO.State.prototype.incr = function(row, col) {
  * @param th {Number} throw-height (beats to arrival, relative to current beat)
 */
 JPRO.State.prototype.makeThrow = function(row, destRow, th) {
-    console.log("makeThrow called with row=" + row + " destRow=" + destRow + " th=" + th);
+    console.log('makeThrow called with row=' + row + ' destRow=' + destRow + ' th=' + th);
     var b = this.state[row][0];
-    if ((b == undefined) || (b == 0)) {
+    if ((b === undefined) || (b === 0)) {
 	if (th > 0) {
-	    console.log("makeThrow: ERROR - throw-height must be 0 for row " + row);
+	    console.log('makeThrow: ERROR - throw-height must be 0 for row ' + row);
 	    return;
 	}
     }
     else {
-	if (th == 0) {
-	    console.log("makeThrow: ERROR - throw-height must be positive for row " + row);
+	if (th === 0) {
+	    console.log('makeThrow: ERROR - throw-height must be positive for row ' + row);
 	    return;
 	}
 	b--;
@@ -168,7 +169,7 @@ JPRO.State.prototype.makeThrow = function(row, destRow, th) {
 */
 JPRO.State.prototype.firstColIsZero = function(state) {
     var i,x;
-    if (state == null) { state = this.state; }
+    if (state === null) { state = this.state; }
     for (i=0; i<state.length; i++) {
 	x = this.toInt(state[i][0]);
 	if (x > 0) {
@@ -193,7 +194,7 @@ JPRO.State.prototype.firstColIsZero = function(state) {
 */
 JPRO.State.prototype.nextState = function(state) {
     var i,x;
-    if (state == null) { state = this.state; }
+    if (state === null) { state = this.state; }
     for (i=0; i<state.length; i++) {
 	x = state[i].shift();
     } // for i
@@ -210,19 +211,19 @@ JPRO.State.prototype.equals = function(s) {
     var i,j;
     var s1 = this.state;
     var s2 = s.state;
-    if (s1.length != s2.length) {
-	console.log("rows not equal:" + s1.length + " != " + s2.length);
+    if (s1.length !== s2.length) {
+	console.log('rows not equal:' + s1.length + ' !== ' + s2.length);
 	return 0;
     }
     for (i=0; i<s1.length; i++) {
-	if (s1[i].length != s2[i].length) {
-	    console.log("cols not equal:" + s1[i].length + " != " + s2[i].length + " for row " + i);
+	if (s1[i].length !== s2[i].length) {
+	    console.log('cols not equal:' + s1[i].length + ' !== ' + s2[i].length + ' for row ' + i);
 	    return 0;
 	}
 	for (j=0; j<s1[i].length; j++) {
-	    if (s1[i][j] == undefined) { s1[i][j] = 0; }
-	    if (s2[i][j] == undefined) { s2[i][j] = 0; }
-	    if (s1[i][j] != s2[i][j]) {
+	    if (s1[i][j] === undefined) { s1[i][j] = 0; }
+	    if (s2[i][j] === undefined) { s2[i][j] = 0; }
+	    if (s1[i][j] !== s2[i][j]) {
 		return 0;
 	    }
 	} // for j
@@ -257,7 +258,7 @@ JPRO.State.prototype.getTransition = function(tso) {
 	} // for i
     } // while
     //cs = this.state;
-    console.log("0 transSeq = " + this.mhnToString(transSeq));
+    console.log('0 transSeq = ' + this.mhnToString(transSeq));
     // Compare state heights
     var csh = this.getHeight();
     var tsh = tso.getHeight();
@@ -265,7 +266,7 @@ JPRO.State.prototype.getTransition = function(tso) {
     if (tlen < 0) {
 	tlen = 1;
     }
-    console.log("csh=" + csh + " tsh=" + tsh + " tlen=" + tlen);
+    console.log('csh=' + csh + ' tsh=' + tsh + ' tlen=' + tlen);
     // Find number of beats (tlen) from current state for which
     // target state is reachable
     csi = csh - 1; // max index of a prop in current state
@@ -274,10 +275,10 @@ JPRO.State.prototype.getTransition = function(tso) {
 	tlen++;
 	tsi = csi - tlen;
     } // while
-    console.log("tlen=" + tlen);
+    console.log('tlen=' + tlen);
     // push transition seq throws
     transSeq = this.pushTransThrows(transSeq, cs, ts, tlen);
-    console.log("1 transSeq = " + this.mhnToString(transSeq));
+    console.log('1 transSeq = ' + this.mhnToString(transSeq));
     return new JPRO.ThrowSeq(transSeq);
 };
     
@@ -307,7 +308,7 @@ JPRO.State.prototype.unreachable = function(cs, csi, ts, tsi) {
 	} // for i
 	csiTmp--;
     } // for j
-    console.log("target state is reachable without having to go through ground state");
+    console.log('target state is reachable without having to go through ground state');
     return 0;
 };
 
@@ -316,10 +317,10 @@ JPRO.State.prototype.unreachable = function(cs, csi, ts, tsi) {
  * 
  * @method toInt
  * @param x {Number}
- * @return {Number} 0 if x==undefined, otherwise returns x
+ * @return {Number} 0 if x===undefined, otherwise returns x
 */
 JPRO.State.prototype.toInt = function(x) {
-    if (x == undefined) {
+    if (x === undefined) {
 	return 0;
     }
     else {
@@ -339,7 +340,7 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
     var i,j,k;
     var x,ii,jj,throwIJ;
     var transSeqTmp = [];
-    if (tlen == 0) {
+    if (tlen === 0) {
 	return transSeq;
     }
     for (i=0; i<cs.length; i++) {
@@ -349,12 +350,12 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
     // fill the gaps prior to building the target state
     for (j=1; j<tlen; j++) {
 	for (i=0; i<cs.length; i++) {
-	    if (this.toInt(cs[i][j]) == 0) {
+	    if (this.toInt(cs[i][j]) === 0) {
 		for (k=0; k<j; k++) {
 		    if (this.toInt(cs[i][k]) > 0) {
 			cs[i][k]--;
 			cs[i][j] = 1;
-			if (transSeqTmp[i][k] == undefined) {
+			if (transSeqTmp[i][k] === undefined) {
 			    transSeqTmp[i][k] = [[i, j-k]];
 			}
 			else {
@@ -366,7 +367,7 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
 	    } // if
 	} // for i
     } // for j
-    console.log("0 transSeqTmp = " + this.mhnToString(transSeqTmp));
+    console.log('0 transSeqTmp = ' + this.mhnToString(transSeqTmp));
 
     // build target state
     for (j=0; j<ts[0].length; j++) {
@@ -380,9 +381,9 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
 		jj = throwIJ[1];
 		cs[ii][jj] = this.toInt(cs[ii][jj]) - 1;
 		cs[i][k]++;
-		console.log("From ii=" + ii + " jj=" + jj);
-		console.log("  To  i=" + i + "  k=" + k);
-		if (transSeqTmp[ii][jj] == undefined) {
+		console.log('From ii=' + ii + ' jj=' + jj);
+		console.log('  To  i=' + i + '  k=' + k);
+		if (transSeqTmp[ii][jj] === undefined) {
 		    transSeqTmp[ii][jj] = [[i, k-jj]];
 		}
 		else {
@@ -392,7 +393,7 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
 	    } // while
 	} // for i
     } // for j
-    console.log("1 transSeqTmp = " + this.mhnToString(transSeqTmp));
+    console.log('1 transSeqTmp = ' + this.mhnToString(transSeqTmp));
 
     // append transSeqTmp to transSeq
     for (i=0; i<transSeq.length; i++) {
@@ -419,7 +420,7 @@ JPRO.State.prototype.findThrow = function(cs, tlen) {
 	} // for i
     } // for j
     // This is an error!
-    console.log("findThrow: ERROR - No balls left in cs to throw");
+    console.log('findThrow: ERROR - No balls left in cs to throw');
     return;
 };
     
@@ -430,7 +431,7 @@ JPRO.State.prototype.findThrow = function(cs, tlen) {
  * @return {Number} maximum state array length
 */
 JPRO.State.prototype.getHeight = function() {
-    var i,j,x,rv;
+    var i,x,rv;
     var s = this.state;
     rv = 0;
     for (i=0; i<s.length; i++) {
@@ -471,23 +472,23 @@ JPRO.State.prototype.getMaxThrowHeight = function(mhn) {
 */
 JPRO.State.prototype.toString = function() {
     var i,j,x;
-    var rv = "[";
+    var rv = '[';
     for (i=0; i<this.state.length; i++) {
 	if (i > 0) {
-	    rv = rv + ",<br>\n";
+	    rv = rv + ',<br>\n';
 	}
-	rv = rv + "[";
+	rv = rv + '[';
 	for (j=0; j<this.state[i].length; j++) {
 	    if (j > 0) {
-		rv = rv + ", ";
+		rv = rv + ', ';
 	    }
 	    x = this.state[i][j];
-	    x = (x == undefined) ? "0" : x;
+	    x = (x === undefined) ? '0' : x;
 	    rv = rv + x;
 	} // for j
-	rv = rv + "]";
+	rv = rv + ']';
     } // for i
-    rv = rv + "]";
+    rv = rv + ']';
     return rv;
 };
 
@@ -537,7 +538,7 @@ JPRO.State.prototype.mhnToString = function(mhn) {
  * @return {State} copy of this state
 */
 JPRO.State.prototype.copy = function() {
-    var i,j;
+    var i;
     var rv = new JPRO.State(this.mhn, this.props);
     rv.state = [];
     for (i=0; i<this.state.length; i++) {
@@ -545,3 +546,5 @@ JPRO.State.prototype.copy = function() {
     } // for i
     return rv;
 };
+
+})();

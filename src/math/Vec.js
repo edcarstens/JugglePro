@@ -12,7 +12,9 @@
  *
  */
 
-"use strict";
+(function () {
+
+'use strict';
 
 JPRO.Vec = function(x, y, z) {
 
@@ -172,3 +174,5 @@ JPRO.Vec.prototype.acc = function(v) {
 JPRO.Vec.prototype.toString = function() {
     return '(' + this.x + ',' + this.y + ',' + this.z + ')';
 };
+
+})();

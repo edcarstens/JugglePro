@@ -14,6 +14,8 @@
  *
  */
 
+/* jshint strict:false */
+(function () {
 "use strict";
 
 JPRO.View = function(viewer, width, height, scale) {
@@ -49,7 +51,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property origin
      * @type Vec
      */
-    this.origin = new Vec(this.width/2, 0, this.height/2);
+    this.origin = new JPRO.Vec(this.width/2, 0, this.height/2);
 
     /**
      * World rotation
@@ -57,7 +59,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property rot
      * @type Matrix
      */
-    this.rot = new Matrix();
+    this.rot = new JPRO.Matrix();
 
     /**
      * World translation
@@ -65,7 +67,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property translation
      * @type Vec
      */
-    this.translation = new Vec();
+    this.translation = new JPRO.Vec();
     
     /**
      * Scaling factor - coordinates are scaled up by 2^scale
@@ -81,7 +83,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property g
      * @type Vec
      */
-    this.g = new Vec(0,0,-4);
+    this.g = new JPRO.Vec(0,0,-4);
     
     /**
      * List of vectors subject to rotation only,
@@ -231,3 +233,5 @@ JPRO.View.prototype.depth2Dscale = function(depth) {
     dscale = this.focalDistance/(this.focalDistance + tdepth);
     return dscale;
 };
+
+}());

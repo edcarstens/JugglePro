@@ -14,7 +14,10 @@
  * @class Handfun
  * @static
  */
-"use strict";
+
+(function () {
+
+'use strict';
 
 JPRO.Handfun = function() {};
 
@@ -29,12 +32,14 @@ JPRO.Handfun.handLength = 50;
 
 JPRO.Handfun.Bone = function(length) {
     this.length = length;
-}
+};
+
 JPRO.Handfun.Bone.prototype = {
     pitch: 0,
     yaw: 0,
     roll: 0
 };
+
 JPRO.Handfun.Bone.prototype.constructor = JPRO.Handfun.Bone;
 
 JPRO.Handfun.Pose = function(pos, facingAngle) {
@@ -124,7 +129,7 @@ JPRO.Handfun.generator = function(neckPos, facingAngle, rightHand, posesMatrix) 
 	    var t0 = Math.floor(t);
 	    //console.log('t0='+t0);
 	    var dt = t - t0;
-	    //var t1 = (t0 == 7) ? 0 : t0 + 1; // not needed
+	    //var t1 = (t0 === 7) ? 0 : t0 + 1; // not needed
 	    var i,xva,x0,v0,a0,x;
 	    var poseAngles = [];
 	    for (i=0; i<posesXva.length; i++) {
@@ -191,7 +196,7 @@ JPRO.Handfun.mirrorX = function(pm) {
 };
 
 JPRO.Handfun.calcXva = function(posesT) {
-    console.log("JPRO.Handfun.calcXva called");
+    console.log('JPRO.Handfun.calcXva called');
     var rv = [];
     var i;
     for (i=0; i<posesT.length; i++) {
@@ -211,7 +216,7 @@ JPRO.Handfun.interpolator = function(x) {
 	while (rv <= -180) { rv += 360; }
 	while (rv > 180) { rv -= 360; }
 	return rv;
-    }
+    };
 
     var i,j,k,k2;
     var d = []; // deltas or average velocities
@@ -247,7 +252,7 @@ JPRO.Handfun.interpolator = function(x) {
     for (i=0; i<n; i++) {
 	k = i << 1;
 	j = k + 1;
-	if (i == n-1) {
+	if (i === n-1) {
 	    k2 = 0;
 	}
 	else {
@@ -257,7 +262,7 @@ JPRO.Handfun.interpolator = function(x) {
     }
     // Calculate accelerations
     for (i=0; i<v.length; i++) {
-	j = (i == v.length-1) ? 0 : i+1;
+	j = (i === v.length-1) ? 0 : i+1;
 	a[i] = v[j] - v[i];
     }
     // Calculate in between positions
@@ -307,7 +312,7 @@ JPRO.Handfun.cascR = function(neckPos, facingAngle) {
     return JPRO.Handfun.generator(neckPos, facingAngle, 1, JPRO.Handfun.casc);
 };
 // cascL is a method of Handfun, not a constructor!
-JPRO.Handfun.casc_l = function(neckPos, facingAngle) {
+JPRO.Handfun.cascL = function(neckPos, facingAngle) {
     return JPRO.Handfun.generator(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.casc));
 };
 
@@ -326,6 +331,7 @@ JPRO.Handfun.revCasc = [
 JPRO.Handfun.revCascR = function(neckPos, facingAngle) {
     return JPRO.Handfun.generator(neckPos, facingAngle, 1, JPRO.Handfun.revCasc);
 };
+
 JPRO.Handfun.revCascL = function(neckPos, facingAngle) {
     return JPRO.Handfun.generator(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.revCasc));
 };
@@ -400,3 +406,5 @@ JPRO.Handfun.experimentR = function(neckPos, facingAngle) {
 							 [-90, 0, 90, 0,  0, 0],
 							 [-90, 0, 90, 0, 90, 0]]);
 };
+
+})();

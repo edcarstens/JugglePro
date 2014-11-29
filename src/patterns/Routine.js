@@ -20,7 +20,7 @@ JPRO.Routine = function(patterns) {
      * @property 
      * @type 
      */
-    this.patterns = (patterns == null) ? [] : patterns; // list of patterns
+    this.patterns = (patterns === null) ? [] : patterns; // list of patterns
 
     /**
      * 
@@ -68,7 +68,7 @@ JPRO.Routine = function(patterns) {
      * @property 
      * @type 
      */
-    this.type = "Routine";
+    this.type = 'Routine';
 };
 
 JPRO.Routine.prototype.constructor = JPRO.Routine;
@@ -95,7 +95,7 @@ JPRO.Routine.prototype.pushPat = function(pat) {
 JPRO.Routine.prototype.nextPat = function(viewer, depth) {
     var i,j,x,pat,d;
     console.log('nextPat called with depth=' + depth);
-    if (this.enable == null) {
+    if (this.enable === null) {
 	this.enable = 1;
 	return null;
     }
@@ -107,7 +107,7 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
     if (viewer) {
 	this.viewer = viewer;
     }
-    if (this.iters == 0) {
+    if (this.iters === 0) {
 	this.enable = null;
 	return null;
     }
@@ -115,7 +115,7 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
     i = this.patternIdx;
     console.log('pattern idx = ' + i);
     // Find first pattern with iters>0
-    while ((j < this.patterns.length) && (this.patterns[i].iters == 0)) {
+    while ((j < this.patterns.length) && (this.patterns[i].iters === 0)) {
 	i++;
 	if (i >= this.patterns.length) {
 	    i = 0;
@@ -125,13 +125,13 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
 	}
 	j++;
     }
-    if (j == this.patterns.length) {
-	throw "pattern has no iterable pattern in it"
+    if (j === this.patterns.length) {
+	throw 'pattern has no iterable pattern in it';
     }
     // Set viewer pattern and other viewer vars
     x = this.patterns[i];
     this.patternIdx = i;
-    if (x.type == "Routine") {
+    if (x.type === 'Routine') {
 	if (x.nextPat(this.viewer, d+1)) {
 	    return 1;
 	}
@@ -145,7 +145,7 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
 	this.viewer.beatPeriod = pat.beatPeriod;
 	//this.viewer.beatPeriod = this.patterns[i].get_beatPeriod(this.viewer.beat, this.viewer.base_beatPeriod);
 	// Update MHN table in html
-	$("#div1").html(this.viewer.pattern.toHtml());
+	$('#div1').html(this.viewer.pattern.toHtml());
     }
     
     i++;
@@ -159,14 +159,14 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
     if ((this.iters > 0) && (this.iterCnt >= this.iters)) {
 	this.iterCnt = 0;
 	this.enable = null; // disable for next time
-	if (pat == null) {
+	if (pat === null) {
 	    return null;
 	}
 	else {
 	    return 1;
 	}
     }
-    if (pat == null) {
+    if (pat === null) {
 	return this.nextPat(this.viewer, d+1);
     }
     else {
@@ -184,13 +184,13 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
 JPRO.Routine.prototype.toString = function() {
     var patterns = this.patterns;
     var i;
-    var rv = "[";
+    var rv = '[';
     for (i=0; i<patterns.length; i++) {
 	if (i > 0) {
-	    rv = rv + ", ";
+	    rv = rv + ', ';
 	}
 	rv = rv + patterns[i].toString();
     }
-    rv = rv + "]";
+    rv = rv + ']';
     return rv;
 };

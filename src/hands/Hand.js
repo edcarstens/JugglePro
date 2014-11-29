@@ -17,7 +17,9 @@
  *
  */
 
-"use strict";
+(function () {
+
+'use strict';
 
 JPRO.Hand = function(viewer, fpos, name, period, movementPeriod, isRight, dwellRatios) {
 
@@ -154,7 +156,7 @@ JPRO.Hand.prototype.constructor = JPRO.Hand;
  * @method update
 */
 JPRO.Hand.prototype.update = function() {
-    var dscale,didx;
+    //var dscale, didx;
     var time = this.viewer.t + this.movementBeat * this.viewer.beatPeriod;
     var pa = this.fpos(time, this.viewer.beatPeriod);
     this.pos = this.view.transform(pa[0]); // pa[0] is hand position
@@ -184,50 +186,50 @@ JPRO.Hand.prototype.update = function() {
 
 	// Draw hand
     g.lineStyle(4, 0xffcc66, 1);
-    var y_dx = x - wpos.x;
-    var y_dy = y - wpos.y;
-    var x_dx = tpos.x - x;
-    var x_dy = tpos.y - y;
+    var yDx = x - wpos.x;
+    var yDy = y - wpos.y;
+    var xDx = tpos.x - x;
+    var xDy = tpos.y - y;
     if (! this.isRight) {
-	x_dx = -x_dx;
-	x_dy = -x_dy;
+	xDx = -xDx;
+	xDy = -xDy;
     }
     // draw thumb
-    g.moveTo(x + x_dx, y + x_dy);
+    g.moveTo(x + xDx, y + xDy);
     g.lineTo(wpos.x, wpos.y);
     // calc finger positions
-    var fs_x = x_dx >> 2; // finger-to-finger spacing
-    var fs_y = x_dy >> 2;
-    var f2_x = x + fs_x; // index
-    var f2_y = y + fs_y;
-    var f4_x = x - fs_x; // ring
-    var f4_y = y - fs_y;
-    var f5_x = x - (x_dx >> 1); // pinky
-    var f5_y = y - (x_dy >> 1);
-    var f2t_x = f2_x + y_dx;
-    var f2t_y = f2_y + y_dy;
-    var f3t_x = x + y_dx;
-    var f3t_y = y + y_dy;
-    var f4t_x = f4_x + y_dx;
-    var f4t_y = f4_y + y_dy;
-    var f5t_x = f5_x + y_dx;
-    var f5t_y = f5_y + y_dy;
+    var fsX = xDx >> 2; // finger-to-finger spacing
+    var fsY = xDy >> 2;
+    var f2X = x + fsX; // index
+    var f2Y = y + fsY;
+    var f4X = x - fsX; // ring
+    var f4Y = y - fsY;
+    var f5X = x - (xDx >> 1); // pinky
+    var f5Y = y - (xDy >> 1);
+    var f2tX = f2X + yDx;
+    var f2tY = f2Y + yDy;
+    var f3tX = x + yDx;
+    var f3tY = y + yDy;
+    var f4tX = f4X + yDx;
+    var f4tY = f4Y + yDy;
+    var f5tX = f5X + yDx;
+    var f5tY = f5Y + yDy;
     // Draw fingers
-    g.moveTo(f2_x, f2_y);
-    g.lineTo(f2t_x, f2t_y);
+    g.moveTo(f2X, f2Y);
+    g.lineTo(f2tX, f2tY);
     g.moveTo(x, y);
-    g.lineTo(f3t_x, f3t_y);
-    g.moveTo(f4_x, f4_y);
-    g.lineTo(f4t_x, f4t_y);
-    g.moveTo(f5_x, f5_y);
-    g.lineTo(f5t_x, f5t_y);
+    g.lineTo(f3tX, f3tY);
+    g.moveTo(f4X, f4Y);
+    g.lineTo(f4tX, f4tY);
+    g.moveTo(f5X, f5Y);
+    g.lineTo(f5tX, f5tY);
     // Draw rest of hand
     g.beginFill(0xffcc66, 1);
-    g.moveTo(f5_x, f5_y);
-    g.lineTo(f2_x, f2_y);
-    g.lineTo(f2_x - y_dx, f2_y - y_dy);
-    g.lineTo(f5_x - y_dx, f5_y - y_dy);
-    g.lineTo(f5_x, f5_y);
+    g.moveTo(f5X, f5Y);
+    g.lineTo(f2X, f2Y);
+    g.lineTo(f2X - yDx, f2Y - yDy);
+    g.lineTo(f5X - yDx, f5Y - yDy);
+    g.lineTo(f5X, f5Y);
     g.endFill();
 };
   
@@ -277,7 +279,7 @@ JPRO.Hand.prototype.catchProp = function(p, updatePropN) {
     var updatePropN1 = updatePropN || 0;
     console.log(this.name + ' caught ball');
     this.props.push(p);
-    if (updatePropN1 == 0) p.caughtBy(this,1);
+    if (updatePropN1 === 0) p.caughtBy(this,1);
 };
 
 /**
@@ -300,7 +302,7 @@ JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel) {
 	p.pos.setV(this.pos);
     }
     console.log(this.name + ' throws a ' + destBeatRel + ' to ' + destHand.name);
-    p.throw2Hand(destHand, destBeatRSel);
+    p.throw2Hand(destHand, destBeatRel);
 };
 
 /**
@@ -326,3 +328,5 @@ JPRO.Hand.prototype.dropProp = function(n) {
 	this.viewer.dropProp(p);
     }
 };
+
+})();
