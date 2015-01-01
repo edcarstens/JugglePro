@@ -3,17 +3,21 @@
 var ts = new JPRO.ThrowSeq();
 console.log("ts=" + ts.toString());
 console.log("ts.repeat=" + ts.repeat());
-
-ts = new JPRO.ThrowSeq([[ [[0,3]], [[0,4]] ]]);
+// fake the Hand objects
+var lh = {name:"LH"};
+var rh = {name:"RH"};
+rhMap = new JPRO.RowHandMapper([[lh,rh]]);
+ts = new JPRO.ThrowSeq([[ [[0,3]], [[0,4]] ]], rhMap);
 console.log("ts=" + ts.toString());
 console.log("ts.repeat=" + ts.repeat());
 console.log("mhn=" + ts.toString([[ [[0,1]] ]]));
 
-var pat = new JPRO.Pattern();
+var pat = new JPRO.Pattern([[[[0,0]]]], rhMap);
 console.log("pat=" + pat.toString());
+console.log("pat.iters=" + pat.iters);
 console.log("pat.repeat=" + pat.repeat());
 
-pat = new JPRO.Pattern([[ [[0,3]], [[0,4]], [[0,5]] ]]);
+pat = new JPRO.Pattern([[ [[0,3]], [[0,4]], [[0,5]] ]], rhMap);
 console.log("pat=" + pat.toString());
 console.log("pat.repeat=" + pat.repeat());
 console.log("pat.swap=" + pat.swap([0,1,0], [0,2,0]).toString());
@@ -32,7 +36,7 @@ console.log("pat.extendRows=" +
 console.log("pat.rotateRows=" +
 	    pat.rotateRows(1).toString());
 
-if (0) {
+if (1) {
 var routine1 = new JPRO.Routine();
 console.log("routine1=" + routine1.toString());
 routine1 = new JPRO.Routine([ts, pat]);

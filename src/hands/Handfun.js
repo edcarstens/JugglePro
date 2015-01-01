@@ -42,13 +42,13 @@ JPRO.Handfun.Bone.prototype = {
 
 JPRO.Handfun.Bone.prototype.constructor = JPRO.Handfun.Bone;
 
-JPRO.Handfun.Pose = function(pos, facingAngle) {
+JPRO.Handfun.Pose = function(pos, facingAngle, uaLength, faLength, handLength) {
     this.pos = pos;
     this.facingAngle = facingAngle;
     this.bones = [
-	new JPRO.Handfun.Bone(JPRO.Handfun.upperArmLength),
-	new JPRO.Handfun.Bone(JPRO.Handfun.foreArmLength),
-	new JPRO.Handfun.Bone(JPRO.Handfun.handLength)
+	new JPRO.Handfun.Bone(uaLength),
+	new JPRO.Handfun.Bone(faLength),
+	new JPRO.Handfun.Bone(handLength)
     ];
     // Methods
     this.set = function(uaP, uaY, faP, faY, faR, handP) {
@@ -59,7 +59,7 @@ JPRO.Handfun.Pose = function(pos, facingAngle) {
 	this.bones[1].roll = faR;     // forearm roll
 	this.bones[2].pitch = handP;  // hand pitch
     };
-    this.handPos = function() {
+    this.jointPos = function() {
 	var r00 = new JPRO.Rmatrix(this.bones[0].pitch, 0); // rotation about X axis
 	var r02 = new JPRO.Rmatrix(this.bones[0].yaw, 2);   // rotation about Z axis
 	r00.xMatrix(r02);
@@ -101,111 +101,108 @@ JPRO.Handfun.Pose = function(pos, facingAngle) {
 };
 JPRO.Handfun.Pose.prototype.constructor = JPRO.Handfun.Pose;
 
-// general hand function generator
-JPRO.Handfun.generator = function(neckPos, facingAngle, rightHand, posesMatrix) {
+// hand function object
+JPRO.Handfun.Func = function(neckPos, facingAngle, rightHand, posesMatrix) {
+    this.scale = JPRO.Handfun.scale;
+    this.shoulderWidth = JPRO.Handfun.shoulderWidth;
+    this.upperArmLength = JPRO.Handfun.upperArmLength;
+    this.foreArmLength = JPRO.Handfun.foreArmLength;
+    this.handLength = JPRO.Handfun.handLength;
     // calculate right or left shoulder position
-    var shoulderAngle = rightHand ? -90 : 90;
-    var throwBeat = rightHand ? 0 : 1;
-    var srad = (facingAngle + shoulderAngle) * PIXI.DEG_TO_RAD;
+    this.shoulderAngle = rightHand ? -90 : 90;
+    //this.throwBeat = rightHand ? 0 : 1;
+    this.facingAngle = facingAngle;
+    var srad = (facingAngle + this.shoulderAngle) * PIXI.DEG_TO_RAD;
     var x = neckPos.getX() + this.shoulderWidth * Math.cos(srad);
     var y = neckPos.getY() + this.shoulderWidth * Math.sin(srad);
-    var shoulderPos = new JPRO.Vec(x, y, neckPos.getZ());
-    var ps = new JPRO.Vec();
-    var scale = this.scale;
-    ps.x = shoulderPos.getX() << scale;
-    ps.y = shoulderPos.getY() << scale;
-    ps.z = shoulderPos.getZ() << scale;
-    var nposes = posesMatrix.length << 1; // number of poses (double the specified array length)
-    // transpose pose matrix
-    var posesMatrixT = JPRO.Handfun.transpose(posesMatrix);
-    // calculate xva matrix
-    var posesXva = JPRO.Handfun.calcXva(posesMatrixT);
+    this.shoulderPos = new JPRO.Vec(x, y, neckPos.getZ());
+    this.ps = new JPRO.Vec();
+    this.ps.setV(this.shoulderPos);
 
-    // This is a function closure
-    return (function() {
-	var getPose = function(tIn) { // 0<=tIn<1
-	    var t = tIn * nposes + throwBeat * posesMatrix.length;
-	    if (t >=nposes ) { t -= nposes; }
-	    var t0 = Math.floor(t);
-	    //console.log('t0='+t0);
-	    var dt = t - t0;
-	    //var t1 = (t0 === 7) ? 0 : t0 + 1; // not needed
-	    var i,xva,x0,v0,a0,x;
-	    var poseAngles = [];
-	    for (i=0; i<posesXva.length; i++) {
-		xva = posesXva[i][t0];
-		x0 = xva[0];
-		v0 = xva[1];
-		a0 = xva[2];
-		x = x0 + v0*dt/2 + a0*dt*dt/4;
-		//console.log('x[' + i + '] = ' + x);
-		poseAngles.push(x);
-	    }
-	    var p = new JPRO.Handfun.Pose(shoulderPos, facingAngle);
-	    p.set( poseAngles[0],
-		   poseAngles[1],
-		   poseAngles[2],
-		   poseAngles[3],
-		   poseAngles[4],
-		   poseAngles[5]
-		 );
-	    return p;
-	};
-	return function(t, bp) {
-	    var pose = getPose(t/bp/2);
-	    var jointPositions = pose.handPos();
+    this.ps.scale(this.scale);
+    this.movementPeriod = posesMatrix.length;
+    var i;
+    this.nposes2 = [];
+    this.nposes = [];
+    var posesMatrixT;
+    this.posesXva = [];
+    for (i=0; i<this.movementPeriod; i++) {
+	this.nposes2.push(posesMatrix[i].length);
+	 // number of poses (double the specified array length)
+	this.nposes.push(posesMatrix[i].length << 1);
+	// transpose pose matrix
+	posesMatrixT = JPRO.Matrix.transpose(posesMatrix[i]);
+	// calculate xva matrix
+	this.posesXva.push(this.calcXva(posesMatrixT));
+    }
+
+};
+
+JPRO.Handfun.Func.prototype.constructor = JPRO.Handfun.Func;
+
+JPRO.Handfun.Func.prototype.getPose = function(tIn,movementBeat) { // 0<=tIn<1, movementBeat>=0 (integer)
+    var mBeat = movementBeat % this.movementPeriod;
+    //console.log('mBeat=' + mBeat);
+    var np = this.nposes[mBeat];
+    var t = tIn * np;
+    if (t >=np ) { t -= np; }
+    var t0 = Math.floor(t);
+    //t0=0;
+    console.log('tIn='+tIn);
+    console.log('t0='+t0);
+    var dt = t - t0;
+    //var t1 = (t0 === 7) ? 0 : t0 + 1; // not needed
+    var i,xva,x0,v0,a0,x;
+    var poseAngles = [];
+    //var temp;
+    for (i=0; i<this.posesXva[mBeat].length; i++) {
+	//temp = this.posesXva[mBeat][i];
+	//console.log('temp length = ' + temp.length);
+	xva = this.posesXva[mBeat][i][t0];
+	x0 = xva[0];
+	v0 = xva[1];
+	a0 = xva[2];
+	x = x0 + v0*dt/2 + a0*dt*dt/4;
+	//console.log('x[' + i + '] = ' + x);
+	poseAngles.push(x);
+    }
+    var p = new JPRO.Handfun.Pose(this.shoulderPos, this.facingAngle, this.upperArmLength, this.foreArmLength, this.handLength);
+    p.set( poseAngles[0],
+	   poseAngles[1],
+	   poseAngles[2],
+	   poseAngles[3],
+	   poseAngles[4],
+	   poseAngles[5]
+	 );
+    return p;
+};
+
+JPRO.Handfun.Func.prototype.getPos = function(t,movementBeat) {
+	    var pose = this.getPose(t, movementBeat);
+	    var jointPositions = pose.jointPos();
 	    var p = new JPRO.Vec().setV(jointPositions[0]);
 	    var pt = new JPRO.Vec().setV(jointPositions[1]);
 	    var pw = new JPRO.Vec().setV(jointPositions[2]);
 	    var pe = new JPRO.Vec().setV(jointPositions[3]);
-	    p.scale(scale);   // position of hand
-	    pt.scale(scale);  // position of thumb
-	    pw.scale(scale);  // position of wrist
-	    pe.scale(scale);  // position of elbow
-	    //console.log('handPos = ' + p.toString());
-	    return [p, pt, pw, pe, ps];
-	    
-	};
-    })();  // end of function closure
+	    p.scale(this.scale);   // position of hand
+	    pt.scale(this.scale);  // position of thumb
+	    pw.scale(this.scale);  // position of wrist
+	    pe.scale(this.scale);  // position of elbow
+	    //console.log('Hand Position = ' + p.toString());
+	    return [p, pt, pw, pe, this.ps];
 };
 
-JPRO.Handfun.transpose = function(m) {
-    var i,j;
-    var cols = m[0].length; // assume square matrix
-    var rv = [];
-    var col = [];
-    for (j=0; j<cols; j++) {
-	col = [];
-	for (i=0; i<m.length; i++) {
-	    col.push(m[i][j]);
-	}
-	rv.push(col);
-    }
-    return rv;
-};
-
-JPRO.Handfun.mirrorX = function(pm) {
-    // affects yaw and roll angles ([1],[3],[4])
-    var i;
-    var rv = [];
-    for (i=0; i<pm.length; i++) {
-	rv.push([pm[i][0], -pm[i][1], pm[i][2],
-		 -pm[i][3],-pm[i][4], pm[i][5]]);
-    }
-    return rv;
-};
-
-JPRO.Handfun.calcXva = function(posesT) {
-    console.log('JPRO.Handfun.calcXva called');
+JPRO.Handfun.Func.prototype.calcXva = function(posesT) {
+//    console.log('JPRO.Handfun.calcXva called');
     var rv = [];
     var i;
     for (i=0; i<posesT.length; i++) {
-	rv.push(JPRO.Handfun.interpolator(posesT[i]));
+	rv.push(this.interpolator(posesT[i]));
     }
     return rv;
 };
 
-JPRO.Handfun.interpolator = function(x) {
+JPRO.Handfun.Func.prototype.interpolator = function(x) {
     // x is an array of angles in degrees
     // the movement repeats x[0]..x[last],x[0]...
 
@@ -275,7 +272,7 @@ JPRO.Handfun.interpolator = function(x) {
     xva.push(xx);
     xva.push(v);
     xva.push(a);
-    xva = JPRO.Handfun.transpose(xva); // transpose for easier use
+    xva = JPRO.Matrix.transpose(xva); // transpose for easier use
     return xva; // return positions, velocities and accelerations arrays
 
     // x = 1/2 * a * t*t
@@ -294,84 +291,101 @@ JPRO.Handfun.interpolator = function(x) {
 
 };
 
+JPRO.Handfun.mirrorX = function(pm) {
+    // affects yaw and roll angles ([1],[3],[4])
+    var i,j;
+    var rv = [];
+    var rvj;
+    for (i=0; i<pm.length; i++) {
+	rvj = [];
+	for (j=0; j<pm[i].length; j++) {
+	    rvj.push([pm[i][j][0], -pm[i][j][1], pm[i][j][2],
+		      -pm[i][j][3],-pm[i][j][4], pm[i][j][5]]);
+	}
+	rv.push(rvj);
+    }
+    return rv;
+};
+
 // Ordinary Cascade/Fountain
-JPRO.Handfun.casc = [
+JPRO.Handfun.casc = [[
     //uap   uay   fap  fay  far   hp
-    [-70,   -20,  -50, -40,   0,   0],
-    [-70,   -10,  -25, -20,   0,   0],
+    [-70,    20,   50,  20,   0,   0],
+    [-70,    30,   75,  30,   0,   0],
     [-70,     0,    0,   0,   0,   0],
-    [-70,    10,   25,  20,   0,   0],
-    [-70,    20,   50,  40,   0,   0],
-    [-70,    30,   75,  60,   0,   0],
+    [-70,   -10,  -25, -10,   0,   0],
+    [-70,   -20,  -50, -20,   0,   0],
+    [-70,   -10,  -25, -10,   0,   0],
     [-70,     0,    0,   0,   0,   0],
-    [-70,   -10,  -25, -20,   0,   0]
-];
+    [-70,    10,   25,  10,   0,   0]
+]];
 
 // cascR is a method of Handfun, not a constructor!
 JPRO.Handfun.cascR = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 1, JPRO.Handfun.casc);
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.casc);
 };
 // cascL is a method of Handfun, not a constructor!
 JPRO.Handfun.cascL = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.casc));
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.casc));
 };
 
 // Reverse Cascade
-JPRO.Handfun.revCasc = [
+JPRO.Handfun.revCasc = [[
     //uap   uay   fap  fay  far   hp
-    [-70,    20,   60,  10,   0,   30],
-    [-70,    10,   60,   5,   0,   30],
-    [-70,     0,   60,   0,   0,   30],
-    [-70,   -10,   60, -20,   0,   30],
     [-70,   -20,   80, -40,   0,   30],
     [-70,   -20,  100, -40,   0,   30],
     [-70,     0,   80, -20,   0,   30],
-    [-70,    10,   60,   5,   0,   30]
-];
+    [-70,    10,   60,   5,   0,   30],
+    [-70,    20,   60,  10,   0,   30],
+    [-70,    10,   60,   5,   0,   30],
+    [-70,     0,   60,   0,   0,   30],
+    [-70,   -10,   60, -20,   0,   30]
+]];
+
 JPRO.Handfun.revCascR = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 1, JPRO.Handfun.revCasc);
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.revCasc);
 };
 
 JPRO.Handfun.revCascL = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.revCasc));
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.revCasc));
 };
 
 // Right-handed Shower
-JPRO.Handfun.rshowerRm = [
+JPRO.Handfun.rshowerRm = [[
     //uap   uay   fap  fay  far   hp
-    [-70,     0,  -20, -60,  80,   0],
-    [-70,     0,  -10, -60,  40,   0],
-    [-70,     0,    0, -60,   0,   0],
-    [-70,     0,    0, -60,   0,   0],
     [-70,     0,   40, -60,   0,   0],
     [-70,     0,   60, -60,   0,   0],
     [-70,     0,   35, -60,   0,   0],
-    [-70,     0,   10, -60,  40,   0]
-];
+    [-70,     0,   10, -60,  40,   0],
+    [-70,     0,  -20, -60,  80,   0],
+    [-70,     0,  -10, -60,  40,   0],
+    [-70,     0,    0, -60,   0,   0],
+    [-70,     0,    0, -60,   0,   0]
+]];
 JPRO.Handfun.rshowerR = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 1, JPRO.Handfun.rshowerRm);
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.rshowerRm);
 };
-JPRO.Handfun.rshowerLm = [
+JPRO.Handfun.rshowerLm = [[
     //uap   uay   fap  fay  far   hp
-    [-70,     0,   70,  20,   0,   0],
-    [-70,     0,   70,  20,   0,   0],
-    [-70,     0,   70,  20,   0,   0],
-    [-70,     0,   70,  10,   0,   0],
     [-70,     0,   70, -25,   0,   0],
     [-70,     0,   70, -60,   0,   0],
     [-70,     0,   70, -20,   0,   0],
-    [-70,     0,   70,  20,   0,   0]
-];
+    [-70,     0,   70,  20,   0,   0],
+    [-70,     0,   70,  20,   0,   0],
+    [-70,     0,   70,  20,   0,   0],
+    [-70,     0,   70,  20,   0,   0],
+    [-70,     0,   70,  10,   0,   0]
+]];
 JPRO.Handfun.rshowerL = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 0, JPRO.Handfun.rshowerLm);
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.rshowerLm);
 };
 
 // Left-handed Shower
 JPRO.Handfun.lshowerR = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 1, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerRm));
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerRm));
 };
 JPRO.Handfun.lshowerL = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerLm));
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerLm));
 };
 
 // TODO - Better method may be to select hand movement based on throw destination/time
@@ -389,22 +403,22 @@ JPRO.Handfun.lshowerL = function(neckPos, facingAngle) {
 
 // Simplest hand movement functions
 JPRO.Handfun.stationaryL = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 0, [[-90, 0, 90, 0, 50, 0]]);
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, [[[-90, 0, 90, 0, 50, 0]]]);
 };
 JPRO.Handfun.stationaryR = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 1, [[-90, 0, 90, 0, 20, 0]]);
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, [[[-90, 0, 90, 0, 20, 0]]]);
 };
 JPRO.Handfun.experimentL = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 0, [[-90, 0, 90, 0, 0, 0],
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, [[[-90, 0, 90, 0, 0, 0],
 							 [-90, 0, 90, 0, 90, 0],
 							 [-90, 0, 90, 0,180, 0],
-							 [-90, 0, 90, 0,270, 0]]);
+							 [-90, 0, 90, 0,270, 0]]]);
 };
 JPRO.Handfun.experimentR = function(neckPos, facingAngle) {
-    return JPRO.Handfun.generator(neckPos, facingAngle, 1, [[-90, 0, 90, 0,180, 0],
-							 [-90, 0, 90, 0,270, 0],
-							 [-90, 0, 90, 0,  0, 0],
-							 [-90, 0, 90, 0, 90, 0]]);
+    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, [[[-90, 0, 90, 0,180, 0],
+								 [-90, 0, 90, 0,270, 0],
+								 [-90, 0, 90, 0,  0, 0],
+								 [-90, 0, 90, 0, 90, 0]]]);
 };
 
 })();

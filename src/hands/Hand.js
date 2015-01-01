@@ -8,12 +8,10 @@
  * @class Hand
  * @constructor
  * @param viewer {Viewer} the viewer object
- * @param fpos {Function} externally defined hand movement function
+ * @param hFunc {Handfun.Func} externally defined hand movement object
  * @param name {String} this hand's name
- * @param period {Number} number of beats from throw to throw
- * @param movementPeriod {Number} number of beats in fpos function
  * @param isRight {Number} 1=right, 0=left
- * @param dwellRatios {Array} list of dwell ratios for this hand
+ * @param dwellRatio {Number} dwell ratio for this hand
  *
  */
 
@@ -21,7 +19,7 @@
 
 'use strict';
 
-JPRO.Hand = function(viewer, fpos, name, period, movementPeriod, isRight, dwellRatios) {
+JPRO.Hand = function(viewer, hFunc, name, isRight, dwellRatio) {
 
     /**
      * Pointer to the Viewer object
@@ -48,29 +46,12 @@ JPRO.Hand = function(viewer, fpos, name, period, movementPeriod, isRight, dwellR
     this.name = name || 'hand';
     
     /**
-     * Number of beats from throw to throw
+     * Dwell ratio for this hand
      *
-     * @property period
+     * @property dwellRatio
      * @type Number
      */
-    this.period = period || 2;
-    
-    /**
-     * Number of beats in fpos function
-     *
-     * @property movementPeriod
-     * @type Number
-     */
-    this.movementPeriod = movementPeriod || 2;
-    
-    /**
-     * Array of dwell ratios for this hand; each throw
-     * beat can be assigned a different dwell ratio
-     *
-     * @property dwellRatios
-     * @type Array
-     */
-    this.dwellRatios = dwellRatios || [this.viewer.dwellRatio]; // use global default as default
+    this.dwellRatio = dwellRatio || this.viewer.dwellRatio; // use global default as default
     
     /**
      * Is this hand a right hand (1) or a left hand (0)?
@@ -89,7 +70,7 @@ JPRO.Hand = function(viewer, fpos, name, period, movementPeriod, isRight, dwellR
     this.beat = 0;
     
     /**
-     * Beat used for fpos function
+     * Beat used by hFunc getPos method
      *
      * @property movementBeat
      * @type Number
@@ -107,14 +88,13 @@ JPRO.Hand = function(viewer, fpos, name, period, movementPeriod, isRight, dwellR
     /**
      * An externally defined function, this method 
      * calculates and returns the positions of the arm
-     * and hand at the specified time.
+     * joints and hand at the specified time.
      *
-     * @method fpos
-     * @param t {Number} time
-     * @param bp {Number} beat period
-     * @return {Array} list of Vec objects
+     * @property hFunc
+     * @type Handfun.Func
      */
-    this.fpos = fpos; // position function returns a Vec object (define externally)
+    this.hFunc = hFunc; // its getPos method returns list of Vec objects
+    this.movementPeriod = hFunc.movementPeriod;
     
     // init sprite
 //    if (imgfile) {
@@ -157,8 +137,36 @@ JPRO.Hand.prototype.constructor = JPRO.Hand;
 */
 JPRO.Hand.prototype.update = function() {
     //var dscale, didx;
-    var time = this.viewer.t + this.movementBeat * this.viewer.beatPeriod;
-    var pa = this.fpos(time, this.viewer.beatPeriod);
+    //var time = this.viewer.clock.t + this.movementBeat * this.viewer.clock.beatPeriod;
+
+    // TODO - fix
+    //var throwPeriod = this.viewer.pattern.rhMap.getHandBeatsFromLastThrow(0, 0, this);
+    //var lastThrowBeat = 1 - throwPeriod;
+    //var lastThrowPeriod = this.viewer.clock.timeBetweenBeats(lastThrowBeat, 0);
+
+    // current time within current beat
+    var t = this.viewer.clock.t;
+    // duration since last throw by this hand
+    var duration = this.viewer.clock.duration(this.name);
+    //console.log('duration=' + duration);
+    // find time until next throw by this hand (rhMap)
+    var b2t = this.viewer.pattern.rhMap.getHandBeatsToNextThrow(this);
+    //console.log(this.name + ' b2t=' + b2t);
+    var xx = this.viewer.clock.timeBetweenBeats(0, b2t);
+    //console.log('xx=' + xx);
+    var time2t = this.viewer.clock.timeBetweenBeats(0, b2t) - t;
+    //console.log('time2t=' + time2t);
+    var tbt = duration + time2t;
+    var time;
+    if (tbt < 0.01) {
+	time = 0.5;
+    }
+    else {
+	time = duration/tbt;
+    }
+    //console.log('time=' + time);
+    //var pa = this.fpos(time, this.viewer.clock.beatPeriod);
+    var pa = this.hFunc.getPos(time, this.movementBeat);
     this.pos = this.view.transform(pa[0]); // pa[0] is hand position
     this.posProjected = this.view.project(this.pos);
     var x = this.posProjected.x;
@@ -246,12 +254,23 @@ JPRO.Hand.prototype.update = function() {
  * @param beat {Number} throw beat
  * @return {Number} dwell time
 */
-JPRO.Hand.prototype.getDwell = function(beat) {
-    var i = beat % this.dwellRatios.length;
+//JPRO.Hand.prototype.getDwell = function(beat) {
+//    var i = beat % this.dwellRatios.length;
     //console.log('getDwell: i=' + i);
-    var dwell = this.dwellRatios[i] * this.viewer.beatPeriod * this.period;
+    // TODO - use clock method timeBetweenBeats?
+//    var dwell = this.dwellRatios[i] * this.viewer.clock.beatPeriod * this.period;
     //console.log('getDwell: dwell=' + dwell);
-    return dwell;
+//    return dwell;
+//};
+
+/**
+ * Returns dwell ratio for this hand
+ *
+ * @method getDwellRatio
+ * @return {Number} dwell ratio
+*/
+JPRO.Hand.prototype.getDwellRatio = function() {
+    return this.dwellRatio;
 };
 
 /**
@@ -292,7 +311,7 @@ JPRO.Hand.prototype.catchProp = function(p, updatePropN) {
  *        relative to current beat
  * @return {Prop} the prop being thrown
 */
-JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel) {
+JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel, dwell) {
     var p;
     if (this.props.length > 0) {
 	p = this.props.shift();
@@ -302,7 +321,7 @@ JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel) {
 	p.pos.setV(this.pos);
     }
     console.log(this.name + ' throws a ' + destBeatRel + ' to ' + destHand.name);
-    p.throw2Hand(destHand, destBeatRel);
+    p.throw2Hand(destHand, destBeatRel, dwell);
 };
 
 /**

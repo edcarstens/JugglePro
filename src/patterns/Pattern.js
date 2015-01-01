@@ -18,76 +18,51 @@
 'use strict';
 
 //JPRO.Pattern = function(mhn, rowHands, iters, get_bp_xfun, get_tbb_xfun) {
-JPRO.Pattern = function(mhn, rowHands, iters) {
+JPRO.Pattern = function(mhn, rhMap, iters) {
 
     // Call superclass
-    JPRO.ThrowSeq.call(this, mhn);
-
-    // Members
+    JPRO.ThrowSeq.call(this, mhn, rhMap);
 
     /**
-     * 
+     * Type string
      *
-     * @property 
-     * @type 
+     * @property type
+     * @type String
      */
     this.type = 'Pattern';
 
-//    this.mhn = mhn;
-
     /**
-     * 
+     * Iterations
      *
-     * @property 
-     * @type 
+     * @property iters
+     * @type Number
      */
-    this.rowHands = rowHands;
+    this.iters = (iters === undefined) ? -1 : iters; // -1 means repeat forever
 
     /**
-     * 
+     * Iteration
      *
-     * @property 
-     * @type 
-     */
-    this.iters = (iters === null) ? -1 : iters; // -1 means repeat forever
-
-    // Unusual external functions for timing beats for throws
-    //this.get_beat_period = (get_bp_xfun === null) ? get_beat_period : get_bp_xfun;
-    //this.get_time_between_beats = (get_tbb_xfun === null) ? get_time_between_beats : get_tbb_xfun;
-    
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
+     * @property iterCnt 
+     * @type Number
      */
     this.iterCnt = 0;
 
     /**
      * 
      *
-     * @property 
-     * @type 
+     * @property rows
+     * @type Number
      */
     this.rows = this.mhn.length;
 
     /**
      * 
      *
-     * @property 
-     * @type 
+     * @property period
+     * @type Number
      */
     this.period = this.mhn[0].length;
     console.log('rows=' + this.rows + ' period=' + this.period);
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.rowBeats = this.makeArray(this.rows); // make array of length rows, all zeros
 
     /**
      * 
@@ -104,58 +79,6 @@ JPRO.Pattern = function(mhn, rowHands, iters) {
      * @type 
      */
     this.maxPeriod = 32;
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.highThrowHeight = 9; // yellow warning threshold
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.maxThrowHeight = 19; // red warning threshold
-    // Members (viewer specific vars)
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.beatPeriod = 20;
-
-    // Members (Gui)
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.selectionOrder = 0; // numerically ordered
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.selections = 0; // number of throws selected
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.isSelected = {}; // hash
-    
 
     /**
      * 
@@ -233,31 +156,6 @@ JPRO.Pattern.prototype.makeArray = function(sz, val) {
     }
     return rv;
 };
-    
-/**
- * Swap two throws in MHN+ matrix
- *
- * @method swap
- * @param loc1 {Array}
- * @param loc2 {Array}
- */
-JPRO.Pattern.prototype.swap = function(loc1, loc2) {
-    var r1 = loc1[0];
-    var t1 = loc1[1];
-    var ms1 = loc1[2];
-    var r2 = loc2[0];
-    var t2 = loc2[1];
-    var ms2 = loc2[2];
-    var p1 = this.mhn[r1][t1][ms1];
-    var p2 = this.mhn[r2][t2][ms2];
-    var p1r = p1[0]; // pair1 destination row
-    var p1t = p1[1] + t1; // pair1 destination time (absolute)
-    this.mhn[r2][t2][ms2] = [p1r, p1t - t2]; // time adjusted (relative)
-    var p2r = p2[0];
-    var p2t = p2[1] + t2;
-    this.mhn[r1][t1][ms1] = [p2r, p2t - t1];
-    return this;
-};
 
 /**
  * Adds an offset to all throws in the throw matrix
@@ -268,7 +166,7 @@ JPRO.Pattern.prototype.swap = function(loc1, loc2) {
  */
 JPRO.Pattern.prototype.translateAll = function(offset) {
     var i,j,k;
-    var offset1 = (offset === null) ? 1 : offset; // default to 1
+    var offset1 = (offset === undefined) ? 1 : offset; // default to 1
     var sum = 0;
     for (i=0; i<this.rows; i++) {
 	for (j=0; j<this.period; j++) {
@@ -294,7 +192,7 @@ JPRO.Pattern.prototype.translateThrow = function(loc, mult) {
     var r = loc[0];
     var t = loc[1];
     var ms = loc[2];
-    var mult1 = (mult === null) ? 1 : mult; // default to 1
+    var mult1 = (mult === undefined) ? 1 : mult; // default to 1
     this.mhn[r][t][ms][1] += mult1*this.period;
     this.props += mult1;
     return this;
@@ -326,7 +224,7 @@ JPRO.Pattern.prototype.translateThrowsSelected = function(mult) {
 JPRO.Pattern.prototype.multiplexTranslate = function(row, offset) {
     var j;
     var row1 = row || 0; // default row to zero
-    var offset1 = (offset === null) ? 1 : offset; // default offset to 1
+    var offset1 = (offset === undefined) ? 1 : offset; // default offset to 1
     if (this.mhn[row1][0].length >= 4) { // button-happy kid proof this
 	alert('No more than 4 multiplex slots allowed per row');
 	return this;
@@ -598,156 +496,6 @@ JPRO.Pattern.prototype.toHtml = function() {
 };
 
 /**
- * Convert row number to capital letter
- *
- * @method toHandSymbol
- * @param row {Number}
- * @return {String} capital letter representing row number
- */
-JPRO.Pattern.prototype.toHandSymbol = function(row) {
-    return String.fromCharCode(65 + row); // A,B,..
-};
-    
-/**
- * Increments rowBeats variables, which are used to
- * determine destination hands
- *
- * @method nextBeat
- */
-JPRO.Pattern.prototype.nextBeat = function() {
-    var i;
-    for (i=0; i<this.rows; i++) {
-	if (this.rowBeats[i] >= this.rowHands[i].length - 1) {
-	    this.rowBeats[i] = 0;
-	}
-	else {
-	    this.rowBeats[i]++;
-	}
-    }
-};
-
-/**
- * Returns the destination hand specified by row and
- * number of beats relative to current beat.
- *
- * @method getHand
- * @param row {Number}
- * @param beatRel {Number}
- * @return {Hand} the destination hand
- */
-JPRO.Pattern.prototype.getHand = function(row, beatRel) {
-    var beatRel1 = beatRel || 0;
-    var rhands = this.rowHands[row];
-    console.log('rhands=' + rhands);
-    console.log('rhands.length=' + rhands.length);
-    var i = (this.rowBeats[row] + beatRel1) % rhands.length;
-    console.log('Pattern.getHand: rhands[' + i + '] = ' + rhands[i].name);
-    return rhands[i];
-};
-
-// bp = base beat period
-// beat periods are integer multiples of bp
-// normally, beatPeriod = bp * 1
-//    function get_beatPeriod(beat, bp) {
-//	return bp;
-//    }
-
-//    function get_time_between_beats(beat1, beat2, bp) {
-//	return (beat2 - beat1)*bp;
-//    }
-        
-/**
- * 
- *
- * @method clean
- */
-JPRO.Pattern.prototype.clean = function() {
-    var i,j;
-    for (i=0; i<this.rows; i++) {
-	for (j=0; j<this.period; j++) {
-	    this.mhn[i][j] = this.cleanList(this.mhn[i][j], i);
-	}
-    } // end for i	
-};
-
-/**
- * 
- *
- * @method cleanList
- * @param pairs {Array}
- * @param row {Number}
- * @return {Array}
- */
-JPRO.Pattern.prototype.cleanList = function(pairs, row) {
-    var rv = [];
-    var pair;
-    while (pair=pairs.shift) {
-	if ((pair[1] !== 0) || (pair[0] !== row)) {
-	    rv.push(pair);
-	}
-    } // end while
-    return rv;
-};
-
-/**
- * Keeps track of throw selection ordered list
- *
- * @method select
- * @param row {Number}
- * @param col {Number}
- * @param ms {Number}
- */
-JPRO.Pattern.prototype.select = function(row, col, ms) {
-    var k = row + ',' + col + ',' + ms; // hash key
-    if (this.isSelected[k]) {
-	//this.isSelected[k] = 0; // deselect
-	delete this.isSelected[k];
-	this.selections--;
-    }
-    else {
-	this.isSelected[k] = ++this.selectionOrder;
-	this.selections++;
-    }
-    console.log('selections:' + this.selections);
-};
-
-/**
- * 
- *
- * @method getSelectedThrows
- * @return {Array} selected throws
- */
-JPRO.Pattern.prototype.getSelectedThrows = function() {
-    var a,k,aa,i;
-    a = [];
-    for (k in this.isSelected) {
-	aa = k.split(',');
-	for (i=0; i<aa.length; i++) {
-	    aa[i] = parseInt(aa[i]); // convert to int
-	}
-	a.push(aa);
-    }
-    return a;
-};
-
-/**
- * 
- *
- * @method clearSelections
- */
-JPRO.Pattern.prototype.clearSelections = function() {
-    var k;
-//	var aa;
-    for (k in this.isSelected) {
-//	    aa = k.split(',');
-//	    if (parseInt(aa[0]) === row) {
-	delete this.isSelected[k];
-	this.selections--;
-//	    }
-    }
-};
-
-/**
  * Finds a minimum throw sequence to transition from
  * this pattern to the specified one.
  *
@@ -856,7 +604,7 @@ JPRO._er = function() {
 /**
  * 
  *
- * @method 
+ * @method _swap
  * @param  
  */
 JPRO._swap = function() {
@@ -869,7 +617,7 @@ JPRO._swap = function() {
 /**
  * 
  *
- * @method 
+ * @method _table
  * @param  
  */
 JPRO._table = function(row, col, ms) {
@@ -880,7 +628,7 @@ JPRO._table = function(row, col, ms) {
 /**
  * 
  *
- * @method 
+ * @method _reset
  * @param  
  */
 JPRO._reset = function() {

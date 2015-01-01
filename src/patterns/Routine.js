@@ -20,7 +20,7 @@ JPRO.Routine = function(patterns) {
      * @property 
      * @type 
      */
-    this.patterns = (patterns === null) ? [] : patterns; // list of patterns
+    this.patterns = (patterns === undefined) ? [] : patterns; // list of patterns
 
     /**
      * 

@@ -7,93 +7,11 @@
  *
  * @class Viewer
  * @constructor
- * @param beatPeriod {Number} the juggling beat period
  *
  */
 
-JPRO.Viewer = function(beatPeriod) {
-    
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    // create a new instance of a pixi stage
-    this.stage = new PIXI.Stage(0x000000);
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    // create a graphics object
-    this.grfx = new PIXI.Graphics();
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.grfx.setStageReference(this.stage);
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.stage.addChild(this.grfx);
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.dwellRatio = 0.5; // global default dwell ratio
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.setBeatPeriod(beatPeriod || 40);
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
+JPRO.Viewer = function() {
     this.initVars();
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.renderer = null;
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.pattern = null;
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.routine = null;
 
     /**
      * 
@@ -104,6 +22,7 @@ JPRO.Viewer = function(beatPeriod) {
     this.testVar = 0; // for experimentation
 };
 
+JPRO.Viewer.prototype = Object.create( JPRO.Config.prototype );
 JPRO.Viewer.prototype.constructor = JPRO.Viewer;
 
 /**
@@ -112,18 +31,19 @@ JPRO.Viewer.prototype.constructor = JPRO.Viewer;
  * @method initVars
 */
 JPRO.Viewer.prototype.initVars = function() {
-    this.view = new JPRO.View(this, 800, 600); // scaling factor is 2^4 = 16
+    this.renderer = null;
+    this.pattern = null;
     this.ballColors = [0xbb11bb, 0x1111dd, 0x11bb11, 0xdddd00, 0xee9900, 0xdd1111];
 //	    0xdd2222, 0x22dd22, 0x2222dd, 0xbb22bb,
 //			    0x22bbbb, 0xbbbb22, 0x888888, 0x1155bb,
 //			    0xeeee00, 0xffaa00, 0xaaff00, 0x22aaff];
     this.ballSize = 40; // best not to change this anymore
-    this.hands = [];
+    //this.hands = [];
     this.props = []; // list of available props not being juggled
     this.allProps = []; // complete list of props
     this.nprops = 0; // total number of props
-    this.t = 0; // time (iteration)
-    this.beat = 0; // beat number (when throws occur)
+//    this.t = 0; // time (iteration)
+//    this.beat = 0; // beat number (when throws occur)
     //this.renderer = null;
     this.enable = 1;
     //this.pattern = null;
@@ -136,34 +56,25 @@ JPRO.Viewer.prototype.initVars = function() {
     this.zoomIn = null;
     this.zoomOut = null;
 };
-
-/**
- *
- *
- * @method setBeatPeriod
-*/
-JPRO.Viewer.prototype.setBeatPeriod = function(bp) {
-    this.basePeriod = bp;
-    this.minThrowTime = (bp >> 1) + 1; // 1/2 beat period
-};
     
 /**
  *
  *
  * @method init
 */
-JPRO.Viewer.prototype.init = function(routine, hands) {
+JPRO.Viewer.prototype.init = function() {
     this.initRotationMatrix();
-    this.routine = routine;
-    this.initHands(hands);
+    //this.initHands(hands);
     this.initProps();
     this.enable = this.routine.nextPat(this); // init routine.viewer=this
     this.view.rotateMe(this.r1);
     this.view.translateMe(this.zoomOut);
-    this.t = 0; // clear time
-    this.beat = 0; // and beat
+//    this.t = 0; // clear time
+//    this.beat = 0; // and beat
     //this.beatPeriod = this.pattern.getBeatPeriod(this.beat, this.baseBeatPeriod);
     this.throwProps(this.pattern); // make first throws
+    this.gui.init();
+    this.initAnimation();
     return this;
 };
 
@@ -184,24 +95,27 @@ JPRO.Viewer.prototype.initRotationMatrix = function() {
     var r1i = new JPRO.Rmatrix(vangle,0);
     this.aerialTurn = new JPRO.Matrix();
     this.aerialTurn.xMatrix(this.r1).xMatrix(rotz).xMatrix(r1i);
-    this.zoomOut = new JPRO.Vec(0, 3500, 0);
+    this.zoomOut = new JPRO.Vec(0, 4500, 0);
     this.zoomIn = new JPRO.Vec(0, -this.zoomOut.y, 0);
+    return this;
 };
     
 /**
  *
  *
  * @method initHands
+ * @return {Viewer} this viewer
 */
-JPRO.Viewer.prototype.initHands = function(hands) {
-    this.hands = hands;
-    return this;
-};
+//JPRO.Viewer.prototype.initHands = function(hands) {
+//    this.hands = hands;
+//    return this;
+//};
 
 /**
  *
  *
  * @method initProps
+ * @return this viewer
 */
 JPRO.Viewer.prototype.initProps = function() {
     var i;
@@ -223,6 +137,7 @@ JPRO.Viewer.prototype.initProps = function() {
  *
  *
  * @method initAnimation
+ * @return this viewer
 */
 JPRO.Viewer.prototype.initAnimation = function() {
 	
@@ -245,6 +160,7 @@ JPRO.Viewer.prototype.grabNewProp = function() {
     console.log('grabbing new prop');
     if (this.props.length === 0) {
 	console.log('No props left to grab!');
+	alert('No props left');
 	return null;
     }
     else {
@@ -270,6 +186,7 @@ JPRO.Viewer.prototype.dropProp = function(p) {
  *
  *
  * @method updateHands
+ * @return this viewer
 */
 JPRO.Viewer.prototype.updateHands = function() {
     var i;
@@ -283,6 +200,7 @@ JPRO.Viewer.prototype.updateHands = function() {
  *
  *
  * @method updateProps
+ * @return this viewer
 */
 JPRO.Viewer.prototype.updateProps = function() {
     var i;
@@ -295,52 +213,25 @@ JPRO.Viewer.prototype.updateProps = function() {
 /**
  *
  *
- * @method updateClock
-*/
-JPRO.Viewer.prototype.updateClock = function(pattern) {
-    var i;
-    if (this.t >= this.beatPeriod-1) {
-	this.t = 0;
-	if (this.beat >= pattern.period-1) {
-	    this.beat = 0;
-	    //this.enable = pattern.repeat();
-	    this.enable = pattern.repeat() || this.routine.nextPat();
-	    if (this.enable) console.log('restart pattern');
-	}
-	else {
-	    this.beat++;
-	}
-	for (i=0; i<this.hands.length; i++) {
-	    this.hands[i].nextBeat(); // for hand movements
-	}
-	pattern.nextBeat(); // for multi-phase hands per row
-	//this.beatPeriod = pattern.getBeatPeriod(this.beat, this.baseBeatPeriod);
-	return 1; // new beat - do throws
-    }
-    else {
-	this.t++; // increment time (once per animation frame)
-	return null;
-    }
-};
-
-/**
- *
- *
  * @method throwProps
 */
 JPRO.Viewer.prototype.throwProps = function(pattern) {
-    var i,k,pairs,destRow,destHand,rowHand,unthrown;
+    var i,k,pairs,destRow,destHand,rowHand,unthrown,dwell;
     for (i=0; i<pattern.rows; i++) {
-	pairs = pattern.mhn[i][this.beat];
+	pairs = pattern.mhn[i][pattern.beat];
 	rowHand = pattern.getHand(i);
+	// timestamp this throw
+	this.clock.timeStamp(rowHand.name);
 	unthrown = 0;
 	for (k=0; k<pairs.length; k++) {
 	    if (pairs[k][1] > 0) {
 		destRow = pairs[k][0];
 		destHand = pattern.getHand(destRow, pairs[k][1]);
-		if ((destHand !== rowHand) || (pairs[k][1] !== rowHand.period) ||
+		dwell = pattern.rhMap.getDwell(destRow, pairs[k][1], this.clock);
+		// TODO - fix conditional (pairs[k][1] !== 2) based on RHM
+		if ((destHand !== rowHand) || (pairs[k][1] !== 2) ||
 		    (rowHand.nprops() === 0)) {
-		    rowHand.throwProp(destHand, pairs[k][1]);
+		    rowHand.throwProp(destHand, pairs[k][1], dwell);
 		}
 		else {
 		    // do not make unnecessary little throw
@@ -371,8 +262,15 @@ JPRO.Viewer.prototype.update = function() {
     // Optional view rotation
     this.rotateViewWhenEnabled(this.aerialTurn, this.zoomIn, this.zoomOut);
     
-    // Do throws once every beat period
-    if ( this.updateClock(this.pattern) ) {
+    // Do throws once every beat
+    if ( this.clock.update() ) {
+	if (! this.pattern.nextBeat()) {
+	    this.enable = this.routine.nextPat();
+	}
+	var i;
+	for (i=0; i<this.hands.length; i++) {
+	    this.hands[i].nextBeat(); // for hand movements
+	}
 	this.throwProps(this.pattern);
     }
     

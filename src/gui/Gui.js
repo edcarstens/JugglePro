@@ -115,8 +115,8 @@ JPRO.Gui.prototype.updateBeatPeriod = function(val) {
 JPRO.Gui.prototype.updateDwellRatio = function(val) {
     //console.log('update dwell ratio = ' + val);
     viewer.dwellRatio = val/100;
-    lh.dwellRatios = [viewer.dwellRatio];
-    rh.dwellRatios = [viewer.dwellRatio]; // TODO - update dwell ratios?
+    //lh.dwellRatios = [viewer.dwellRatio];
+    //rh.dwellRatios = [viewer.dwellRatio]; // TODO - update dwell ratios?
     $('#dwellRatio').html(val + '%');
 };
 

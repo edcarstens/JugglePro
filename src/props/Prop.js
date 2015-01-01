@@ -179,26 +179,36 @@ JPRO.Prop.prototype.throw2Pos = function(dest, time) {
  * @param destBeatRel {Number} destination beat relative to current beat (aka throw-height)
  * @return {Prop} this
 */
-JPRO.Prop.prototype.throw2Hand = function(destHand, destBeatRel) {
+JPRO.Prop.prototype.throw2Hand = function(destHand, destBeatRel, dwell) {
     // Calculate throw time
     //var beat = this.viewer.beat;
-    var destBeat = (destHand.movementBeat + destBeatRel) % destHand.movementPeriod;
-    var dwell = destHand.getDwell(destBeat); // todo - change to get_dwell(dest_beat_rel)
-    var time = destBeatRel * this.viewer.beatPeriod - dwell;
-    //var time = this.viewer.pattern.get_time_between_beats(beat, beat + dest_beat_rel) - dwell;
+    //var destBeat = (destHand.movementBeat + destBeatRel) % destHand.movementPeriod;
+    //var dwell = destHand.getDwell(destBeat); // todo - change to get_dwell(dest_beat_rel)??
+    // TODO - use clock method to find time to destBeatRel
+    //var time = destBeatRel * this.viewer.clock.beatPeriod - dwell;
+    var time = this.viewer.clock.timeBetweenBeats(0, destBeatRel);
+    var flightTime = time - dwell;
+    //var time = this.viewer.beatScheduler.timeBetweenBeats(beat, beat + destBeatRel) - dwell;
     var minTime = this.viewer.minThrowTime;
-    if (time < minTime) time = minTime;
+    if (flightTime < minTime) flightTime = minTime;
 
+    var mBeat = destHand.movementBeat + destBeatRel - 1;
+    var dwellRatio = destHand.getDwellRatio();
     // Calculate dest hand position
-    var timeAbs = (time + destHand.movementBeat*this.viewer.beatPeriod) %
-	(destHand.movementPeriod * this.viewer.beatPeriod);
-
+    // TODO - use clock method to calculate this
+    //var timeAbs = (time + destHand.movementBeat*this.viewer.clock.beatPeriod) %
+    //	(destHand.movementPeriod * this.viewer.clock.beatPeriod);
+//    var destBeat1 = (destHand.movementBeat + destHand.movementPeriod + destBeatRel - 1) % destHand.movementPeriod;
+//    var timeAbs = destBeat1 + 1 - dwell
     this.destHand = destHand;
-    console.log('JPRO.Prop.throw2Hand: throw prop to ' + destHand.name + ' in time ' + time);
-    var pa = destHand.fpos(timeAbs, this.viewer.beatPeriod); // position array
+    console.log('JPRO.Prop.throw2Hand: throw prop to ' + destHand.name + ' in time ' + flightTime);
+    //var pa = destHand.fpos(timeAbs, this.viewer.beatPeriod); // position array
+    //console.log('dwell ratio = ' + dwellRatio);
+    var pa = destHand.hFunc.getPos(dwellRatio, mBeat); // position array
+    //console.log('cp1');
     var pos = this.view.transform(pa[0]);
     console.log('JPRO.Prop.throw2Hand: pos = ' + pos.toString());
-    return this.throw2Pos(pos, time);
+    return this.throw2Pos(pos, flightTime);
 };
     
 /**

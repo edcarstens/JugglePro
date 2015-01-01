@@ -15,6 +15,7 @@ module.exports = function(grunt) {
 	'<%= dirs.src %>/gui/Gui.js',
 	'<%= dirs.src %>/hands/Hand.js',
 	'<%= dirs.src %>/hands/Handfun.js',
+	'<%= dirs.src %>/hands/RowHandMapper.js',
 	'<%= dirs.src %>/math/Vec.js',
 	'<%= dirs.src %>/math/Matrix.js',
 	'<%= dirs.src %>/math/Rmatrix.js',
@@ -25,6 +26,9 @@ module.exports = function(grunt) {
 	'<%= dirs.src %>/props/Prop.js',
 	'<%= dirs.src %>/props/Ball.js',
 	'<%= dirs.src %>/props/Sprite3D.js',
+	'<%= dirs.src %>/time/Clock.js',
+	'<%= dirs.src %>/time/Rhythm.js',
+	'<%= dirs.src %>/viewer/Config.js',
 	'<%= dirs.src %>/viewer/View.js',
 	'<%= dirs.src %>/viewer/Viewer.js'
     ];

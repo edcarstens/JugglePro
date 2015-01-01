@@ -147,4 +147,28 @@ JPRO.Matrix.prototype.toString = function() {
 	this.m[6] + ',' + this.m[7] + ',' + this.m[8] + ']]';
 };
 
+// Static Matrix functions
+
+/**
+ * Return transpose of arbitrary square matrix
+ *
+ * @method transpose
+ * @param m {Array} this is a square matrix
+ * @return transpose of matrix
+*/
+JPRO.Matrix.transpose = function(m) {
+    var i,j;
+    var cols = m[0].length; // assume square matrix
+    var rv = [];
+    var col = [];
+    for (j=0; j<cols; j++) {
+	col = [];
+	for (i=0; i<m.length; i++) {
+	    col.push(m[i][j]);
+	}
+	rv.push(col);
+    }
+    return rv;
+};
+
 })();
