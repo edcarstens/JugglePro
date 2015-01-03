@@ -13,6 +13,7 @@ module.exports = function(grunt) {
     var srcFiles = [
 	'<%= dirs.src %>/Jpro.js',
 	'<%= dirs.src %>/gui/Gui.js',
+	'<%= dirs.src %>/hands/Juggler.js',
 	'<%= dirs.src %>/hands/Hand.js',
 	'<%= dirs.src %>/hands/Handfun.js',
 	'<%= dirs.src %>/hands/RowHandMapper.js',

@@ -18,7 +18,7 @@
 (function () {
 "use strict";
 
-JPRO.View = function(viewer, width, height, scale) {
+JPRO.View = function(viewer) {
 
     /**
      * Pointer to the Viewer object
@@ -34,7 +34,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property width
      * @type Number
      */
-    this.width = width || 800;
+    this.width = viewer.width || 800;
 
     /**
      * Height of view screen
@@ -42,11 +42,11 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property height
      * @type Number
      */
-    this.height = height || 600;
+    this.height = viewer.height || 600;
 
     /**
      * Origin of 3D coordinate in projection frame,
-     # translates the position prior to projection
+     * translates the position prior to projection
      *
      * @property origin
      * @type Vec
@@ -75,7 +75,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property scale
      * @type Number
      */
-    this.scale = scale || 4;
+    this.scale = viewer.scale || 4;
 
     /**
      * Gravity vector (actually acceleration of gravity)
@@ -83,7 +83,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property g
      * @type Vec
      */
-    this.g = new JPRO.Vec(0,0,-4);
+    this.g = viewer.gravity || new JPRO.Vec(0,0,-4);
     
     /**
      * List of vectors subject to rotation only,

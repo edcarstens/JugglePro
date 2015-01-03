@@ -10,7 +10,7 @@ var JPRO = JPRO || {};
 /* 
 * 
 * This file contains a lot of jpro consts
-* @class Consts
+*
 */
 
 // version
@@ -21,3 +21,8 @@ JPRO.XAXIS = 0;
 JPRO.YAXIS = 1;
 JPRO.ZAXIS = 2;
 
+// Juggler
+JPRO.SHOULDERWIDTH = 200;
+JPRO.UPPERARMLENGTH = 200;
+JPRO.FOREARMLENGTH = 240;
+JPRO.HANDLENGTH = 50;

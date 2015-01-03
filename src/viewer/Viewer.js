@@ -185,13 +185,15 @@ JPRO.Viewer.prototype.dropProp = function(p) {
 /**
  *
  *
- * @method updateHands
+ * @method updateJugglers
  * @return this viewer
 */
-JPRO.Viewer.prototype.updateHands = function() {
-    var i;
-    for (i=0; i<this.hands.length; i++) {
-	this.hands[i].update();
+JPRO.Viewer.prototype.updateJugglers = function() {
+    var i,j;
+    for (i=0; i<this.jugglers.length; i++) {
+	for (j=0; j<this.jugglers[i].hands.length; j++) {
+	    this.jugglers[i].hands[j].update();
+	}
     }
     return this;
 };
@@ -256,8 +258,8 @@ JPRO.Viewer.prototype.update = function() {
     
     this.grfx.clear(); // clear graphics
     
-    // Update hands/balls
-    this.updateHands().updateProps();
+    // Update jugglers/balls
+    this.updateJugglers().updateProps();
     
     // Optional view rotation
     this.rotateViewWhenEnabled(this.aerialTurn, this.zoomIn, this.zoomOut);
@@ -268,8 +270,8 @@ JPRO.Viewer.prototype.update = function() {
 	    this.enable = this.routine.nextPat();
 	}
 	var i;
-	for (i=0; i<this.hands.length; i++) {
-	    this.hands[i].nextBeat(); // for hand movements
+	for (i=0; i<this.jugglers.length; i++) {
+	    this.jugglers[i].nextBeat(); // for juggler/hand movements
 	}
 	this.throwProps(this.pattern);
     }

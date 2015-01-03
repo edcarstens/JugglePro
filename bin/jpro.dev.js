@@ -4,7 +4,7 @@
  * Copyright (c) 2014, Ed Carstens
  * http://www.wealthygames.com/
  *
- * Compiled: 2014-12-31
+ * Compiled: 2015-01-03
  *
  * JugglePro is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license.php
@@ -21,7 +21,7 @@ var JPRO = JPRO || {};
 /* 
 * 
 * This file contains a lot of jpro consts
-* @class Consts
+*
 */
 
 // version
@@ -32,6 +32,11 @@ JPRO.XAXIS = 0;
 JPRO.YAXIS = 1;
 JPRO.ZAXIS = 2;
 
+// Juggler
+JPRO.SHOULDERWIDTH = 200;
+JPRO.UPPERARMLENGTH = 200;
+JPRO.FOREARMLENGTH = 240;
+JPRO.HANDLENGTH = 50;
 
 /**
  * @author Ed Carstens
@@ -167,6 +172,77 @@ JPRO.Gui.prototype.updateTestVar = function(val) {
     viewer.zoomIn.y  = -100*val;
     viewer.view.translateMe(viewer.zoomOut);
     $('#testVar').html(viewer.zoomOut.y);
+};
+
+/**
+ * @author Ed Carstens
+ */
+
+/**
+ *
+ *
+ * @class Juggler
+ * @constructor
+ * @param viewer {Viewer} the viewer object
+ *
+ */
+
+JPRO.Juggler = function(viewer, hands, neckPos, facingAngle, shoulderWidth, upperArmLength,
+			foreArmLength, handLength) {
+    
+    /**
+     * Pointer to the Viewer object
+     *
+     * @property viewer
+     * @type Viewer
+     */
+    this.viewer = viewer;
+
+    /**
+     * 3D Position of this juggler (specifically the neck)
+     *
+     * @property neckPos
+     * @type Vec
+     */
+    this.neckPos = ((neckPos === undefined) || (neckPos === null)) ? new JPRO.Vec(0,200,100) : neckPos;
+    this.facingAngle = ((facingAngle === undefined) || (facingAngle === null)) ? -90 : facingAngle;
+    this.shoulderWidth = shoulderWidth || JPRO.SHOULDERWIDTH;
+    this.upperArmLength = upperArmLength || JPRO.UPPERARMLENGTH;
+    this.foreArmLength = foreArmLength || JPRO.FOREARMLENGTH;
+    this.handLength = handLength || JPRO.HANDLENGTH;
+
+    /**
+     * Array of Hand objects
+     *
+     * @property hands
+     * @type Array
+     */
+    if (hands) {
+	this.hands = hands;
+    }
+    else {
+	var LeftHand = JPRO.Handfun.cascL(this);
+	var RightHand = JPRO.Handfun.cascR(this);
+	var lh = new JPRO.Hand(this.viewer, LeftHand, 'LH', 0);
+	var rh = new JPRO.Hand(this.viewer, RightHand, 'RH', 1);
+	this.hands = [lh, rh];
+    }    
+};
+
+JPRO.Juggler.prototype.constructor = JPRO.Juggler;
+
+JPRO.Juggler.prototype.update = function() {
+    var i;
+    for (i in this.hands) {
+	this.hands[i].update();
+    }
+};
+
+JPRO.Juggler.prototype.nextBeat = function() {
+    var i;
+    for (i in this.hands) {
+	this.hands[i].nextBeat();
+    }
 };
 
 /**
@@ -548,10 +624,6 @@ JPRO.Handfun = function() {};
 // skeleton made of bones
 // Handfun Globals
 JPRO.Handfun.scale = 5;
-JPRO.Handfun.shoulderWidth = 200;
-JPRO.Handfun.upperArmLength = 200;
-JPRO.Handfun.foreArmLength = 240;
-JPRO.Handfun.handLength = 50;
 
 JPRO.Handfun.Bone = function(length) {
     this.length = length;
@@ -625,17 +697,18 @@ JPRO.Handfun.Pose = function(pos, facingAngle, uaLength, faLength, handLength) {
 JPRO.Handfun.Pose.prototype.constructor = JPRO.Handfun.Pose;
 
 // hand function object
-JPRO.Handfun.Func = function(neckPos, facingAngle, rightHand, posesMatrix) {
+JPRO.Handfun.Func = function(owner, rightHand, posesMatrix) {
     this.scale = JPRO.Handfun.scale;
-    this.shoulderWidth = JPRO.Handfun.shoulderWidth;
-    this.upperArmLength = JPRO.Handfun.upperArmLength;
-    this.foreArmLength = JPRO.Handfun.foreArmLength;
-    this.handLength = JPRO.Handfun.handLength;
+    var neckPos = owner.neckPos;
+    this.shoulderWidth = owner.shoulderWidth;
+    this.upperArmLength = owner.upperArmLength;
+    this.foreArmLength = owner.foreArmLength;
+    this.handLength = owner.handLength;
     // calculate right or left shoulder position
     this.shoulderAngle = rightHand ? -90 : 90;
     //this.throwBeat = rightHand ? 0 : 1;
-    this.facingAngle = facingAngle;
-    var srad = (facingAngle + this.shoulderAngle) * PIXI.DEG_TO_RAD;
+    this.facingAngle = owner.facingAngle;
+    var srad = (this.facingAngle + this.shoulderAngle) * PIXI.DEG_TO_RAD;
     var x = neckPos.getX() + this.shoulderWidth * Math.cos(srad);
     var y = neckPos.getY() + this.shoulderWidth * Math.sin(srad);
     this.shoulderPos = new JPRO.Vec(x, y, neckPos.getZ());
@@ -844,12 +917,12 @@ JPRO.Handfun.casc = [[
 ]];
 
 // cascR is a method of Handfun, not a constructor!
-JPRO.Handfun.cascR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.casc);
+JPRO.Handfun.cascR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.casc);
 };
 // cascL is a method of Handfun, not a constructor!
-JPRO.Handfun.cascL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.casc));
+JPRO.Handfun.cascL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.casc));
 };
 
 // Reverse Cascade
@@ -865,12 +938,12 @@ JPRO.Handfun.revCasc = [[
     [-70,   -10,   60, -20,   0,   30]
 ]];
 
-JPRO.Handfun.revCascR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.revCasc);
+JPRO.Handfun.revCascR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.revCasc);
 };
 
-JPRO.Handfun.revCascL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.revCasc));
+JPRO.Handfun.revCascL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.revCasc));
 };
 
 // Right-handed Shower
@@ -885,8 +958,8 @@ JPRO.Handfun.rshowerRm = [[
     [-70,     0,    0, -60,   0,   0],
     [-70,     0,    0, -60,   0,   0]
 ]];
-JPRO.Handfun.rshowerR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.rshowerRm);
+JPRO.Handfun.rshowerR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.rshowerRm);
 };
 JPRO.Handfun.rshowerLm = [[
     //uap   uay   fap  fay  far   hp
@@ -899,16 +972,16 @@ JPRO.Handfun.rshowerLm = [[
     [-70,     0,   70,  20,   0,   0],
     [-70,     0,   70,  10,   0,   0]
 ]];
-JPRO.Handfun.rshowerL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.rshowerLm);
+JPRO.Handfun.rshowerL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.rshowerLm);
 };
 
 // Left-handed Shower
-JPRO.Handfun.lshowerR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerRm));
+JPRO.Handfun.lshowerR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerRm));
 };
-JPRO.Handfun.lshowerL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerLm));
+JPRO.Handfun.lshowerL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerLm));
 };
 
 // TODO - Better method may be to select hand movement based on throw destination/time
@@ -925,20 +998,20 @@ JPRO.Handfun.lshowerL = function(neckPos, facingAngle) {
 // False Shower
 
 // Simplest hand movement functions
-JPRO.Handfun.stationaryL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, [[[-90, 0, 90, 0, 50, 0]]]);
+JPRO.Handfun.stationaryL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, [[[-90, 0, 90, 0, 50, 0]]]);
 };
-JPRO.Handfun.stationaryR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, [[[-90, 0, 90, 0, 20, 0]]]);
+JPRO.Handfun.stationaryR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, [[[-90, 0, 90, 0, 20, 0]]]);
 };
-JPRO.Handfun.experimentL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, [[[-90, 0, 90, 0, 0, 0],
+JPRO.Handfun.experimentL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, [[[-90, 0, 90, 0, 0, 0],
 							 [-90, 0, 90, 0, 90, 0],
 							 [-90, 0, 90, 0,180, 0],
 							 [-90, 0, 90, 0,270, 0]]]);
 };
-JPRO.Handfun.experimentR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, [[[-90, 0, 90, 0,180, 0],
+JPRO.Handfun.experimentR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, [[[-90, 0, 90, 0,180, 0],
 								 [-90, 0, 90, 0,270, 0],
 								 [-90, 0, 90, 0,  0, 0],
 								 [-90, 0, 90, 0, 90, 0]]]);
@@ -4173,6 +4246,9 @@ JPRO.Config.prototype.setDefaults = function() {
     if (this.clock === undefined) {
 	this.clock = new JPRO.Clock(this.basePeriod);
     }
+    else {
+	this.basePeriod = this.clock.basePeriod;
+    }
     this.minThrowTime = (this.clock.basePeriod >> 1) + 1; // 1/2 beat period
 
     /**
@@ -4213,12 +4289,12 @@ JPRO.Config.prototype.setDefaults = function() {
      * @property view
      * @type {View}
      */
-    if (this.view === undefined) { this.view = new JPRO.View(this, this.viewWidth, this.viewHeight); }
+    if (this.view === undefined) { this.view = new JPRO.View(this); }
 
     // TODO - need to use Juggler and have list of jugglers
-    //if (this.jugglers === undefined) {
-//	this.jugglers = [new JPRO.Juggler(this)];
-  //  }
+    if (this.jugglers === undefined) {
+	this.jugglers = [new JPRO.Juggler(this)];
+    }
     
     /**
      * Juggling routine
@@ -4227,12 +4303,12 @@ JPRO.Config.prototype.setDefaults = function() {
      * @type {Routine}
      */
     if (this.routine === undefined) {
-	var LeftHand = JPRO.Handfun.cascL(new JPRO.Vec(0,200,100), -90);
-	var RightHand = JPRO.Handfun.cascR(new JPRO.Vec(0,200,100), -90);
-	var lh = new JPRO.Hand(this, LeftHand, 'LH', 0, this.dwellRatio);
-	var rh = new JPRO.Hand(this, RightHand, 'RH', 1, this.dwellRatio);
-	this.hands = [lh,rh]; // TODO - need Juggler, jugglers list, ea juggler has hands
-	var rhMap = new JPRO.RowHandMapper([[lh,rh]]);
+	
+	//var LeftHand = JPRO.Handfun.cascL(new JPRO.Vec(0,200,100), -90);
+	//var RightHand = JPRO.Handfun.cascR(new JPRO.Vec(0,200,100), -90);
+	//var lh = new JPRO.Hand(this, LeftHand, 'LH', 0, this.dwellRatio);
+	//var rh = new JPRO.Hand(this, RightHand, 'RH', 1, this.dwellRatio);
+	var rhMap = new JPRO.RowHandMapper([[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]]);
 	var pat = new JPRO.Pattern([[ [[0,3]] ]], rhMap, 1);
 	//pat.beatPeriod = 30; // TODO
 	this.routine = new JPRO.Routine([pat]);
@@ -4260,7 +4336,7 @@ JPRO.Config.prototype.setDefaults = function() {
 (function () {
 "use strict";
 
-JPRO.View = function(viewer, width, height, scale) {
+JPRO.View = function(viewer) {
 
     /**
      * Pointer to the Viewer object
@@ -4276,7 +4352,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property width
      * @type Number
      */
-    this.width = width || 800;
+    this.width = viewer.width || 800;
 
     /**
      * Height of view screen
@@ -4284,11 +4360,11 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property height
      * @type Number
      */
-    this.height = height || 600;
+    this.height = viewer.height || 600;
 
     /**
      * Origin of 3D coordinate in projection frame,
-     # translates the position prior to projection
+     * translates the position prior to projection
      *
      * @property origin
      * @type Vec
@@ -4317,7 +4393,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property scale
      * @type Number
      */
-    this.scale = scale || 4;
+    this.scale = viewer.scale || 4;
 
     /**
      * Gravity vector (actually acceleration of gravity)
@@ -4325,7 +4401,7 @@ JPRO.View = function(viewer, width, height, scale) {
      * @property g
      * @type Vec
      */
-    this.g = new JPRO.Vec(0,0,-4);
+    this.g = viewer.gravity || new JPRO.Vec(0,0,-4);
     
     /**
      * List of vectors subject to rotation only,
@@ -4665,13 +4741,15 @@ JPRO.Viewer.prototype.dropProp = function(p) {
 /**
  *
  *
- * @method updateHands
+ * @method updateJugglers
  * @return this viewer
 */
-JPRO.Viewer.prototype.updateHands = function() {
-    var i;
-    for (i=0; i<this.hands.length; i++) {
-	this.hands[i].update();
+JPRO.Viewer.prototype.updateJugglers = function() {
+    var i,j;
+    for (i=0; i<this.jugglers.length; i++) {
+	for (j=0; j<this.jugglers[i].hands.length; j++) {
+	    this.jugglers[i].hands[j].update();
+	}
     }
     return this;
 };
@@ -4736,8 +4814,8 @@ JPRO.Viewer.prototype.update = function() {
     
     this.grfx.clear(); // clear graphics
     
-    // Update hands/balls
-    this.updateHands().updateProps();
+    // Update jugglers/balls
+    this.updateJugglers().updateProps();
     
     // Optional view rotation
     this.rotateViewWhenEnabled(this.aerialTurn, this.zoomIn, this.zoomOut);
@@ -4748,8 +4826,8 @@ JPRO.Viewer.prototype.update = function() {
 	    this.enable = this.routine.nextPat();
 	}
 	var i;
-	for (i=0; i<this.hands.length; i++) {
-	    this.hands[i].nextBeat(); // for hand movements
+	for (i=0; i<this.jugglers.length; i++) {
+	    this.jugglers[i].nextBeat(); // for juggler/hand movements
 	}
 	this.throwProps(this.pattern);
     }

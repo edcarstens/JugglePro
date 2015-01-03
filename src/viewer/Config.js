@@ -70,6 +70,9 @@ JPRO.Config.prototype.setDefaults = function() {
     if (this.clock === undefined) {
 	this.clock = new JPRO.Clock(this.basePeriod);
     }
+    else {
+	this.basePeriod = this.clock.basePeriod;
+    }
     this.minThrowTime = (this.clock.basePeriod >> 1) + 1; // 1/2 beat period
 
     /**
@@ -110,12 +113,12 @@ JPRO.Config.prototype.setDefaults = function() {
      * @property view
      * @type {View}
      */
-    if (this.view === undefined) { this.view = new JPRO.View(this, this.viewWidth, this.viewHeight); }
+    if (this.view === undefined) { this.view = new JPRO.View(this); }
 
     // TODO - need to use Juggler and have list of jugglers
-    //if (this.jugglers === undefined) {
-//	this.jugglers = [new JPRO.Juggler(this)];
-  //  }
+    if (this.jugglers === undefined) {
+	this.jugglers = [new JPRO.Juggler(this)];
+    }
     
     /**
      * Juggling routine
@@ -124,12 +127,12 @@ JPRO.Config.prototype.setDefaults = function() {
      * @type {Routine}
      */
     if (this.routine === undefined) {
-	var LeftHand = JPRO.Handfun.cascL(new JPRO.Vec(0,200,100), -90);
-	var RightHand = JPRO.Handfun.cascR(new JPRO.Vec(0,200,100), -90);
-	var lh = new JPRO.Hand(this, LeftHand, 'LH', 0, this.dwellRatio);
-	var rh = new JPRO.Hand(this, RightHand, 'RH', 1, this.dwellRatio);
-	this.hands = [lh,rh]; // TODO - need Juggler, jugglers list, ea juggler has hands
-	var rhMap = new JPRO.RowHandMapper([[lh,rh]]);
+	
+	//var LeftHand = JPRO.Handfun.cascL(new JPRO.Vec(0,200,100), -90);
+	//var RightHand = JPRO.Handfun.cascR(new JPRO.Vec(0,200,100), -90);
+	//var lh = new JPRO.Hand(this, LeftHand, 'LH', 0, this.dwellRatio);
+	//var rh = new JPRO.Hand(this, RightHand, 'RH', 1, this.dwellRatio);
+	var rhMap = new JPRO.RowHandMapper([[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]]);
 	var pat = new JPRO.Pattern([[ [[0,3]] ]], rhMap, 1);
 	//pat.beatPeriod = 30; // TODO
 	this.routine = new JPRO.Routine([pat]);

@@ -25,10 +25,6 @@ JPRO.Handfun = function() {};
 // skeleton made of bones
 // Handfun Globals
 JPRO.Handfun.scale = 5;
-JPRO.Handfun.shoulderWidth = 200;
-JPRO.Handfun.upperArmLength = 200;
-JPRO.Handfun.foreArmLength = 240;
-JPRO.Handfun.handLength = 50;
 
 JPRO.Handfun.Bone = function(length) {
     this.length = length;
@@ -102,17 +98,18 @@ JPRO.Handfun.Pose = function(pos, facingAngle, uaLength, faLength, handLength) {
 JPRO.Handfun.Pose.prototype.constructor = JPRO.Handfun.Pose;
 
 // hand function object
-JPRO.Handfun.Func = function(neckPos, facingAngle, rightHand, posesMatrix) {
+JPRO.Handfun.Func = function(owner, rightHand, posesMatrix) {
     this.scale = JPRO.Handfun.scale;
-    this.shoulderWidth = JPRO.Handfun.shoulderWidth;
-    this.upperArmLength = JPRO.Handfun.upperArmLength;
-    this.foreArmLength = JPRO.Handfun.foreArmLength;
-    this.handLength = JPRO.Handfun.handLength;
+    var neckPos = owner.neckPos;
+    this.shoulderWidth = owner.shoulderWidth;
+    this.upperArmLength = owner.upperArmLength;
+    this.foreArmLength = owner.foreArmLength;
+    this.handLength = owner.handLength;
     // calculate right or left shoulder position
     this.shoulderAngle = rightHand ? -90 : 90;
     //this.throwBeat = rightHand ? 0 : 1;
-    this.facingAngle = facingAngle;
-    var srad = (facingAngle + this.shoulderAngle) * PIXI.DEG_TO_RAD;
+    this.facingAngle = owner.facingAngle;
+    var srad = (this.facingAngle + this.shoulderAngle) * PIXI.DEG_TO_RAD;
     var x = neckPos.getX() + this.shoulderWidth * Math.cos(srad);
     var y = neckPos.getY() + this.shoulderWidth * Math.sin(srad);
     this.shoulderPos = new JPRO.Vec(x, y, neckPos.getZ());
@@ -321,12 +318,12 @@ JPRO.Handfun.casc = [[
 ]];
 
 // cascR is a method of Handfun, not a constructor!
-JPRO.Handfun.cascR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.casc);
+JPRO.Handfun.cascR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.casc);
 };
 // cascL is a method of Handfun, not a constructor!
-JPRO.Handfun.cascL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.casc));
+JPRO.Handfun.cascL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.casc));
 };
 
 // Reverse Cascade
@@ -342,12 +339,12 @@ JPRO.Handfun.revCasc = [[
     [-70,   -10,   60, -20,   0,   30]
 ]];
 
-JPRO.Handfun.revCascR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.revCasc);
+JPRO.Handfun.revCascR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.revCasc);
 };
 
-JPRO.Handfun.revCascL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.revCasc));
+JPRO.Handfun.revCascL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.revCasc));
 };
 
 // Right-handed Shower
@@ -362,8 +359,8 @@ JPRO.Handfun.rshowerRm = [[
     [-70,     0,    0, -60,   0,   0],
     [-70,     0,    0, -60,   0,   0]
 ]];
-JPRO.Handfun.rshowerR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.rshowerRm);
+JPRO.Handfun.rshowerR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.rshowerRm);
 };
 JPRO.Handfun.rshowerLm = [[
     //uap   uay   fap  fay  far   hp
@@ -376,16 +373,16 @@ JPRO.Handfun.rshowerLm = [[
     [-70,     0,   70,  20,   0,   0],
     [-70,     0,   70,  10,   0,   0]
 ]];
-JPRO.Handfun.rshowerL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.rshowerLm);
+JPRO.Handfun.rshowerL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.rshowerLm);
 };
 
 // Left-handed Shower
-JPRO.Handfun.lshowerR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerRm));
+JPRO.Handfun.lshowerR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerRm));
 };
-JPRO.Handfun.lshowerL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerLm));
+JPRO.Handfun.lshowerL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, JPRO.Handfun.mirrorX(JPRO.Handfun.rshowerLm));
 };
 
 // TODO - Better method may be to select hand movement based on throw destination/time
@@ -402,20 +399,20 @@ JPRO.Handfun.lshowerL = function(neckPos, facingAngle) {
 // False Shower
 
 // Simplest hand movement functions
-JPRO.Handfun.stationaryL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, [[[-90, 0, 90, 0, 50, 0]]]);
+JPRO.Handfun.stationaryL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, [[[-90, 0, 90, 0, 50, 0]]]);
 };
-JPRO.Handfun.stationaryR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, [[[-90, 0, 90, 0, 20, 0]]]);
+JPRO.Handfun.stationaryR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, [[[-90, 0, 90, 0, 20, 0]]]);
 };
-JPRO.Handfun.experimentL = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 0, [[[-90, 0, 90, 0, 0, 0],
+JPRO.Handfun.experimentL = function(owner) {
+    return new JPRO.Handfun.Func(owner, 0, [[[-90, 0, 90, 0, 0, 0],
 							 [-90, 0, 90, 0, 90, 0],
 							 [-90, 0, 90, 0,180, 0],
 							 [-90, 0, 90, 0,270, 0]]]);
 };
-JPRO.Handfun.experimentR = function(neckPos, facingAngle) {
-    return new JPRO.Handfun.Func(neckPos, facingAngle, 1, [[[-90, 0, 90, 0,180, 0],
+JPRO.Handfun.experimentR = function(owner) {
+    return new JPRO.Handfun.Func(owner, 1, [[[-90, 0, 90, 0,180, 0],
 								 [-90, 0, 90, 0,270, 0],
 								 [-90, 0, 90, 0,  0, 0],
 								 [-90, 0, 90, 0, 90, 0]]]);
