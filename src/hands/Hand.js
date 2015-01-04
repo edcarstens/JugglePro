@@ -136,14 +136,6 @@ JPRO.Hand.prototype.constructor = JPRO.Hand;
  * @method update
 */
 JPRO.Hand.prototype.update = function() {
-    //var dscale, didx;
-    //var time = this.viewer.clock.t + this.movementBeat * this.viewer.clock.beatPeriod;
-
-    // TODO - fix
-    //var throwPeriod = this.viewer.pattern.rhMap.getHandBeatsFromLastThrow(0, 0, this);
-    //var lastThrowBeat = 1 - throwPeriod;
-    //var lastThrowPeriod = this.viewer.clock.timeBetweenBeats(lastThrowBeat, 0);
-
     // current time within current beat
     var t = this.viewer.clock.t;
     // duration since last throw by this hand
@@ -152,7 +144,7 @@ JPRO.Hand.prototype.update = function() {
     // find time until next throw by this hand (rhMap)
     var b2t = this.viewer.pattern.rhMap.getHandBeatsToNextThrow(this);
     //console.log(this.name + ' b2t=' + b2t);
-    var xx = this.viewer.clock.timeBetweenBeats(0, b2t);
+    //var xx = this.viewer.clock.timeBetweenBeats(0, b2t);
     //console.log('xx=' + xx);
     var time2t = this.viewer.clock.timeBetweenBeats(0, b2t) - t;
     //console.log('time2t=' + time2t);
@@ -321,6 +313,7 @@ JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel, dwell) {
 	p.pos.setV(this.pos);
     }
     console.log(this.name + ' throws a ' + destBeatRel + ' to ' + destHand.name);
+    console.log('dwell = ' + dwell);
     p.throw2Hand(destHand, destBeatRel, dwell);
 };
 

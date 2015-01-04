@@ -90,12 +90,11 @@ JPRO.Viewer.prototype.initRotationMatrix = function() {
     //var rotx = new JPRO.Rmatrix(-1,0);
     //var roty = new JPRO.Rmatrix(1,1);
     var rotz = new JPRO.Rmatrix(1,2);
-    var vangle = 0; // view angle
-    this.r1 = new JPRO.Rmatrix(-vangle,0);
-    var r1i = new JPRO.Rmatrix(vangle,0);
+    this.r1 = new JPRO.Rmatrix(-this.viewAngle,0);
+    var r1i = new JPRO.Rmatrix(this.viewAngle,0);
     this.aerialTurn = new JPRO.Matrix();
     this.aerialTurn.xMatrix(this.r1).xMatrix(rotz).xMatrix(r1i);
-    this.zoomOut = new JPRO.Vec(0, 4500, 0);
+    this.zoomOut = new JPRO.Vec(0, this.zoomDistance, 0);
     this.zoomIn = new JPRO.Vec(0, -this.zoomOut.y, 0);
     return this;
 };

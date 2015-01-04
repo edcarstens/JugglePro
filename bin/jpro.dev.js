@@ -33,10 +33,10 @@ JPRO.YAXIS = 1;
 JPRO.ZAXIS = 2;
 
 // Juggler
-JPRO.SHOULDERWIDTH = 200;
-JPRO.UPPERARMLENGTH = 200;
-JPRO.FOREARMLENGTH = 240;
-JPRO.HANDLENGTH = 50;
+JPRO.SHOULDERWIDTH = 80;
+JPRO.UPPERARMLENGTH = 100;
+JPRO.FOREARMLENGTH = 120;
+JPRO.HANDLENGTH = 25;
 
 /**
  * @author Ed Carstens
@@ -187,7 +187,7 @@ JPRO.Gui.prototype.updateTestVar = function(val) {
  *
  */
 
-JPRO.Juggler = function(viewer, hands, neckPos, facingAngle, shoulderWidth, upperArmLength,
+JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth, upperArmLength,
 			foreArmLength, handLength) {
     
     /**
@@ -198,6 +198,8 @@ JPRO.Juggler = function(viewer, hands, neckPos, facingAngle, shoulderWidth, uppe
      */
     this.viewer = viewer;
 
+    this.name = name;
+    
     /**
      * 3D Position of this juggler (specifically the neck)
      *
@@ -223,8 +225,10 @@ JPRO.Juggler = function(viewer, hands, neckPos, facingAngle, shoulderWidth, uppe
     else {
 	var LeftHand = JPRO.Handfun.cascL(this);
 	var RightHand = JPRO.Handfun.cascR(this);
-	var lh = new JPRO.Hand(this.viewer, LeftHand, 'LH', 0);
-	var rh = new JPRO.Hand(this.viewer, RightHand, 'RH', 1);
+	//var LeftHand = JPRO.Handfun.stationaryL(this);
+	//var RightHand = JPRO.Handfun.stationaryR(this);
+	var lh = new JPRO.Hand(this.viewer, LeftHand, this.name + '_LH', 0);
+	var rh = new JPRO.Hand(this.viewer, RightHand, this.name + '_RH', 1);
 	this.hands = [lh, rh];
     }    
 };
@@ -383,14 +387,6 @@ JPRO.Hand.prototype.constructor = JPRO.Hand;
  * @method update
 */
 JPRO.Hand.prototype.update = function() {
-    //var dscale, didx;
-    //var time = this.viewer.clock.t + this.movementBeat * this.viewer.clock.beatPeriod;
-
-    // TODO - fix
-    //var throwPeriod = this.viewer.pattern.rhMap.getHandBeatsFromLastThrow(0, 0, this);
-    //var lastThrowBeat = 1 - throwPeriod;
-    //var lastThrowPeriod = this.viewer.clock.timeBetweenBeats(lastThrowBeat, 0);
-
     // current time within current beat
     var t = this.viewer.clock.t;
     // duration since last throw by this hand
@@ -399,7 +395,7 @@ JPRO.Hand.prototype.update = function() {
     // find time until next throw by this hand (rhMap)
     var b2t = this.viewer.pattern.rhMap.getHandBeatsToNextThrow(this);
     //console.log(this.name + ' b2t=' + b2t);
-    var xx = this.viewer.clock.timeBetweenBeats(0, b2t);
+    //var xx = this.viewer.clock.timeBetweenBeats(0, b2t);
     //console.log('xx=' + xx);
     var time2t = this.viewer.clock.timeBetweenBeats(0, b2t) - t;
     //console.log('time2t=' + time2t);
@@ -568,6 +564,7 @@ JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel, dwell) {
 	p.pos.setV(this.pos);
     }
     console.log(this.name + ' throws a ' + destBeatRel + ' to ' + destHand.name);
+    console.log('dwell = ' + dwell);
     p.throw2Hand(destHand, destBeatRel, dwell);
 };
 
@@ -1132,6 +1129,9 @@ JPRO.RowHandMapper.prototype.getDwell = function(row, beatRel, clock) {
     if (beats < beatRel) {
 	beat1 = beatRel - beats;
     }
+    var dr = rHands[i].getDwellRatio();
+    var pd = clock.timeBetweenBeats(beat1, beatRel);
+    console.log(rHands[i].name + ' dr='+dr+' pd='+pd);
     return rHands[i].getDwellRatio() * clock.timeBetweenBeats(beat1, beatRel);
 };
 
@@ -4291,11 +4291,14 @@ JPRO.Config.prototype.setDefaults = function() {
      */
     if (this.view === undefined) { this.view = new JPRO.View(this); }
 
-    // TODO - need to use Juggler and have list of jugglers
+    if (this.viewAngle === undefined) { this.viewAngle = 0; }
+
+    if (this.zoomDistance === undefined) { this.zoomDistance = 4500; }
+    
     if (this.jugglers === undefined) {
 	this.jugglers = [new JPRO.Juggler(this)];
     }
-    
+
     /**
      * Juggling routine
      *
@@ -4303,14 +4306,8 @@ JPRO.Config.prototype.setDefaults = function() {
      * @type {Routine}
      */
     if (this.routine === undefined) {
-	
-	//var LeftHand = JPRO.Handfun.cascL(new JPRO.Vec(0,200,100), -90);
-	//var RightHand = JPRO.Handfun.cascR(new JPRO.Vec(0,200,100), -90);
-	//var lh = new JPRO.Hand(this, LeftHand, 'LH', 0, this.dwellRatio);
-	//var rh = new JPRO.Hand(this, RightHand, 'RH', 1, this.dwellRatio);
 	var rhMap = new JPRO.RowHandMapper([[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]]);
 	var pat = new JPRO.Pattern([[ [[0,3]] ]], rhMap, 1);
-	//pat.beatPeriod = 30; // TODO
 	this.routine = new JPRO.Routine([pat]);
     }
 
@@ -4646,12 +4643,11 @@ JPRO.Viewer.prototype.initRotationMatrix = function() {
     //var rotx = new JPRO.Rmatrix(-1,0);
     //var roty = new JPRO.Rmatrix(1,1);
     var rotz = new JPRO.Rmatrix(1,2);
-    var vangle = 0; // view angle
-    this.r1 = new JPRO.Rmatrix(-vangle,0);
-    var r1i = new JPRO.Rmatrix(vangle,0);
+    this.r1 = new JPRO.Rmatrix(-this.viewAngle,0);
+    var r1i = new JPRO.Rmatrix(this.viewAngle,0);
     this.aerialTurn = new JPRO.Matrix();
     this.aerialTurn.xMatrix(this.r1).xMatrix(rotz).xMatrix(r1i);
-    this.zoomOut = new JPRO.Vec(0, 4500, 0);
+    this.zoomOut = new JPRO.Vec(0, this.zoomDistance, 0);
     this.zoomIn = new JPRO.Vec(0, -this.zoomOut.y, 0);
     return this;
 };

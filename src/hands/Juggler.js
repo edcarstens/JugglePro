@@ -11,7 +11,7 @@
  *
  */
 
-JPRO.Juggler = function(viewer, hands, neckPos, facingAngle, shoulderWidth, upperArmLength,
+JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth, upperArmLength,
 			foreArmLength, handLength) {
     
     /**
@@ -22,6 +22,8 @@ JPRO.Juggler = function(viewer, hands, neckPos, facingAngle, shoulderWidth, uppe
      */
     this.viewer = viewer;
 
+    this.name = name;
+    
     /**
      * 3D Position of this juggler (specifically the neck)
      *
@@ -47,8 +49,10 @@ JPRO.Juggler = function(viewer, hands, neckPos, facingAngle, shoulderWidth, uppe
     else {
 	var LeftHand = JPRO.Handfun.cascL(this);
 	var RightHand = JPRO.Handfun.cascR(this);
-	var lh = new JPRO.Hand(this.viewer, LeftHand, 'LH', 0);
-	var rh = new JPRO.Hand(this.viewer, RightHand, 'RH', 1);
+	//var LeftHand = JPRO.Handfun.stationaryL(this);
+	//var RightHand = JPRO.Handfun.stationaryR(this);
+	var lh = new JPRO.Hand(this.viewer, LeftHand, this.name + '_LH', 0);
+	var rh = new JPRO.Hand(this.viewer, RightHand, this.name + '_RH', 1);
 	this.hands = [lh, rh];
     }    
 };

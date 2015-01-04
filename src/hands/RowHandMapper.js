@@ -111,6 +111,9 @@ JPRO.RowHandMapper.prototype.getDwell = function(row, beatRel, clock) {
     if (beats < beatRel) {
 	beat1 = beatRel - beats;
     }
+    var dr = rHands[i].getDwellRatio();
+    var pd = clock.timeBetweenBeats(beat1, beatRel);
+    console.log(rHands[i].name + ' dr='+dr+' pd='+pd);
     return rHands[i].getDwellRatio() * clock.timeBetweenBeats(beat1, beatRel);
 };
 
