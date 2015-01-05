@@ -109,7 +109,7 @@ JPRO.View = function(viewer) {
      * @property depthOffset
      * @type Number
      */
-    this.depthOffset = 160;
+    this.depthOffset = 400;
 
     /**
      * Distance from focus (eye) to 2D projection screen
@@ -117,7 +117,7 @@ JPRO.View = function(viewer) {
      * @property focalDistance
      * @type Number
      */
-    this.focalDistance = 400;
+    this.focalDistance = 1000;
 };
 
 // constructor

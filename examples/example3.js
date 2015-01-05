@@ -9,14 +9,14 @@ viewer.viewWidth = 800;
 viewer.viewHeight = 600;
 viewer.gravity = new JPRO.Vec(0,0,-16);
 viewer.view = new JPRO.View(viewer);
-viewer.viewAngle = -60;
-viewer.zoomDistance = 8000;
+viewer.viewAngle = -50;
+viewer.zoomDistance = 9000;
 viewer.dwellRatio = 0.5;
 
 // jugglers
 var Abe = new JPRO.Juggler(viewer, 'Abe', null, new JPRO.Vec(360,0,100), -180);
-var Bob = new JPRO.Juggler(viewer, 'Bob', null, new JPRO.Vec(-360,-200,100), 0);
-var Cat = new JPRO.Juggler(viewer, 'Cat', null, new JPRO.Vec(-360,200,100), 0);
+var Bob = new JPRO.Juggler(viewer, 'Bob', null, new JPRO.Vec(-360,-150,100), 0);
+var Cat = new JPRO.Juggler(viewer, 'Cat', null, new JPRO.Vec(-360,150,100), 0);
 viewer.jugglers = [Abe, Bob, Cat];
 
 // routine

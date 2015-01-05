@@ -28,12 +28,13 @@ JPRO.Gui.prototype.init = function() {
     p = v.pattern; if (!p) return;
     //console.log('Gui: Pattern=' + p.toString());
     $('#div1').html(p.toHtml());
-    var bpslider = this.makeSlider('Beat Period', 'beatPeriod', viewer.beatPeriod, 5, 75, 1, 10, 70, 10);
-    var dwslider = this.makeSlider('Dwell Ratio', 'dwellRatio', viewer.dwellRatio*100, 0, 100, 1, 0, 100, 10);
-    var vslider = this.makeSlider('Test Variable', 'testVar', viewer.testVar, 0, 100, 1, 0, 100, 10);
+    var bpslider = this.makeSlider('Base Period', 'BasePeriod', viewer.clock.basePeriod, 5, 75, 1, 10, 70, 10);
+    var dwslider = this.makeSlider('Dwell Ratio', 'DwellRatio', viewer.dwellRatio*100, 0, 100, 1, 0, 100, 10);
+    var vslider = this.makeSlider('Test Variable', 'TestVar', viewer.testVar, 0, 100, 1, 0, 100, 10);
     $('#div2').html(bpslider);
     $('#div3').html(dwslider + vslider);
     this.updateDwellRatio(viewer.dwellRatio*100);
+    this.updateBasePeriod(viewer.clock.basePeriod);
     this.initButtons();
 };
 
@@ -46,7 +47,7 @@ JPRO.Gui.prototype.makeSlider = function(label, vname, val, min, max, step, star
     var i;
     var fader = vname + '_fader';
     var settings = vname + '_settings';
-    var call = '\"update' + vname + '(value)\"';
+    var call = '\"viewer.gui.update' + vname + '(value)\"';
     var rv = '<label for=' + fader + '>' + label + '</label>';
     rv += '<input type=range min=' + min + ' max=' + max + ' value=' + val;
     rv += ' id=' + fader + ' step=' + step + ' list=' + settings + ' oninput=' + call + '>';
@@ -97,13 +98,12 @@ JPRO.Gui.prototype.initButtons = function() {
 /**
  *
  *
- * @method updateBeatPeriod
+ * @method updateBasePeriod
 */
-JPRO.Gui.prototype.updateBeatPeriod = function(val) {
-    //console.log('update beat period = ' + val);
-    viewer.pattern.beatPeriod = val;
-    viewer.beatPeriod = val;
-    $('#beatPeriod').html(val);
+JPRO.Gui.prototype.updateBasePeriod = function(val) {
+    console.log('update base period = ' + val);
+    viewer.clock.basePeriod = val;
+    $('#BasePeriod').html(val);
 };
 
 
@@ -113,11 +113,15 @@ JPRO.Gui.prototype.updateBeatPeriod = function(val) {
  * @method updateDwellRatio
 */
 JPRO.Gui.prototype.updateDwellRatio = function(val) {
-    //console.log('update dwell ratio = ' + val);
+    var j,h;
+    console.log('update dwell ratio = ' + val);
     viewer.dwellRatio = val/100;
-    //lh.dwellRatios = [viewer.dwellRatio];
-    //rh.dwellRatios = [viewer.dwellRatio]; // TODO - update dwell ratios?
-    $('#dwellRatio').html(val + '%');
+    for (j in viewer.jugglers) {
+	for (h in viewer.jugglers[j].hands) {
+	    viewer.jugglers[j].hands[h].dwellRatio = viewer.dwellRatio;
+	}
+    }
+    $('#DwellRatio').html(val + '%');
 };
 
 /**

@@ -4,7 +4,7 @@
  * Copyright (c) 2014, Ed Carstens
  * http://www.wealthygames.com/
  *
- * Compiled: 2015-01-03
+ * Compiled: 2015-01-04
  *
  * JugglePro is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license.php
@@ -68,12 +68,13 @@ JPRO.Gui.prototype.init = function() {
     p = v.pattern; if (!p) return;
     //console.log('Gui: Pattern=' + p.toString());
     $('#div1').html(p.toHtml());
-    var bpslider = this.makeSlider('Beat Period', 'beatPeriod', viewer.beatPeriod, 5, 75, 1, 10, 70, 10);
-    var dwslider = this.makeSlider('Dwell Ratio', 'dwellRatio', viewer.dwellRatio*100, 0, 100, 1, 0, 100, 10);
-    var vslider = this.makeSlider('Test Variable', 'testVar', viewer.testVar, 0, 100, 1, 0, 100, 10);
+    var bpslider = this.makeSlider('Base Period', 'BasePeriod', viewer.clock.basePeriod, 5, 75, 1, 10, 70, 10);
+    var dwslider = this.makeSlider('Dwell Ratio', 'DwellRatio', viewer.dwellRatio*100, 0, 100, 1, 0, 100, 10);
+    var vslider = this.makeSlider('Test Variable', 'TestVar', viewer.testVar, 0, 100, 1, 0, 100, 10);
     $('#div2').html(bpslider);
     $('#div3').html(dwslider + vslider);
     this.updateDwellRatio(viewer.dwellRatio*100);
+    this.updateBasePeriod(viewer.clock.basePeriod);
     this.initButtons();
 };
 
@@ -86,7 +87,7 @@ JPRO.Gui.prototype.makeSlider = function(label, vname, val, min, max, step, star
     var i;
     var fader = vname + '_fader';
     var settings = vname + '_settings';
-    var call = '\"update' + vname + '(value)\"';
+    var call = '\"viewer.gui.update' + vname + '(value)\"';
     var rv = '<label for=' + fader + '>' + label + '</label>';
     rv += '<input type=range min=' + min + ' max=' + max + ' value=' + val;
     rv += ' id=' + fader + ' step=' + step + ' list=' + settings + ' oninput=' + call + '>';
@@ -137,13 +138,12 @@ JPRO.Gui.prototype.initButtons = function() {
 /**
  *
  *
- * @method updateBeatPeriod
+ * @method updateBasePeriod
 */
-JPRO.Gui.prototype.updateBeatPeriod = function(val) {
-    //console.log('update beat period = ' + val);
-    viewer.pattern.beatPeriod = val;
-    viewer.beatPeriod = val;
-    $('#beatPeriod').html(val);
+JPRO.Gui.prototype.updateBasePeriod = function(val) {
+    console.log('update base period = ' + val);
+    viewer.clock.basePeriod = val;
+    $('#BasePeriod').html(val);
 };
 
 
@@ -153,11 +153,15 @@ JPRO.Gui.prototype.updateBeatPeriod = function(val) {
  * @method updateDwellRatio
 */
 JPRO.Gui.prototype.updateDwellRatio = function(val) {
-    //console.log('update dwell ratio = ' + val);
+    var j,h;
+    console.log('update dwell ratio = ' + val);
     viewer.dwellRatio = val/100;
-    //lh.dwellRatios = [viewer.dwellRatio];
-    //rh.dwellRatios = [viewer.dwellRatio]; // TODO - update dwell ratios?
-    $('#dwellRatio').html(val + '%');
+    for (j in viewer.jugglers) {
+	for (h in viewer.jugglers[j].hands) {
+	    viewer.jugglers[j].hands[h].dwellRatio = viewer.dwellRatio;
+	}
+    }
+    $('#DwellRatio').html(val + '%');
 };
 
 /**
@@ -902,15 +906,15 @@ JPRO.Handfun.mirrorX = function(pm) {
 
 // Ordinary Cascade/Fountain
 JPRO.Handfun.casc = [[
-    //uap   uay   fap  fay  far   hp
-    [-70,    20,   50,  20,   0,   0],
-    [-70,    30,   75,  30,   0,   0],
-    [-70,     0,    0,   0,   0,   0],
-    [-70,   -10,  -25, -10,   0,   0],
-    [-70,   -20,  -50, -20,   0,   0],
-    [-70,   -10,  -25, -10,   0,   0],
-    [-70,     0,    0,   0,   0,   0],
-    [-70,    10,   25,  10,   0,   0]
+    //uap   uay   fap   fay  far   hp
+    [-70,    10,   20+70,   10,   0,   0],
+    [-70,    15,   25+70,   15,   0,   0],
+    [-70,     0,    0+70,    0,   0,   0],
+    [-70,    -5,  -12+70,   -5,   0,   0],
+    [-70,    -10, -25+70,  -10,   0,   0],
+    [-70,    -5,  -12+70,   -5,   0,   0],
+    [-70,     0,    0+70,    0,   0,   0],
+    [-70,     5,   12+70,    5,   0,   0]
 ]];
 
 // cascR is a method of Handfun, not a constructor!
@@ -4424,7 +4428,7 @@ JPRO.View = function(viewer) {
      * @property depthOffset
      * @type Number
      */
-    this.depthOffset = 160;
+    this.depthOffset = 400;
 
     /**
      * Distance from focus (eye) to 2D projection screen
@@ -4432,7 +4436,7 @@ JPRO.View = function(viewer) {
      * @property focalDistance
      * @type Number
      */
-    this.focalDistance = 400;
+    this.focalDistance = 1000;
 };
 
 // constructor
