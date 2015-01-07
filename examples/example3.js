@@ -14,7 +14,17 @@ viewer.zoomDistance = 9000;
 viewer.dwellRatio = 0.5;
 
 // jugglers
-var Abe = new JPRO.Juggler(viewer, 'Abe', null, new JPRO.Vec(360,0,100), -180);
+// Set Abe.hands=0 at creation 
+var Abe = new JPRO.Juggler(viewer, 'Abe', 0, new JPRO.Vec(360,0,100), -180);
+// Abe's hand movement functions
+var AbeLFunc = JPRO.Handfun.cascL(Abe);
+var AbeRFunc = JPRO.Handfun.cascR(Abe);
+// Abe's hands
+var AbeL = new JPRO.Hand(viewer, AbeLFunc, Abe.name + '_LH', 0);
+var AbeR = new JPRO.Hand(viewer, AbeRFunc, Abe.name + '_RH', 1);
+Abe.hands = [AbeL, AbeR];
+
+// Let Bob's hands default (to cascade)
 var Bob = new JPRO.Juggler(viewer, 'Bob', null, new JPRO.Vec(-360,-150,100), 0);
 var Cat = new JPRO.Juggler(viewer, 'Cat', null, new JPRO.Vec(-360,150,100), 0);
 viewer.jugglers = [Abe, Bob, Cat];

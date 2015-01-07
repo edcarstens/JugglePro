@@ -30,9 +30,9 @@ JPRO.Gui.prototype.init = function() {
     $('#div1').html(p.toHtml());
     var bpslider = this.makeSlider('Base Period', 'BasePeriod', viewer.clock.basePeriod, 5, 75, 1, 10, 70, 10);
     var dwslider = this.makeSlider('Dwell Ratio', 'DwellRatio', viewer.dwellRatio*100, 0, 100, 1, 0, 100, 10);
-    var vslider = this.makeSlider('Test Variable', 'TestVar', viewer.testVar, 0, 100, 1, 0, 100, 10);
+    //var vslider = this.makeSlider('Test Variable', 'TestVar', viewer.testVar, 0, 100, 1, 0, 100, 10);
     $('#div2').html(bpslider);
-    $('#div3').html(dwslider + vslider);
+    $('#div3').html(dwslider);
     this.updateDwellRatio(viewer.dwellRatio*100);
     this.updateBasePeriod(viewer.clock.basePeriod);
     this.initButtons();

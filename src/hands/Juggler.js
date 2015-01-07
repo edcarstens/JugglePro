@@ -43,7 +43,7 @@ JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth
      * @property hands
      * @type Array
      */
-    if (hands) {
+    if ((hands !== undefined) && (hands !== null)) {
 	this.hands = hands;
     }
     else {
