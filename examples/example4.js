@@ -1,9 +1,5 @@
-// Example4: Impossible pattern
-// This example shows an 8-ball siteswap with a
-// reverse cascade hand movement. The dwell ratio
-// was tweaked to produce this incredible
-// juggling pattern free of collisions.
-// It also demonstrates how the routine can be
+// Example4: Dynamic pattern modification
+// This demonstrates how the routine can be
 // modified dynamically using a Dynamic object.
 // The number of iterations of the Dynamic
 // returned Routine is modified and at some
