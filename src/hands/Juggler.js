@@ -22,7 +22,7 @@ JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth
      */
     this.viewer = viewer;
 
-    this.name = name;
+    this.name = name || 'Zeke';
     
     /**
      * 3D Position of this juggler (specifically the neck)

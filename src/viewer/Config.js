@@ -59,7 +59,7 @@ JPRO.Config.prototype.setDefaults = function() {
      * @property basePeriod
      * @type {Number}
      */
-    if (this.basePeriod === undefined) { this.basePeriod = 30; }
+    if (this.basePeriod === undefined) { this.basePeriod = 40; }
 
     /**
      * Clock provides timing of throws
@@ -81,7 +81,7 @@ JPRO.Config.prototype.setDefaults = function() {
      * @property gravity
      * @type {Vec}
      */
-    if (this.gravity === undefined) { this.gravity = new JPRO.Vec(0,0,-4); }
+    if (this.gravity === undefined) { this.gravity = new JPRO.Vec(0,0,-8); }
 
     /**
      * GUI (graphical user interface)
@@ -120,7 +120,7 @@ JPRO.Config.prototype.setDefaults = function() {
     if (this.zoomDistance === undefined) { this.zoomDistance = 4500; }
     
     if (this.jugglers === undefined) {
-	this.jugglers = [new JPRO.Juggler(this)];
+	this.jugglers = [new JPRO.Juggler(this, 'Zeke')];
     }
 
     /**
@@ -130,7 +130,12 @@ JPRO.Config.prototype.setDefaults = function() {
      * @type {Routine}
      */
     if (this.routine === undefined) {
-	var rhMap = new JPRO.RowHandMapper([[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]]);
+	var rhMap = new JPRO.RowHandMapper('rhm',
+					   [[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]],
+					   [[2,2]]);
+	//console.log('rhMap=' + rhMap);
+	//console.log('rhMap.tpm=' + rhMap.tpm[0][0]);
+	//console.log('rhMap.entryTpm=' + rhMap.entryTpm[0][1]);
 	var pat = new JPRO.Pattern([[ [[0,3]] ]], rhMap, 1);
 	this.routine = new JPRO.Routine([pat]);
     }

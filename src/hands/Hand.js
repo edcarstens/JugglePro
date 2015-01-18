@@ -159,6 +159,10 @@ JPRO.Hand.prototype.update = function() {
     //console.log('time=' + time);
     //var pa = this.fpos(time, this.viewer.clock.beatPeriod);
     var pa = this.hFunc.getPos(time, this.movementBeat);
+    var tpos = this.view.project(this.view.transform(pa[1]));
+    var wpos = this.view.project(this.view.transform(pa[2]));
+    var epos = this.view.project(this.view.transform(pa[3]));
+    var spos = this.view.project(this.view.transform(pa[4]));
     this.pos = this.view.transform(pa[0]); // pa[0] is hand position
     this.posProjected = this.view.project(this.pos);
     var x = this.posProjected.x;
@@ -166,25 +170,22 @@ JPRO.Hand.prototype.update = function() {
     //console.log('Hand.update() - hand pos = ' + this.pos.toString());
     // draw line from hand to wrist to elbow to shoulder
     var g = this.viewer.grfx;
+    g.lineStyle(1, 0xffcc66, 1);
+    g.beginFill(0xffcc66);
+    g.drawCircle(wpos.x, wpos.y, 8);
+    g.drawCircle(epos.x, epos.y, 8);
+    g.endFill();
+    
     g.lineStyle(16, 0xffcc66, 1);
     g.moveTo(x, y);
-    var tpos = this.view.project(this.view.transform(pa[1]));
-    var wpos = this.view.project(this.view.transform(pa[2]));
-    var epos = this.view.project(this.view.transform(pa[3]));
-    var spos = this.view.project(this.view.transform(pa[4]));
-//	g.lineTo(tpos.x, tpos.y);
-//	g.moveTo(this.posProjected.x, this.posProjected.y);
-	//if (wpos.mdist2(this.posProjected) > 9) {
     g.lineTo(wpos.x, wpos.y);
-	//}
-	//if (epos.mdist2(wpos) > 9) {
+    g.moveTo(wpos.x, wpos.y);
     g.lineTo(epos.x, epos.y);
-	//}
-	//if (spos.mdist2(epos) > 9) {
+    g.moveTo(epos.x, epos.y);
     g.lineTo(spos.x, spos.y);
-	//}
+    //g.moveTo(spos.x, spos.y);
 
-	// Draw hand
+    // Draw hand
     g.lineStyle(4, 0xffcc66, 1);
     var yDx = x - wpos.x;
     var yDy = y - wpos.y;
@@ -224,13 +225,16 @@ JPRO.Hand.prototype.update = function() {
     g.moveTo(f5X, f5Y);
     g.lineTo(f5tX, f5tY);
     // Draw rest of hand
-    g.beginFill(0xffcc66, 1);
+    //g.beginFill(0xffcc66, 1);
     g.moveTo(f5X, f5Y);
     g.lineTo(f2X, f2Y);
+    g.moveTo(f2X, f2Y);
     g.lineTo(f2X - yDx, f2Y - yDy);
+    g.moveTo(f2X - yDx, f2Y - yDy);
     g.lineTo(f5X - yDx, f5Y - yDy);
+    g.moveTo(f5X - yDx, f5Y - yDy);
     g.lineTo(f5X, f5Y);
-    g.endFill();
+    //g.endFill();
 };
   
 //    function removeMe() {

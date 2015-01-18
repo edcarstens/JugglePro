@@ -14,7 +14,8 @@
  * @param rowHands {Array} row-to-hand mapping matrix
  */
 
-JPRO.RowHandMapper = function(rhm) {
+JPRO.RowHandMapper = function(name, rhm, tpm, entryTpm) {
+    this.name = name;
     /**
      * row-to-hand mapping matrix
      *
@@ -32,6 +33,10 @@ JPRO.RowHandMapper = function(rhm) {
      */
     this.rowBeats = this.makeArray(this.rhm.length); // make array filled with zeros
 
+    // Calculate throw period matrix
+    this.tpm = tpm;
+    this.entryTpm = (entryTpm === undefined) ? this.tpm : entryTpm;
+    
     // Calculate handToRowHash (hand-to-row) hash lookup
     var i,j;
     this.handToRowHash = {};
@@ -40,9 +45,22 @@ JPRO.RowHandMapper = function(rhm) {
 	    this.handToRowHash[this.rhm[i][j].name] = i;
 	}
     }
+
 };
 
 JPRO.RowHandMapper.prototype.constructor = JPRO.RowHandMapper;
+
+/**
+ * Copy
+ */
+JPRO.RowHandMapper.prototype.copy = function() {
+    var rv = new JPRO.RowHandMapper(this.name + '_copy', this.rhm, this.tpm, this.entryTpm);
+    rv.rowBeats = this.rowBeats.slice();
+    rv.tpm = this.tpm;
+    rv.entryTpm = this.entryTpm;
+    rv.rhm = this.rhm;
+    return rv;
+};
 
 /**
  * Return a string representation of this object. 
@@ -88,11 +106,37 @@ JPRO.RowHandMapper.prototype.toString = function () {
  */
 JPRO.RowHandMapper.prototype.getHand = function(row, beatRel) {
     var beatRel1 = beatRel || 0;
+    console.log("row=" + row);
     var rHands = this.rhm[row];
+    if (rHands === undefined) {
+	console.log(this.name);
+	console.log("rhm[0][0]=" + this.rhm[0][0].name);
+	console.log("rhm[1]=" + this.rhm[1]);
+	console.log("rhm[1][0]=" + this.rhm[1][0].name);
+	alert('hello');
+    }
     var i = (this.rowBeats[row] + beatRel1) % rHands.length;
     return rHands[i];
 };
 
+JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
+    var rHands = this.rhm[row];
+    var i = this.rowBeats[row];
+    //console.log('getDwell: row=' + row);
+    //console.log('entryTpm=' + this.entryTpm);
+    //console.log('tpm=' + this.tpm);
+    var beats = (pat.iterCnt === 0) ? this.entryTpm[row][i] : this.tpm[row][i];
+    //console.log('beats=' + beats);
+    var dr = rHands[i].getDwellRatio();
+    var beat1 = 0;
+    if (beats < beatRel) {
+	beat1 = beatRel - beats;
+    }
+    var pd = clock.timeBetweenBeats(beat1, beatRel);
+    console.log(rHands[i].name +
+		"dr="+dr+" pd="+pd);
+    return dr*pd;
+};
 /**
  * Returns the dwell time of the destination hand specified
  * by row and number of beats relative to current beat.
@@ -103,7 +147,7 @@ JPRO.RowHandMapper.prototype.getHand = function(row, beatRel) {
  * @param clock {Clock}
  * @return {Number} the dwell time in destination hand
  */
-JPRO.RowHandMapper.prototype.getDwell = function(row, beatRel, clock) {
+/*JPRO.RowHandMapper.prototype.getDwell = function(row, beatRel, clock) {
     var rHands = this.rhm[row];
     var i = (this.rowBeats[row] + beatRel) % rHands.length;
     var beats = this.getHandBeatsFromLastThrow(row, beatRel);
@@ -115,7 +159,7 @@ JPRO.RowHandMapper.prototype.getDwell = function(row, beatRel, clock) {
     var pd = clock.timeBetweenBeats(beat1, beatRel);
     console.log(rHands[i].name + ' dr='+dr+' pd='+pd);
     return rHands[i].getDwellRatio() * clock.timeBetweenBeats(beat1, beatRel);
-};
+};*/
 
 /**
  * Returns the number of beats from last throw beat for
@@ -152,8 +196,10 @@ JPRO.RowHandMapper.prototype.getHandBeatsFromLastThrow = function(row, beatRel, 
 
 JPRO.RowHandMapper.prototype.getHandBeatsToNextThrow = function(hand) {
     var row = this.handToRow(hand);
+    //console.log("row=" + row);
     var i = this.rowBeats[row];
     var rHands = this.rhm[row];
+    //console.log("rHands=" + rHands);
     var rv = 1;
     while (rv < 999) {
 	if (hand === rHands[(i+rv) % rHands.length]) {
@@ -180,6 +226,7 @@ JPRO.RowHandMapper.prototype.nextBeat = function() {
 	else {
 	    this.rowBeats[i]++;
 	}
+	console.log("rowBeats[" + i + "]=" + this.rowBeats[i]);
     }
     return this;
 };
@@ -212,5 +259,11 @@ JPRO.RowHandMapper.prototype.makeArray = function(sz, val) {
  * @return {Number} the (last) rhm row in which this hand is found
  */
 JPRO.RowHandMapper.prototype.handToRow = function(hand) {
+    //if (hand) {
+//	console.log("RowHandMapper handToRow: hand ok name=" + hand.name);
+//    }
+//    if (this.handToRowHash) {
+//	console.log(this.handToRowHash);
+//    }
     return this.handToRowHash[hand.name];
 };

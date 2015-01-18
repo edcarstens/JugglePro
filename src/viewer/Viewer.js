@@ -66,7 +66,10 @@ JPRO.Viewer.prototype.init = function() {
     this.initRotationMatrix();
     //this.initHands(hands);
     this.initProps();
-    this.enable = this.routine.nextPat(this); // init routine.viewer=this
+    this.pattern = this.routine.nextPat(this); // init routine.viewer=this
+    if (this.pattern) {
+	console.log('pattern exists');
+    }
     this.view.rotateMe(this.r1);
     this.view.translateMe(this.zoomOut);
 //    this.t = 0; // clear time
@@ -75,6 +78,7 @@ JPRO.Viewer.prototype.init = function() {
     this.throwProps(this.pattern); // make first throws
     this.gui.init();
     this.initAnimation();
+    console.log('finished init');
     return this;
 };
 
@@ -191,6 +195,7 @@ JPRO.Viewer.prototype.updateJugglers = function() {
     var i,j;
     for (i=0; i<this.jugglers.length; i++) {
 	for (j=0; j<this.jugglers[i].hands.length; j++) {
+	    //console.log('updateJugglers: i=' + i + ' j=' + j);
 	    this.jugglers[i].hands[j].update();
 	}
     }
@@ -211,6 +216,35 @@ JPRO.Viewer.prototype.updateProps = function() {
     return this;
 };
 
+JPRO.Viewer.prototype.getPat = function(beatRel) {
+    var tmpRtn = this.routine.copy();
+    tmpRtn.viewer = {};
+    tmpRtn.patternIdx = tmpRtn.currentIdx; // move next ptr back to current one
+    var tmpPat = tmpRtn.nextPat(tmpRtn.viewer, 0, 1); // current pattern (copy)
+    //var tmpPat = this.pattern.copy();
+    console.log(tmpPat);
+    var i = beatRel;
+    while (i--) {
+	console.log('i=' + i);
+	if (! tmpPat.nextBeat()) {
+	    console.log('proceed to next pat in routine..');
+	    tmpPat = tmpRtn.nextPat(null, 0, 1);
+	    console.log(tmpPat);
+	}
+    }
+    console.log(tmpPat);
+    console.log(tmpPat.rhMap.name);
+    return tmpPat;
+};
+
+JPRO.Viewer.prototype.getHand = function(pat,row) {
+    return pat.rhMap.getHand(row);
+};
+
+JPRO.Viewer.prototype.getDwell = function(pat,row,clock,beatRel) {
+    return pat.rhMap.getDwell(pat,row,clock,beatRel);
+};
+
 /**
  *
  *
@@ -218,20 +252,31 @@ JPRO.Viewer.prototype.updateProps = function() {
 */
 JPRO.Viewer.prototype.throwProps = function(pattern) {
     var i,k,pairs,destRow,destHand,rowHand,unthrown,dwell;
+    var pat;
     for (i=0; i<pattern.rows; i++) {
 	pairs = pattern.mhn[i][pattern.beat];
-	rowHand = pattern.getHand(i);
+	rowHand = pattern.rhMap.getHand(i);
+	console.log('cp1');
 	// timestamp this throw
 	this.clock.timeStamp(rowHand.name);
 	unthrown = 0;
 	for (k=0; k<pairs.length; k++) {
 	    if (pairs[k][1] > 0) {
 		destRow = pairs[k][0];
-		destHand = pattern.getHand(destRow, pairs[k][1]);
-		dwell = pattern.rhMap.getDwell(destRow, pairs[k][1], this.clock);
+		//destHand = this.getHand(destRow, pairs[k][1]);
+		//dwell = pattern.rhMap.getDwell(destRow, pairs[k][1], this.clock);
+		pat = this.getPat(pairs[k][1]);
+//		console.log(pat.toString());
+//		console.log('cp2');
+//		console.log(pat.rhMap);
+		destHand = this.getHand(pat,destRow);
+//		console.log('cp3');
+		dwell = this.getDwell(pat,destRow,this.clock,pairs[k][1]);
+		console.log('dwell=' + dwell);
 		// TODO - fix conditional (pairs[k][1] !== 2) based on RHM
-		if ((destHand !== rowHand) || (pairs[k][1] !== 2) ||
-		    (rowHand.nprops() === 0)) {
+		//if ((destHand !== rowHand) || (pairs[k][1] !== 2) ||
+		//    (rowHand.nprops() === 0)) {
+		if (1) {
 		    rowHand.throwProp(destHand, pairs[k][1], dwell);
 		}
 		else {
@@ -266,7 +311,10 @@ JPRO.Viewer.prototype.update = function() {
     // Do throws once every beat
     if ( this.clock.update() ) {
 	if (! this.pattern.nextBeat()) {
-	    this.enable = this.routine.nextPat();
+	    this.pattern = this.routine.nextPat(this, 0);
+	    console.log('New pattern is ' + this.pattern);
+	    // Update MHN table in html
+	    $('#div1').html(this.pattern.toHtml());
 	}
 	var i;
 	for (i=0; i<this.jugglers.length; i++) {
@@ -332,3 +380,37 @@ JPRO.Viewer.prototype.rotateView = function(rot, zoomIn, zoomOut) {
 //	} // for
     return this;
 };
+
+/**
+ * This is used to find the hand's throw period  
+ *
+ * @method getHandBeatsFromLastThrow
+ * @param row {Number}     - row of RHM matrix
+ * @param beatRel {Number} - beat relative to current
+ * @param hand {Hand}      - specify the Hand object to search for
+ * @return {Number} the number of beats for destination
+ *                  hand from its last throw beat
+*/
+JPRO.Viewer.prototype.getHandBeatsFromLastThrow = function(row, beatRel, hand) {
+    var beatRel1 = beatRel || 0;
+    // determine rhMap
+    
+    if (hand !== undefined) {
+	row = this.handToRow(hand);
+    }
+    var rHands = this.rhm[row];
+    var i = (this.rowBeats[row] + beatRel1) % rHands.length;
+    var rv = 0;
+    if (hand === undefined) {
+	rv = 1;
+	hand = rHands[i];
+    }
+    while (rv < 999) {
+	if (hand === rHands[(i+rHands.length-rv) % rHands.length]) {
+	    return rv;
+	}
+	rv++;
+    }
+    return 0; // something went wrong
+};
+

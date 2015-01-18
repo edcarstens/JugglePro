@@ -50,39 +50,6 @@ JPRO.Pattern = function(mhn, rhMap, iters) {
     /**
      * 
      *
-     * @property rows
-     * @type Number
-     */
-    this.rows = this.mhn.length;
-
-    /**
-     * 
-     *
-     * @property period
-     * @type Number
-     */
-    this.period = this.mhn[0].length;
-    console.log('rows=' + this.rows + ' period=' + this.period);
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.maxRows = 2; // limited to two hands right now
-
-    /**
-     * 
-     *
-     * @property 
-     * @type 
-     */
-    this.maxPeriod = 32;
-
-    /**
-     * 
-     *
      * @property 
      * @type 
      */
@@ -93,6 +60,24 @@ JPRO.Pattern = function(mhn, rhMap, iters) {
 JPRO.Pattern.prototype = Object.create( JPRO.ThrowSeq.prototype );
 JPRO.Pattern.prototype.constructor = JPRO.Pattern;
 
+JPRO.Pattern.prototype.copy = function(rhmHash) {
+    var rhMap = rhmHash[this.rhMap.name];
+    if (rhMap === undefined) {
+	rhMap = this.rhMap.copy();
+	rhmHash[this.rhMap.name] = rhMap;
+	console.log('rhmHash[1]=' + rhmHash[1]);
+	console.log('rhmHash[' + this.rhMap.name + ']=' + rhmHash[this.rhMap.name]);
+    }
+    var rv = new JPRO.Pattern(this.mhn, rhMap, this.iters);
+    rv.type = this.type;
+    rv.iterCnt = this.iterCnt;
+    rv.beat = this.beat;
+    rv.maxRows = this.maxRows;
+    rv.maxPeriod = this.maxPeriod;
+    rv.props = this.props;
+    return rv;
+};
+    
 /**
  * 
  *

@@ -12,7 +12,7 @@
  *
  */
 
-JPRO.Routine = function(patterns) {
+JPRO.Routine = function(patterns, iters) {
 
     /**
      * 
@@ -28,7 +28,7 @@ JPRO.Routine = function(patterns) {
      * @property 
      * @type 
      */
-    this.patternIdx = 0; // index to patterns
+    this.currentIdx = 0; // index to current element
 
     /**
      * 
@@ -36,7 +36,15 @@ JPRO.Routine = function(patterns) {
      * @property 
      * @type 
      */
-    this.iters = -1;
+    this.patternIdx = 0; // index to next element in patterns
+
+    /**
+     * 
+     *
+     * @property 
+     * @type 
+     */
+    this.iters = (iters === undefined) ? -1 : iters;
 
     /**
      * 
@@ -74,6 +82,28 @@ JPRO.Routine = function(patterns) {
 JPRO.Routine.prototype.constructor = JPRO.Routine;
 
 /**
+ * Copies this routine
+ *
+ */
+JPRO.Routine.prototype.copy = function(rhmHash) {
+    var rv = new JPRO.Routine();
+    rv.patternIdx = this.patternIdx;
+    rv.currentIdx = this.currentIdx;
+    rv.iters = this.iters;
+    rv.iterCnt = this.iterCnt;
+    rv.viewer = this.viewer;
+    rv.enable = this.enable;
+    rv.type = this.type;
+    var i,x,rh;
+    rh = (rhmHash === undefined) ? {1:2} : rhmHash;
+    for (i=0; i<this.patterns.length; i++) {
+	x = this.patterns[i];
+	rv.patterns.push(x.copy(rh));
+    }
+    return rv;
+};
+
+/**
  * Pushes a pattern, throw sequence, or routine to
  * the patterns list.
  *
@@ -92,9 +122,9 @@ JPRO.Routine.prototype.pushPat = function(pat) {
  * @param viewer {Viewer} The viewer object
  * @param depth {Number} Recursive depth
 */
-JPRO.Routine.prototype.nextPat = function(viewer, depth) {
-    var i,j,x,pat,d;
-    console.log('nextPat called with depth=' + depth);
+JPRO.Routine.prototype.nextPat = function(viewer, depth, lookAhead) {
+    var i,j,x,pat,d,laf;
+    console.log('nextPat called with depth=' + depth + ' lookAhead=' + lookAhead);
     if (this.enable === null) {
 	this.enable = 1;
 	return null;
@@ -107,6 +137,7 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
     if (viewer) {
 	this.viewer = viewer;
     }
+    laf = lookAhead || 0; // lookahead flag
     if (this.iters === 0) {
 	this.enable = null;
 	return null;
@@ -126,28 +157,38 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
 	j++;
     }
     if (j === this.patterns.length) {
-	throw 'pattern has no iterable pattern in it';
+	throw 'routine has no iterable pattern in it';
     }
     // Set viewer pattern and other viewer vars
     x = this.patterns[i];
     this.patternIdx = i;
+    while (x.type === 'Dynamic') {
+	console.log('x is Dynamic object');
+	x = x.getRoutine(this, laf);
+	console.log('dynamic loop: x=' + x);
+    }
     if (x.type === 'Routine') {
-	if (x.nextPat(this.viewer, d+1)) {
-	    return 1;
+	pat = x.nextPat(this.viewer, d+1, laf);
+	if (pat) {
+	    this.currentIdx = this.patternIdx;
+	    return pat;
 	}
-	//x.enable = 1;
+	x.enable = 1;
 	console.log('finished routine');
 	pat = null;
     }
     else {
 	pat = x;
-	this.viewer.pattern = pat;
-	this.viewer.beatPeriod = pat.beatPeriod;
+	this.currentIdx = this.patternIdx;
+//	this.viewer.pattern = pat;
+	//this.viewer.beatPeriod = pat.beatPeriod;
 	//this.viewer.beatPeriod = this.patterns[i].get_beatPeriod(this.viewer.beat, this.viewer.base_beatPeriod);
 	// Update MHN table in html
-	$('#div1').html(this.viewer.pattern.toHtml());
+	//$('#div1').html(pat.toHtml());
+	//return 1;
     }
-    
+
+    // Increment pattern index
     i++;
     if (i >= this.patterns.length) {
 	i = 0;
@@ -163,14 +204,14 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth) {
 	    return null;
 	}
 	else {
-	    return 1;
+	    return pat;
 	}
     }
     if (pat === null) {
-	return this.nextPat(this.viewer, d+1);
+	return this.nextPat(this.viewer, d+1, laf);
     }
     else {
-	return this.enable;
+	return pat;
     }
 };
 

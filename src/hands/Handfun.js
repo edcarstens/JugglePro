@@ -145,8 +145,8 @@ JPRO.Handfun.Func.prototype.getPose = function(tIn,movementBeat) { // 0<=tIn<1, 
     if (t >=np ) { t -= np; }
     var t0 = Math.floor(t);
     //t0=0;
-    console.log('tIn='+tIn);
-    console.log('t0='+t0);
+//    console.log('tIn='+tIn);
+//    console.log('t0='+t0);
     var dt = t - t0;
     //var t1 = (t0 === 7) ? 0 : t0 + 1; // not needed
     var i,xva,x0,v0,a0,x;

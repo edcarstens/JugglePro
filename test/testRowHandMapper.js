@@ -7,7 +7,7 @@ var blh = {name:"BLH"};
 var brh = {name:"BRH"};
 var clh = {name:"CLH"};
 var crh = {name:"CRH"};
-var r1 = new JPRO.RowHandMapper([[arh], [alh,brh], [blh,crh,clh]]);
+var r1 = new JPRO.RowHandMapper('rhm', [[arh], [alh,brh], [blh,crh,clh]], [[1],[2,2],[3,3,3]]);
 console.log(r1.toString());
 var i,j;
 j = 0;

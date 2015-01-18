@@ -12,6 +12,7 @@ viewer.view = new JPRO.View(viewer);
 viewer.viewAngle = -50;
 viewer.zoomDistance = 9000;
 viewer.dwellRatio = 0.5;
+viewer.basePeriod = 27;
 
 // jugglers
 // Set Abe.hands=0 at creation 
@@ -30,9 +31,13 @@ var Cat = new JPRO.Juggler(viewer, 'Cat', null, new JPRO.Vec(-360,150,100), 0);
 viewer.jugglers = [Abe, Bob, Cat];
 
 // routine
-var rhMap = new JPRO.RowHandMapper([[Abe.hands[0],Abe.hands[1]],
+var rhMap = new JPRO.RowHandMapper('rhm',
+				   [[Abe.hands[0],Abe.hands[1]],
 				    [Bob.hands[0],Bob.hands[1]],
-				    [Cat.hands[0],Cat.hands[1]]]);
+				    [Cat.hands[0],Cat.hands[1]]],
+				   [[2,2],
+				    [2,2],
+				    [2,2]]);
 var mhn = [[ [[0,3]],[[1,3]],[[0,3]],[[2,3]] ],
 	   [ [[1,3]],[[0,3]],[[1,3]],[[1,3]] ],
 	   [ [[2,3]],[[2,3]],[[2,3]],[[0,3]] ]];

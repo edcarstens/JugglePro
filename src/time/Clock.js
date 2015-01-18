@@ -31,6 +31,18 @@ JPRO.Clock = function(basePeriod, rhythm) {
 
 JPRO.Clock.prototype.constructor = JPRO.Clock;
 
+JPRO.Clock.prototype.copy = function() {
+    var rv = new JPRO.Clock(this.basePeriod, this.rhythm);
+    rv.t = this.t;
+    rv.tt = this.tt;
+    rv.maxTime = this.maxTime;
+    rv.timeStamps = this.timeStamps; // fix me?
+};
+
+//JPRO.Clock.prototype.updateBeats = function(beats) {
+//
+//};
+
 /**
  * This method calculates and returns the time between
  * two future beats in the rhythm. The beats are
@@ -73,12 +85,12 @@ JPRO.Clock.prototype.update = function() {
 	    this.adjustTimeStamps(this.maxTime);
 	}
 	this.beatPeriod = this.rhythm.nextBeat()*this.basePeriod;
-	console.log('beatPeriod = ' + this.beatPeriod);
+	//console.log('beatPeriod = ' + this.beatPeriod);
 	return 1; // new beat
     }
     else {
 	this.t++; // increment time (once per animation frame)
-	console.log('t=' + this.t + ' beatPeriod=' + this.beatPeriod);
+	//console.log('t=' + this.t + ' beatPeriod=' + this.beatPeriod);
 	return null;
     }
 };

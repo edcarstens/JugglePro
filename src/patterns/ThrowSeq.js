@@ -54,6 +54,23 @@
 	this.iters = 1;
 	
 	/**
+	 * 
+	 *
+	 * @property rows
+	 * @type Number
+	 */
+	this.rows = this.mhn.length;
+	
+	/**
+	 * 
+	 *
+	 * @property period
+	 * @type Number
+	 */
+	this.period = this.mhn[0].length;
+	console.log('rows=' + this.rows + ' period=' + this.period);
+	
+	/**
 	 * Iteration counter
 	 *
 	 * @property iterCnt
@@ -61,6 +78,22 @@
 	 */
 	this.iterCnt = 0;
 	
+	/**
+	 * 
+	 *
+	 * @property 
+	 * @type 
+	 */
+	this.maxRows = 10; // limit to 10 rows
+
+	/**
+	 * 
+	 *
+	 * @property 
+	 * @type 
+	 */
+	this.maxPeriod = 32;
+
 	/**
 	 * Used in ordering selected throws
 	 *
@@ -105,6 +138,20 @@
     };
     
     JPRO.ThrowSeq.prototype.constructor = JPRO.ThrowSeq;
+
+    JPRO.ThrowSeq.prototype.copy = function(rhmHash) {
+	var rhMap = rhmHash[this.rhMap.name];
+	if (rhMap === undefined) {
+	    rhMap = this.rhMap.copy();
+	    rhmHash[this.rhMap.name] = rhMap;
+	}
+	var rv = new JPRO.ThrowSeq(this.mhn, rhMap);
+	rv.type = this.type;
+	rv.iters = this.iters;
+	rv.iterCnt = this.iterCnt;
+	rv.beat = this.beat;
+	return rv;
+    };
     
     /**
      * Indicates whether this object is to be repeated
@@ -156,7 +203,7 @@
 	}
 	else {
 	    this.beat++;
-	    return null;
+	    return 1;
 	}
     };
 
