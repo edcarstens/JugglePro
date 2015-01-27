@@ -217,23 +217,24 @@ JPRO.Viewer.prototype.updateProps = function() {
 };
 
 JPRO.Viewer.prototype.getPat = function(beatRel) {
-    var tmpRtn = this.routine.copy();
+    var rh = {};
+    var tmpRtn = this.routine.copy(rh);
     tmpRtn.viewer = {};
-    tmpRtn.patternIdx = tmpRtn.currentIdx; // move next ptr back to current one
-    var tmpPat = tmpRtn.nextPat(tmpRtn.viewer, 0, 1); // current pattern (copy)
-    //var tmpPat = this.pattern.copy();
-    console.log(tmpPat);
+    var tmpPat = this.pattern.copy(rh);
+    var rhm = tmpPat.rhMap;
     var i = beatRel;
     while (i--) {
-	console.log('i=' + i);
+	//console.log('i=' + i);
 	if (! tmpPat.nextBeat()) {
-	    console.log('proceed to next pat in routine..');
+	    //console.log('proceed to next pat in routine..');
 	    tmpPat = tmpRtn.nextPat(null, 0, 1);
-	    console.log(tmpPat);
+	    if (tmpPat.rhMap !== rhm) {
+		rhm.clearEntryDone();
+	    }
 	}
     }
-    console.log(tmpPat);
-    console.log(tmpPat.rhMap.name);
+    //console.log(tmpPat);
+    //console.log(tmpPat.rhMap.name);
     return tmpPat;
 };
 
@@ -243,6 +244,31 @@ JPRO.Viewer.prototype.getHand = function(pat,row) {
 
 JPRO.Viewer.prototype.getDwell = function(pat,row,clock,beatRel) {
     return pat.rhMap.getDwell(pat,row,clock,beatRel);
+};
+
+JPRO.Viewer.prototype.getBeatsToNextThrow = function(hand) {
+    var rh = {};
+    var tmpRtn = this.routine.copy(rh);
+    tmpRtn.viewer = {};
+    var tmpPat = this.pattern.copy(rh);
+    var i = 1;
+    if (! tmpPat.nextBeat()) {
+	tmpPat = tmpRtn.nextPat(null, 0, 1);
+    }
+    //console.log(tmpPat.toString());
+    //console.log(tmpPat.rhMap.name);
+    while (! tmpPat.isThrowing(hand)) {
+	if (! tmpPat.nextBeat()) {
+	    tmpPat = tmpRtn.nextPat(null, 0, 1);
+	    //console.log(tmpPat.toString());
+	    //console.log(tmpPat.rhMap.name);
+	}
+	i++;
+	if (i > 999) {
+	    throw 'Viewer.getBeatsToNextThrow: Not finding matching hand';
+	}
+    }
+    return i;    
 };
 
 /**
@@ -312,7 +338,7 @@ JPRO.Viewer.prototype.update = function() {
     if ( this.clock.update() ) {
 	if (! this.pattern.nextBeat()) {
 	    this.pattern = this.routine.nextPat(this, 0);
-	    console.log('New pattern is ' + this.pattern);
+	    console.log('Viewer: New pattern is ' + this.pattern);
 	    // Update MHN table in html
 	    $('#div1').html(this.pattern.toHtml());
 	}

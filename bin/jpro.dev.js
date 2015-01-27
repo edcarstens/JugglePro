@@ -4,7 +4,7 @@
  * Copyright (c) 2014, Ed Carstens
  * http://www.wealthygames.com/
  *
- * Compiled: 2015-01-18
+ * Compiled: 2015-01-27
  *
  * JugglePro is licensed under the MIT License.
  * http://www.opensource.org/licenses/mit-license.php
@@ -397,7 +397,7 @@ JPRO.Hand.prototype.update = function() {
     var duration = this.viewer.clock.duration(this.name);
     //console.log('duration=' + duration);
     // find time until next throw by this hand (rhMap)
-    var b2t = this.viewer.pattern.rhMap.getHandBeatsToNextThrow(this);
+    var b2t = this.viewer.getBeatsToNextThrow(this);
     //console.log(this.name + ' b2t=' + b2t);
     //var xx = this.viewer.clock.timeBetweenBeats(0, b2t);
     //console.log('xx=' + xx);
@@ -428,29 +428,19 @@ JPRO.Hand.prototype.update = function() {
     g.lineStyle(1, 0xffcc66, 1);
     g.beginFill(0xffcc66);
     g.drawCircle(wpos.x, wpos.y, 8);
-    //g.endFill();
-    //g.beginFill(0xffcc66);
     g.drawCircle(epos.x, epos.y, 8);
     g.endFill();
     
     g.lineStyle(16, 0xffcc66, 1);
     g.moveTo(x, y);
-//	g.lineTo(tpos.x, tpos.y);
-//	g.moveTo(this.posProjected.x, this.posProjected.y);
-	//if (wpos.mdist2(this.posProjected) > 9) {
     g.lineTo(wpos.x, wpos.y);
     g.moveTo(wpos.x, wpos.y);
-	//}
-	//if (epos.mdist2(wpos) > 9) {
     g.lineTo(epos.x, epos.y);
     g.moveTo(epos.x, epos.y);
-	//}
-	//if (spos.mdist2(epos) > 9) {
     g.lineTo(spos.x, spos.y);
     //g.moveTo(spos.x, spos.y);
-	//}
 
-	// Draw hand
+    // Draw hand
     g.lineStyle(4, 0xffcc66, 1);
     var yDx = x - wpos.x;
     var yDy = y - wpos.y;
@@ -1072,6 +1062,7 @@ JPRO.RowHandMapper = function(name, rhm, tpm, entryTpm) {
     // Calculate throw period matrix
     this.tpm = tpm;
     this.entryTpm = (entryTpm === undefined) ? this.tpm : entryTpm;
+    this.entryDone = this.makeArray(this.rhm.length);
     
     // Calculate handToRowHash (hand-to-row) hash lookup
     var i,j;
@@ -1142,7 +1133,7 @@ JPRO.RowHandMapper.prototype.toString = function () {
  */
 JPRO.RowHandMapper.prototype.getHand = function(row, beatRel) {
     var beatRel1 = beatRel || 0;
-    console.log("row=" + row);
+    //console.log("row=" + row);
     var rHands = this.rhm[row];
     if (rHands === undefined) {
 	console.log(this.name);
@@ -1158,10 +1149,12 @@ JPRO.RowHandMapper.prototype.getHand = function(row, beatRel) {
 JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
     var rHands = this.rhm[row];
     var i = this.rowBeats[row];
-    //console.log('getDwell: row=' + row);
+    //console.log('getDwell: row=' + row + ' i=' + i);
     //console.log('entryTpm=' + this.entryTpm);
     //console.log('tpm=' + this.tpm);
-    var beats = (pat.iterCnt === 0) ? this.entryTpm[row][i] : this.tpm[row][i];
+    //console.log('pat=' + pat.toString());
+    //console.log('pat.iterCnt=' + pat.iterCnt);
+    var beats = (this.entryDone[row] === 0) ? this.entryTpm[row][i] : this.tpm[row][i];
     //console.log('beats=' + beats);
     var dr = rHands[i].getDwellRatio();
     var beat1 = 0;
@@ -1169,8 +1162,7 @@ JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
 	beat1 = beatRel - beats;
     }
     var pd = clock.timeBetweenBeats(beat1, beatRel);
-    console.log(rHands[i].name +
-		"dr="+dr+" pd="+pd);
+    //console.log(rHands[i].name + " dr="+dr+" pd="+pd);
     return dr*pd;
 };
 /**
@@ -1209,6 +1201,7 @@ JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
  * @return {Number} the number of beats for destination
  *                  hand from its last throw beat
  */
+/*
 JPRO.RowHandMapper.prototype.getHandBeatsFromLastThrow = function(row, beatRel, hand) {
     var beatRel1 = beatRel || 0;
     if (hand !== undefined) {
@@ -1229,7 +1222,7 @@ JPRO.RowHandMapper.prototype.getHandBeatsFromLastThrow = function(row, beatRel, 
     }
     return 0; // something went wrong
 };
-
+*/
 JPRO.RowHandMapper.prototype.getHandBeatsToNextThrow = function(hand) {
     var row = this.handToRow(hand);
     //console.log("row=" + row);
@@ -1258,11 +1251,12 @@ JPRO.RowHandMapper.prototype.nextBeat = function() {
     for (i=0; i<this.rowBeats.length; i++) {
 	if (this.rowBeats[i] >= this.rhm[i].length - 1) {
 	    this.rowBeats[i] = 0;
+	    this.entryDone[i] = 1;
 	}
 	else {
 	    this.rowBeats[i]++;
 	}
-	console.log("rowBeats[" + i + "]=" + this.rowBeats[i]);
+	//console.log("rowBeats[" + i + "]=" + this.rowBeats[i]);
     }
     return this;
 };
@@ -1284,6 +1278,13 @@ JPRO.RowHandMapper.prototype.makeArray = function(sz, val) {
 	rv[i] = val1;
     }
     return rv;
+};
+
+JPRO.RowHandMapper.prototype.clearEntryDone = function() {
+    var i;
+    for (i=0; i<this.entryDone.length; i++) {
+	this.entryDone[i] = 0;
+    }
 };
 
 /**
@@ -1774,7 +1775,7 @@ JPRO.Rmatrix.prototype.constructor = JPRO.Rmatrix;
 	 * @type Number
 	 */
 	this.period = this.mhn[0].length;
-	console.log('rows=' + this.rows + ' period=' + this.period);
+//	console.log('rows=' + this.rows + ' period=' + this.period);
 	
 	/**
 	 * Iteration counter
@@ -1858,6 +1859,16 @@ JPRO.Rmatrix.prototype.constructor = JPRO.Rmatrix;
 	rv.beat = this.beat;
 	return rv;
     };
+
+    JPRO.ThrowSeq.prototype.isThrowing = function(hand) {
+	var i;
+	for (i=0; i<this.mhn.length; i++) {
+	    if (this.rhMap.getHand(i) === hand) {
+		return 1;
+	    }
+	}
+	return null;
+    };
     
     /**
      * Indicates whether this object is to be repeated
@@ -1902,15 +1913,21 @@ JPRO.Rmatrix.prototype.constructor = JPRO.Rmatrix;
      * @return {Boolean} 1 when pattern repeats
      */
     JPRO.ThrowSeq.prototype.nextBeat = function () {
-	this.rhMap.nextBeat();
+	var rv;
+	//console.log(this.toString());
+	//console.log('beat=' + this.beat + ' pd=' + this.mhn[0].length);
 	if (this.beat >= this.mhn[0].length-1) {
 	    this.beat = 0;
-	    return this.repeat();
+	    rv = this.repeat();
 	}
 	else {
 	    this.beat++;
-	    return 1;
+	    rv = 1;
 	}
+	if (this.iters !== 0) {
+	    this.rhMap.nextBeat();
+	}
+	return rv;
     };
 
     /**
@@ -2222,9 +2239,12 @@ JPRO.Pattern.prototype.copy = function(rhmHash) {
     var rhMap = rhmHash[this.rhMap.name];
     if (rhMap === undefined) {
 	rhMap = this.rhMap.copy();
+	//console.log('>>> rowBeats=' + this.rhMap.rowBeats);
+	//console.log('>>> rowBeats=' + rhMap.rowBeats);
 	rhmHash[this.rhMap.name] = rhMap;
-	console.log('rhmHash[1]=' + rhmHash[1]);
-	console.log('rhmHash[' + this.rhMap.name + ']=' + rhmHash[this.rhMap.name]);
+	//console.log('rhmHash[1]=' + rhmHash[1]);
+	//console.log('rhmHash[' + this.rhMap.name + ']=' + rhmHash[this.rhMap.name].name);
+	//console.log('rowBeats=' + rhmHash[this.rhMap.name].rowBeats);
     }
     var rv = new JPRO.Pattern(this.mhn, rhMap, this.iters);
     rv.type = this.type;
@@ -2552,7 +2572,7 @@ JPRO.Pattern.prototype.reset = function() {
  */
 JPRO.Pattern.prototype.calcProps = function() {
     var i,j,k,sum,rv;
-    console.log('calcProps called');
+    //console.log('calcProps called');
     sum = 0;
     for (i=0; i<this.rows; i++) {
 	for (j=0; j<this.period; j++) {
@@ -2561,7 +2581,7 @@ JPRO.Pattern.prototype.calcProps = function() {
 	    }
 	}
     }
-    console.log('sum=' + sum);
+    //console.log('sum=' + sum);
     rv = sum/this.period;
     // todo - check for error if rv is not an integer
     return Math.round(rv);
@@ -2878,7 +2898,7 @@ JPRO.Routine.prototype.copy = function(rhmHash) {
     rv.enable = this.enable;
     rv.type = this.type;
     var i,x,rh;
-    rh = (rhmHash === undefined) ? {1:2} : rhmHash;
+    rh = (rhmHash === undefined) ? {} : rhmHash;
     for (i=0; i<this.patterns.length; i++) {
 	x = this.patterns[i];
 	rv.patterns.push(x.copy(rh));
@@ -2983,12 +3003,7 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth, lookAhead) {
     if ((this.iters > 0) && (this.iterCnt >= this.iters)) {
 	this.iterCnt = 0;
 	this.enable = null; // disable for next time
-	if (pat === null) {
-	    return null;
-	}
-	else {
-	    return pat;
-	}
+	return pat;
     }
     if (pat === null) {
 	return this.nextPat(this.viewer, d+1, laf);
@@ -4969,23 +4984,24 @@ JPRO.Viewer.prototype.updateProps = function() {
 };
 
 JPRO.Viewer.prototype.getPat = function(beatRel) {
-    var tmpRtn = this.routine.copy();
+    var rh = {};
+    var tmpRtn = this.routine.copy(rh);
     tmpRtn.viewer = {};
-    tmpRtn.patternIdx = tmpRtn.currentIdx; // move next ptr back to current one
-    var tmpPat = tmpRtn.nextPat(tmpRtn.viewer, 0, 1); // current pattern (copy)
-    //var tmpPat = this.pattern.copy();
-    console.log(tmpPat);
+    var tmpPat = this.pattern.copy(rh);
+    var rhm = tmpPat.rhMap;
     var i = beatRel;
     while (i--) {
-	console.log('i=' + i);
+	//console.log('i=' + i);
 	if (! tmpPat.nextBeat()) {
-	    console.log('proceed to next pat in routine..');
+	    //console.log('proceed to next pat in routine..');
 	    tmpPat = tmpRtn.nextPat(null, 0, 1);
-	    console.log(tmpPat);
+	    if (tmpPat.rhMap !== rhm) {
+		rhm.clearEntryDone();
+	    }
 	}
     }
-    console.log(tmpPat);
-    console.log(tmpPat.rhMap.name);
+    //console.log(tmpPat);
+    //console.log(tmpPat.rhMap.name);
     return tmpPat;
 };
 
@@ -4995,6 +5011,31 @@ JPRO.Viewer.prototype.getHand = function(pat,row) {
 
 JPRO.Viewer.prototype.getDwell = function(pat,row,clock,beatRel) {
     return pat.rhMap.getDwell(pat,row,clock,beatRel);
+};
+
+JPRO.Viewer.prototype.getBeatsToNextThrow = function(hand) {
+    var rh = {};
+    var tmpRtn = this.routine.copy(rh);
+    tmpRtn.viewer = {};
+    var tmpPat = this.pattern.copy(rh);
+    var i = 1;
+    if (! tmpPat.nextBeat()) {
+	tmpPat = tmpRtn.nextPat(null, 0, 1);
+    }
+    //console.log(tmpPat.toString());
+    //console.log(tmpPat.rhMap.name);
+    while (! tmpPat.isThrowing(hand)) {
+	if (! tmpPat.nextBeat()) {
+	    tmpPat = tmpRtn.nextPat(null, 0, 1);
+	    //console.log(tmpPat.toString());
+	    //console.log(tmpPat.rhMap.name);
+	}
+	i++;
+	if (i > 999) {
+	    throw 'Viewer.getBeatsToNextThrow: Not finding matching hand';
+	}
+    }
+    return i;    
 };
 
 /**
@@ -5064,7 +5105,7 @@ JPRO.Viewer.prototype.update = function() {
     if ( this.clock.update() ) {
 	if (! this.pattern.nextBeat()) {
 	    this.pattern = this.routine.nextPat(this, 0);
-	    console.log('New pattern is ' + this.pattern);
+	    console.log('Viewer: New pattern is ' + this.pattern);
 	    // Update MHN table in html
 	    $('#div1').html(this.pattern.toHtml());
 	}

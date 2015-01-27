@@ -68,7 +68,7 @@
 	 * @type Number
 	 */
 	this.period = this.mhn[0].length;
-	console.log('rows=' + this.rows + ' period=' + this.period);
+//	console.log('rows=' + this.rows + ' period=' + this.period);
 	
 	/**
 	 * Iteration counter
@@ -152,6 +152,16 @@
 	rv.beat = this.beat;
 	return rv;
     };
+
+    JPRO.ThrowSeq.prototype.isThrowing = function(hand) {
+	var i;
+	for (i=0; i<this.mhn.length; i++) {
+	    if (this.rhMap.getHand(i) === hand) {
+		return 1;
+	    }
+	}
+	return null;
+    };
     
     /**
      * Indicates whether this object is to be repeated
@@ -196,15 +206,21 @@
      * @return {Boolean} 1 when pattern repeats
      */
     JPRO.ThrowSeq.prototype.nextBeat = function () {
-	this.rhMap.nextBeat();
+	var rv;
+	//console.log(this.toString());
+	//console.log('beat=' + this.beat + ' pd=' + this.mhn[0].length);
 	if (this.beat >= this.mhn[0].length-1) {
 	    this.beat = 0;
-	    return this.repeat();
+	    rv = this.repeat();
 	}
 	else {
 	    this.beat++;
-	    return 1;
+	    rv = 1;
 	}
+	if (this.iters !== 0) {
+	    this.rhMap.nextBeat();
+	}
+	return rv;
     };
 
     /**

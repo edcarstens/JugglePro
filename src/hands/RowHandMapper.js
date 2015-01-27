@@ -36,6 +36,7 @@ JPRO.RowHandMapper = function(name, rhm, tpm, entryTpm) {
     // Calculate throw period matrix
     this.tpm = tpm;
     this.entryTpm = (entryTpm === undefined) ? this.tpm : entryTpm;
+    this.entryDone = this.makeArray(this.rhm.length);
     
     // Calculate handToRowHash (hand-to-row) hash lookup
     var i,j;
@@ -106,7 +107,7 @@ JPRO.RowHandMapper.prototype.toString = function () {
  */
 JPRO.RowHandMapper.prototype.getHand = function(row, beatRel) {
     var beatRel1 = beatRel || 0;
-    console.log("row=" + row);
+    //console.log("row=" + row);
     var rHands = this.rhm[row];
     if (rHands === undefined) {
 	console.log(this.name);
@@ -122,10 +123,12 @@ JPRO.RowHandMapper.prototype.getHand = function(row, beatRel) {
 JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
     var rHands = this.rhm[row];
     var i = this.rowBeats[row];
-    //console.log('getDwell: row=' + row);
+    //console.log('getDwell: row=' + row + ' i=' + i);
     //console.log('entryTpm=' + this.entryTpm);
     //console.log('tpm=' + this.tpm);
-    var beats = (pat.iterCnt === 0) ? this.entryTpm[row][i] : this.tpm[row][i];
+    //console.log('pat=' + pat.toString());
+    //console.log('pat.iterCnt=' + pat.iterCnt);
+    var beats = (this.entryDone[row] === 0) ? this.entryTpm[row][i] : this.tpm[row][i];
     //console.log('beats=' + beats);
     var dr = rHands[i].getDwellRatio();
     var beat1 = 0;
@@ -133,8 +136,7 @@ JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
 	beat1 = beatRel - beats;
     }
     var pd = clock.timeBetweenBeats(beat1, beatRel);
-    console.log(rHands[i].name +
-		"dr="+dr+" pd="+pd);
+    //console.log(rHands[i].name + " dr="+dr+" pd="+pd);
     return dr*pd;
 };
 /**
@@ -173,6 +175,7 @@ JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
  * @return {Number} the number of beats for destination
  *                  hand from its last throw beat
  */
+/*
 JPRO.RowHandMapper.prototype.getHandBeatsFromLastThrow = function(row, beatRel, hand) {
     var beatRel1 = beatRel || 0;
     if (hand !== undefined) {
@@ -193,7 +196,7 @@ JPRO.RowHandMapper.prototype.getHandBeatsFromLastThrow = function(row, beatRel, 
     }
     return 0; // something went wrong
 };
-
+*/
 JPRO.RowHandMapper.prototype.getHandBeatsToNextThrow = function(hand) {
     var row = this.handToRow(hand);
     //console.log("row=" + row);
@@ -222,11 +225,12 @@ JPRO.RowHandMapper.prototype.nextBeat = function() {
     for (i=0; i<this.rowBeats.length; i++) {
 	if (this.rowBeats[i] >= this.rhm[i].length - 1) {
 	    this.rowBeats[i] = 0;
+	    this.entryDone[i] = 1;
 	}
 	else {
 	    this.rowBeats[i]++;
 	}
-	console.log("rowBeats[" + i + "]=" + this.rowBeats[i]);
+	//console.log("rowBeats[" + i + "]=" + this.rowBeats[i]);
     }
     return this;
 };
@@ -248,6 +252,13 @@ JPRO.RowHandMapper.prototype.makeArray = function(sz, val) {
 	rv[i] = val1;
     }
     return rv;
+};
+
+JPRO.RowHandMapper.prototype.clearEntryDone = function() {
+    var i;
+    for (i=0; i<this.entryDone.length; i++) {
+	this.entryDone[i] = 0;
+    }
 };
 
 /**

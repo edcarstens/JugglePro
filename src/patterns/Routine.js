@@ -95,7 +95,7 @@ JPRO.Routine.prototype.copy = function(rhmHash) {
     rv.enable = this.enable;
     rv.type = this.type;
     var i,x,rh;
-    rh = (rhmHash === undefined) ? {1:2} : rhmHash;
+    rh = (rhmHash === undefined) ? {} : rhmHash;
     for (i=0; i<this.patterns.length; i++) {
 	x = this.patterns[i];
 	rv.patterns.push(x.copy(rh));
@@ -200,12 +200,7 @@ JPRO.Routine.prototype.nextPat = function(viewer, depth, lookAhead) {
     if ((this.iters > 0) && (this.iterCnt >= this.iters)) {
 	this.iterCnt = 0;
 	this.enable = null; // disable for next time
-	if (pat === null) {
-	    return null;
-	}
-	else {
-	    return pat;
-	}
+	return pat;
     }
     if (pat === null) {
 	return this.nextPat(this.viewer, d+1, laf);

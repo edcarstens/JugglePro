@@ -142,7 +142,7 @@ JPRO.Hand.prototype.update = function() {
     var duration = this.viewer.clock.duration(this.name);
     //console.log('duration=' + duration);
     // find time until next throw by this hand (rhMap)
-    var b2t = this.viewer.pattern.rhMap.getHandBeatsToNextThrow(this);
+    var b2t = this.viewer.getBeatsToNextThrow(this);
     //console.log(this.name + ' b2t=' + b2t);
     //var xx = this.viewer.clock.timeBetweenBeats(0, b2t);
     //console.log('xx=' + xx);

@@ -64,9 +64,12 @@ JPRO.Pattern.prototype.copy = function(rhmHash) {
     var rhMap = rhmHash[this.rhMap.name];
     if (rhMap === undefined) {
 	rhMap = this.rhMap.copy();
+	//console.log('>>> rowBeats=' + this.rhMap.rowBeats);
+	//console.log('>>> rowBeats=' + rhMap.rowBeats);
 	rhmHash[this.rhMap.name] = rhMap;
-	console.log('rhmHash[1]=' + rhmHash[1]);
-	console.log('rhmHash[' + this.rhMap.name + ']=' + rhmHash[this.rhMap.name]);
+	//console.log('rhmHash[1]=' + rhmHash[1]);
+	//console.log('rhmHash[' + this.rhMap.name + ']=' + rhmHash[this.rhMap.name].name);
+	//console.log('rowBeats=' + rhmHash[this.rhMap.name].rowBeats);
     }
     var rv = new JPRO.Pattern(this.mhn, rhMap, this.iters);
     rv.type = this.type;
@@ -394,7 +397,7 @@ JPRO.Pattern.prototype.reset = function() {
  */
 JPRO.Pattern.prototype.calcProps = function() {
     var i,j,k,sum,rv;
-    console.log('calcProps called');
+    //console.log('calcProps called');
     sum = 0;
     for (i=0; i<this.rows; i++) {
 	for (j=0; j<this.period; j++) {
@@ -403,7 +406,7 @@ JPRO.Pattern.prototype.calcProps = function() {
 	    }
 	}
     }
-    console.log('sum=' + sum);
+    //console.log('sum=' + sum);
     rv = sum/this.period;
     // todo - check for error if rv is not an integer
     return Math.round(rv);
