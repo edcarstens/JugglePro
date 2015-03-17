@@ -28,6 +28,8 @@ JPRO.View = function(viewer) {
      */
     this.viewer = viewer;
 
+    this.name = "view";
+    
     /**
      * Width of view screen
      *
@@ -122,6 +124,34 @@ JPRO.View = function(viewer) {
 
 // constructor
 JPRO.View.prototype.constructor = JPRO.View;
+
+/**
+ * Copy this view
+ *
+ * @method copy
+ * @param objHash {Object} object hash
+ * @return {View} copied View object
+*/
+JPRO.View.prototype.copy = function(objHash) {
+    if (objHash === undefined) { objHash = {}; }
+    if (objHash[this.name] !== undefined) { return objHash[this.name]; }
+    var rv = new JPRO.View(this.viewer.copy(objHash));
+    rv.name = this.name + "_copy";
+    objHash[this.name] = rv;
+    objHash[rv.name] = this;
+    rv.width = this.width;
+    rv.height = this.height;
+    rv.origin = this.origin;
+    rv.rot = this.rot.copy(objHash);
+    rv.translation = this.translation.copy(objHash);
+    rv.scale = this.scale;
+    rv.g = this.g.copy(objHash);
+    rv.worldRot = JPRO.Common.copyObjVector(this.worldRot, objHash);
+    rv.worldPos = JPRO.Common.copyObjVector(this.worldPos, objHash);
+    rv.depthOffset = this.depthOffset;
+    rv.focalDistance = this.focalDistance;
+    return rv;
+};
 
 /**
  * Transform 3D vector to this view

@@ -35,6 +35,7 @@ JPRO.Rmatrix = function(degrees, axis) {
     var r1 = new JPRO.Vec(m[0],m[1],m[2]);
     var r2 = new JPRO.Vec(m[3],m[4],m[5]);
     var r3 = new JPRO.Vec(m[6],m[7],m[8]);
+    this.className = 'Rmatrix';
     JPRO.Matrix.call(this,r1,r2,r3);
 };
 

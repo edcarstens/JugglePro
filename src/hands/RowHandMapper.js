@@ -13,9 +13,13 @@
  * @constructor
  * @param rowHands {Array} row-to-hand mapping matrix
  */
+JPRO.ID.RowHandMapper = 0;
+JPRO.RowHandMapper = function(name, rhm) {
 
-JPRO.RowHandMapper = function(name, rhm, tpm, entryTpm) {
-    this.name = name;
+    // Call superclass
+    this.className = this.className || 'RowHandMapper';
+    JPRO.Base.call(this, name);
+
     /**
      * row-to-hand mapping matrix
      *
@@ -28,38 +32,54 @@ JPRO.RowHandMapper = function(name, rhm, tpm, entryTpm) {
      * Keeps track of beat for each row.
      * Each row can have different period.
      *
-     * @property rhm
+     * @property rowBeats
      * @type Array
      */
-    this.rowBeats = this.makeArray(this.rhm.length); // make array filled with zeros
-
-    // Calculate throw period matrix
-    this.tpm = tpm;
-    this.entryTpm = (entryTpm === undefined) ? this.tpm : entryTpm;
-    this.entryDone = this.makeArray(this.rhm.length);
+    if (this.rhm) {
+	this.rowBeats = this.makeArray(this.rhm.length); // make array filled with zeros
     
-    // Calculate handToRowHash (hand-to-row) hash lookup
-    var i,j;
-    this.handToRowHash = {};
-    for (i=0; i<this.rhm.length; i++) {
-	for (j=0; j<this.rhm[i].length; j++) {
-	    this.handToRowHash[this.rhm[i][j].name] = i;
+    // Calculate throw period matrix
+    //this.tpm = tpm;
+    //this.entryTpm = (entryTpm === undefined) ? this.tpm : entryTpm;
+    //this.entryDone = this.makeArray(this.rhm.length);
+    
+    /**
+     * Hand-to-row hash lookup
+     *
+     * @property handToRowHash
+     * @type Object
+     */
+	// Calculate handToRowHash (hand-to-row) hash lookup
+	var i,j;
+	this.handToRowHash = {};
+	for (i=0; i<this.rhm.length; i++) {
+	    for (j=0; j<this.rhm[i].length; j++) {
+		this.handToRowHash[this.rhm[i][j].name] = i;
+	    }
 	}
     }
-
 };
 
+JPRO.RowHandMapper.prototype = Object.create(JPRO.Base.prototype);
 JPRO.RowHandMapper.prototype.constructor = JPRO.RowHandMapper;
 
 /**
  * Copy
+ *
+ * @method copy
+ * @return {RowHandMapper} copied RowHandMapper
  */
-JPRO.RowHandMapper.prototype.copy = function() {
-    var rv = new JPRO.RowHandMapper(this.name + '_copy', this.rhm, this.tpm, this.entryTpm);
+JPRO.RowHandMapper.prototype.copy = function(objHash, cFunc) {
+    var pFuncs = {};
+    pFuncs.rhm = JPRO.Common.copyObjMatrix;
+    pFuncs.handToRowHash = JPRO.Common.copyHash;
+    cFunc = cFunc || function() {
+	return new JPRO.RowHandMapper();
+    };
+    var skip = {};
+    skip.rowBeats = 1;
+    var rv = this.copyOnce(objHash, cFunc, skip, pFuncs);
     rv.rowBeats = this.rowBeats.slice();
-    rv.tpm = this.tpm;
-    rv.entryTpm = this.entryTpm;
-    rv.rhm = this.rhm;
     return rv;
 };
 
@@ -71,28 +91,28 @@ JPRO.RowHandMapper.prototype.copy = function() {
  */
 JPRO.RowHandMapper.prototype.toString = function () {
     var i,j;
-    var rv = "{rhm:[";
+    var rv = '{rhm:[';
     for (i=0; i<this.rhm.length; i++) {
 	if (i > 0) {
-	    rv = rv + ", ";
+	    rv = rv + ', ';
 	}
-	rv = rv + "[";
+	rv = rv + '[';
 	for (j=0; j<this.rhm[i].length; j++) {
 	    if (j > 0) {
-		rv = rv + ", ";
+		rv = rv + ', ';
 	    }
 	    rv = rv + this.rhm[i][j].name;
 	}
-	rv = rv + "]";
+	rv = rv + ']';
     }
-    rv = rv + "], rowBeats:[";
+    rv = rv + '], rowBeats:[';
     for (i=0; i<this.rowBeats.length; i++) {
 	if (i > 0) {
-	    rv = rv + ", ";
+	    rv = rv + ', ';
 	}
 	rv = rv + this.rowBeats[i];
     }
-    rv = rv + "]}";
+    rv = rv + ']}';
     return rv;
 };
 
@@ -107,19 +127,20 @@ JPRO.RowHandMapper.prototype.toString = function () {
  */
 JPRO.RowHandMapper.prototype.getHand = function(row, beatRel) {
     var beatRel1 = beatRel || 0;
-    //console.log("row=" + row);
+    //console.log('row=' + row);
     var rHands = this.rhm[row];
     if (rHands === undefined) {
 	console.log(this.name);
-	console.log("rhm[0][0]=" + this.rhm[0][0].name);
-	console.log("rhm[1]=" + this.rhm[1]);
-	console.log("rhm[1][0]=" + this.rhm[1][0].name);
+	console.log('rhm[0][0]=' + this.rhm[0][0].name);
+	console.log('rhm[1]=' + this.rhm[1]);
+	console.log('rhm[1][0]=' + this.rhm[1][0].name);
 	alert('hello');
     }
     var i = (this.rowBeats[row] + beatRel1) % rHands.length;
     return rHands[i];
 };
 
+/*
 JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
     var rHands = this.rhm[row];
     var i = this.rowBeats[row];
@@ -136,9 +157,10 @@ JPRO.RowHandMapper.prototype.getDwell = function(pat, row, clock, beatRel) {
 	beat1 = beatRel - beats;
     }
     var pd = clock.timeBetweenBeats(beat1, beatRel);
-    //console.log(rHands[i].name + " dr="+dr+" pd="+pd);
+    //console.log(rHands[i].name + ' dr='+dr+' pd='+pd);
     return dr*pd;
-};
+};*/
+
 /**
  * Returns the dwell time of the destination hand specified
  * by row and number of beats relative to current beat.
@@ -199,10 +221,10 @@ JPRO.RowHandMapper.prototype.getHandBeatsFromLastThrow = function(row, beatRel, 
 */
 JPRO.RowHandMapper.prototype.getHandBeatsToNextThrow = function(hand) {
     var row = this.handToRow(hand);
-    //console.log("row=" + row);
+    //console.log('row=' + row);
     var i = this.rowBeats[row];
     var rHands = this.rhm[row];
-    //console.log("rHands=" + rHands);
+    //console.log('rHands=' + rHands);
     var rv = 1;
     while (rv < 999) {
 	if (hand === rHands[(i+rv) % rHands.length]) {
@@ -225,12 +247,12 @@ JPRO.RowHandMapper.prototype.nextBeat = function() {
     for (i=0; i<this.rowBeats.length; i++) {
 	if (this.rowBeats[i] >= this.rhm[i].length - 1) {
 	    this.rowBeats[i] = 0;
-	    this.entryDone[i] = 1;
+	    //this.entryDone[i] = 1;
 	}
 	else {
 	    this.rowBeats[i]++;
 	}
-	//console.log("rowBeats[" + i + "]=" + this.rowBeats[i]);
+	//console.log('rowBeats[' + i + ']=' + this.rowBeats[i]);
     }
     return this;
 };
@@ -254,12 +276,14 @@ JPRO.RowHandMapper.prototype.makeArray = function(sz, val) {
     return rv;
 };
 
+/*
 JPRO.RowHandMapper.prototype.clearEntryDone = function() {
     var i;
     for (i=0; i<this.entryDone.length; i++) {
 	this.entryDone[i] = 0;
     }
 };
+*/
 
 /**
  * Returns the rhm row corresponding to specified Hand.
@@ -271,7 +295,7 @@ JPRO.RowHandMapper.prototype.clearEntryDone = function() {
  */
 JPRO.RowHandMapper.prototype.handToRow = function(hand) {
     //if (hand) {
-//	console.log("RowHandMapper handToRow: hand ok name=" + hand.name);
+//	console.log('RowHandMapper handToRow: hand ok name=' + hand.name);
 //    }
 //    if (this.handToRowHash) {
 //	console.log(this.handToRowHash);

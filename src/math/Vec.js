@@ -15,14 +15,18 @@
 (function () {
 
 'use strict';
-
+JPRO.ID.Vec = 0;
 JPRO.Vec = function(x, y, z) {
+
+    // Call superclass
+    this.className = this.className || 'Vec';
+    JPRO.Base.call(this);
 
     /**
      * X cartesian coordinate
      *
      * @property x
-     * @type number
+     * @type Number
      */
     this.x = x || 0;
 
@@ -30,7 +34,7 @@ JPRO.Vec = function(x, y, z) {
      * Y cartesian coordinate
      *
      * @property y
-     * @type number
+     * @type Number
      */
     this.y = y || 0;
 
@@ -38,14 +42,28 @@ JPRO.Vec = function(x, y, z) {
      * Z cartesian coordinate
      *
      * @property z
-     * @type number
+     * @type Number
      */
     this.z = z || 0;
+
 };
 
 // constructor
+JPRO.Vec.prototype = Object.create(JPRO.Base.prototype);
 JPRO.Vec.prototype.constructor = JPRO.Vec;
-
+    
+/**
+ * Copy
+ *
+ * @method copy
+ * @return {Vec} copied vector
+ */
+//JPRO.Vec.prototype.copy = function(objHash, obj) {
+//JPRO.Vec.prototype.copy = function(objHash, cFunc) {
+    //cFunc = cFunc || function() { return new JPRO.Vec(); };
+//    return this.copyOnce(objHash, cFunc);
+//};
+    
 /**
  * Getter function for X coordinate
  *

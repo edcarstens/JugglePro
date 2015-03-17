@@ -17,20 +17,37 @@
  */
 (function () {
     'use strict';
-    JPRO.Dynamic = function(routine) {
+    JPRO.ID.Dynamic = 0;
+    JPRO.Dynamic = function(routine, name) {
+
+	// Call superclass
+	this.className = this.className || 'Dynamic';
+	JPRO.Base.call(this, name);
+
 	this.routine = routine;
 	this.type = 'Dynamic';
     };
+    JPRO.Dynamic.prototype = Object.create(JPRO.Base.prototype);
     JPRO.Dynamic.prototype.constructor = JPRO.Dynamic;
 
-    JPRO.Dynamic.prototype.copy = function(rhmHash) {
-	return new JPRO.Dynamic(this.routine.copy(rhmHash));
+    /**
+     * Copy
+     *
+     * @method copy
+     * @param objHash {Object} tracks all copied objects
+     * @param cFunc {Function} constructor function
+     * @return {Dynamic} copied Dynamic
+     */
+    JPRO.Dynamic.prototype.copy = function(objHash, cFunc) {
+	var callBacks = ['getRoutine'];
+	return this.copyOnce(objHash, cFunc, {}, {}, callBacks);
     };
 
+    /* jshint unused:false */
     JPRO.Dynamic.prototype.getRoutine = function(parentRoutine, laf) {
 	return this.routine;
     };
-
+    /* jshint unused:true */
     JPRO.Dynamic.prototype.toString = function() {
 	return this.routine.toString;
     };

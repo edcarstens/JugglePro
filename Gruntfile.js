@@ -12,6 +12,8 @@ module.exports = function(grunt) {
     // Source files
     var srcFiles = [
 	'<%= dirs.src %>/Jpro.js',
+	'<%= dirs.src %>/common/Base.js',
+	'<%= dirs.src %>/common/Common.js',
 	'<%= dirs.src %>/gui/Gui.js',
 	'<%= dirs.src %>/hands/Juggler.js',
 	'<%= dirs.src %>/hands/Hand.js',
@@ -23,7 +25,6 @@ module.exports = function(grunt) {
 	'<%= dirs.src %>/patterns/ThrowSeq.js',
 	'<%= dirs.src %>/patterns/Pattern.js',
 	'<%= dirs.src %>/patterns/Routine.js',
-	'<%= dirs.src %>/patterns/Dynamic.js',
 	'<%= dirs.src %>/patterns/State.js',
 	'<%= dirs.src %>/props/Prop.js',
 	'<%= dirs.src %>/props/Ball.js',
@@ -31,6 +32,8 @@ module.exports = function(grunt) {
 	'<%= dirs.src %>/time/Clock.js',
 	'<%= dirs.src %>/time/Rhythm.js',
 	'<%= dirs.src %>/viewer/Config.js',
+	'<%= dirs.src %>/viewer/ThrowData.js',
+	'<%= dirs.src %>/viewer/LookAhead.js',
 	'<%= dirs.src %>/viewer/View.js',
 	'<%= dirs.src %>/viewer/Viewer.js'
     ];

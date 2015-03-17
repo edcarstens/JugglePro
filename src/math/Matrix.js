@@ -18,8 +18,12 @@
 (function () {
 
 'use strict';
-
+JPRO.ID.Matrix = 0;
 JPRO.Matrix = function(row1, row2, row3, col4) {
+
+    // Call superclass
+    this.className = this.className || 'Matrix';
+    JPRO.Base.call(this);
 
     var r1 = row1 || new JPRO.Vec(1,0,0);
     var r2 = row2 || new JPRO.Vec(0,1,0);
@@ -43,11 +47,26 @@ JPRO.Matrix = function(row1, row2, row3, col4) {
      * @property col4
      * @type Array
      */
-    this.col4 = (col4 === null) ? new JPRO.Vec() : col4; // 4th column
+    this.col4 = (col4 === undefined) ? new JPRO.Vec() : col4; // 4th column
+
 };
 
 // constructor
+JPRO.Matrix.prototype = Object.create(JPRO.Base.prototype);
 JPRO.Matrix.prototype.constructor = JPRO.Matrix;
+
+/**
+ * Copy
+ *
+ * @method copy
+ * @return {Matrix} copied Matrix
+ */
+JPRO.Matrix.prototype.copy = function(objHash, cFunc) {
+    // skip the m property (an array of numbers)
+    var rv = this.copyOnce(objHash, cFunc, {'m':1});
+    rv.m = this.m.slice();
+    return rv;
+};
 
 /**
  * Multiplies two matrixes

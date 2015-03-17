@@ -10,10 +10,13 @@
  * @param viewer {Viewer} the viewer object
  *
  */
-
-JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth, upperArmLength,
-			foreArmLength, handLength) {
+JPRO.ID.Juggler = 0;
+JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, params) {
     
+    // Call superclass
+    this.className = this.className || 'Juggler';
+    JPRO.Base.call(this, name);
+
     /**
      * Pointer to the Viewer object
      *
@@ -21,8 +24,6 @@ JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth
      * @type Viewer
      */
     this.viewer = viewer;
-
-    this.name = name || 'Zeke';
     
     /**
      * 3D Position of this juggler (specifically the neck)
@@ -31,11 +32,26 @@ JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth
      * @type Vec
      */
     this.neckPos = ((neckPos === undefined) || (neckPos === null)) ? new JPRO.Vec(0,200,100) : neckPos;
+
+    /**
+     * Facing Angle
+     *
+     * @property 
+     * @type Number
+     */
     this.facingAngle = ((facingAngle === undefined) || (facingAngle === null)) ? -90 : facingAngle;
-    this.shoulderWidth = shoulderWidth || JPRO.SHOULDERWIDTH;
-    this.upperArmLength = upperArmLength || JPRO.UPPERARMLENGTH;
-    this.foreArmLength = foreArmLength || JPRO.FOREARMLENGTH;
-    this.handLength = handLength || JPRO.HANDLENGTH;
+
+    /**
+     * Parameters: shoulderWidth, upperArmLength, foreArmLength, handLength
+     * 
+     * @property params
+     * @type Object
+     */
+    if (params === undefined) { params = {}; }
+    this.shoulderWidth = params.shoulderWidth || JPRO.SHOULDERWIDTH;
+    this.upperArmLength = params.upperArmLength || JPRO.UPPERARMLENGTH;
+    this.foreArmLength = params.foreArmLength || JPRO.FOREARMLENGTH;
+    this.handLength = params.handLength || JPRO.HANDLENGTH;
 
     /**
      * Array of Hand objects
@@ -51,18 +67,47 @@ JPRO.Juggler = function(viewer, name, hands, neckPos, facingAngle, shoulderWidth
 	var RightHand = JPRO.Handfun.cascR(this);
 	//var LeftHand = JPRO.Handfun.stationaryL(this);
 	//var RightHand = JPRO.Handfun.stationaryR(this);
-	var lh = new JPRO.Hand(this.viewer, LeftHand, this.name + '_LH', 0);
-	var rh = new JPRO.Hand(this.viewer, RightHand, this.name + '_RH', 1);
+	var lh = new JPRO.Hand(this.viewer, this.name + '_LH', LeftHand, 0);
+	var rh = new JPRO.Hand(this.viewer, this.name + '_RH', RightHand, 1);
 	this.hands = [lh, rh];
     }    
 };
 
+JPRO.Juggler.prototype = Object.create(JPRO.Base.prototype);
 JPRO.Juggler.prototype.constructor = JPRO.Juggler;
 
-JPRO.Juggler.prototype.update = function() {
+/**
+ * Copy
+ *
+ * @method copy
+ * @return {Juggler} copied Juggler
+ */
+JPRO.Juggler.prototype.copy = function(objHash, cFunc) {
+    var pFuncs = {};
+    pFuncs.hands = JPRO.Common.copyObjVector;
+   
+    cFunc = cFunc || function() {
+	return new JPRO.Juggler(null, // viewer
+				1, // name
+				[], // hands
+				1, // neckPos
+				1, // facingAngle
+				{}); // params
+    };
+    return this.copyOnce(objHash, cFunc, {}, pFuncs);
+};
+
+JPRO.Juggler.prototype.update = function(timeBetweenThrowsHash) {
     var i;
     for (i in this.hands) {
-	this.hands[i].update();
+	this.hands[i].update(timeBetweenThrowsHash);
+    }
+};
+
+JPRO.Juggler.prototype.updatePos = function() {
+    var i;
+    for (i in this.hands) {
+	this.hands[i].updatePos();
     }
 };
 

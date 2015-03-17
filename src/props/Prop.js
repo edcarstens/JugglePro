@@ -175,11 +175,20 @@ JPRO.Prop.prototype.throw2Pos = function(dest, time) {
  * time is calculated, then throw2Pos is called.
  *
  * @method throw2Hand
- * @param destHand {Hand} the destination hand
+ * @param origDestHand {Hand} the original destination hand
+ * @param destHand {Hand} copy of the original destination hand
  * @param destBeatRel {Number} destination beat relative to current beat (aka throw-height)
  * @return {Prop} this
 */
-JPRO.Prop.prototype.throw2Hand = function(destHand, destBeatRel, dwell) {
+    JPRO.Prop.prototype.throw2Hand = function(td) {
+	this.destHand = td.destHand;
+	this.timer = td.timer;
+	this.vel.setV(td.vel);
+	this.inHand = null; // release prop
+	return this;
+    };
+
+ /*JPRO.Prop.prototype.throw2Hand = function(origDestHand, destHand, destBeatRel, dwell) {
     // Calculate throw time
     //var beat = this.viewer.beat;
     //var destBeat = (destHand.movementBeat + destBeatRel) % destHand.movementPeriod;
@@ -200,8 +209,8 @@ JPRO.Prop.prototype.throw2Hand = function(destHand, destBeatRel, dwell) {
     //	(destHand.movementPeriod * this.viewer.clock.beatPeriod);
 //    var destBeat1 = (destHand.movementBeat + destHand.movementPeriod + destBeatRel - 1) % destHand.movementPeriod;
 //    var timeAbs = destBeat1 + 1 - dwell
-    this.destHand = destHand;
-    console.log('JPRO.Prop.throw2Hand: throw prop to ' + destHand.name + ' in time ' + flightTime);
+    this.destHand = origDestHand;
+    console.log('JPRO.Prop.throw2Hand: throw prop to ' + origDestHand.name + ' in time ' + flightTime);
     //var pa = destHand.fpos(timeAbs, this.viewer.beatPeriod); // position array
     //console.log('dwell ratio = ' + dwellRatio);
     var pa = destHand.hFunc.getPos(dwellRatio, mBeat); // position array
@@ -210,7 +219,8 @@ JPRO.Prop.prototype.throw2Hand = function(destHand, destBeatRel, dwell) {
     console.log('JPRO.Prop.throw2Hand: pos = ' + pos.toString());
     return this.throw2Pos(pos, flightTime);
 };
-    
+ */
+
 /**
  * Called when prop is to be caught by a hand, this method
  * sets inHand to the Hand object catching the prop and the

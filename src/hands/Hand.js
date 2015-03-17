@@ -17,9 +17,14 @@
 
 (function () {
 
-'use strict';
+    'use strict';
 
-JPRO.Hand = function(viewer, hFunc, name, isRight, dwellRatio) {
+    JPRO.ID.Hand = 0;
+    JPRO.Hand = function(viewer, name, hFunc, isRight, dwellRatio) {
+
+    // Call superclass
+    this.className = this.className || 'Hand';
+    JPRO.Base.call(this, name);
 
     /**
      * Pointer to the Viewer object
@@ -36,14 +41,6 @@ JPRO.Hand = function(viewer, hFunc, name, isRight, dwellRatio) {
      * @type View
      */
     this.view = viewer.view;
-    
-    /**
-     * Name of hand
-     *
-     * @property name
-     * @type String
-     */
-    this.name = name || 'hand';
     
     /**
      * Dwell ratio for this hand
@@ -86,7 +83,7 @@ JPRO.Hand = function(viewer, hFunc, name, isRight, dwellRatio) {
     this.props = [];
         
     /**
-     * An externally defined function, this method 
+     * An externally defined object, its getPos method 
      * calculates and returns the positions of the arm
      * joints and hand at the specified time.
      *
@@ -127,7 +124,67 @@ JPRO.Hand = function(viewer, hFunc, name, isRight, dwellRatio) {
     this.posProjected = new JPRO.Vec();
 };
 
+JPRO.Hand.prototype = Object.create(JPRO.Base.prototype);
 JPRO.Hand.prototype.constructor = JPRO.Hand;
+
+/**
+ * Copy
+ *
+ * @method copy
+ * @return {Hand} copied Hand
+ */
+JPRO.Hand.prototype.copy = function(objHash, cFunc) {
+    cFunc = cFunc || function() {
+	return new JPRO.Hand({}, // viewer
+			     1, // name
+			     {}, // hFunc
+			     1, // isRight
+			     1 // dwellRatio
+			    );
+    };
+    var skip = {};
+    skip.props = 1;
+    return this.copyOnce(objHash, cFunc, skip);
+    
+/*
+    if (objHash === undefined) { objHash = {}; }
+    if (objHash[this.name] !== undefined) { return objHash[this.name]; }
+    var rv = new JPRO.Hand(this.viewer.copy(objHash), this.name + '_copy',
+			   this.hFunc.copy(objHash), this.isRight,
+			   this.dwellRatio);
+    objHash[this.name] = rv;
+    objHash[rv.name] = this;
+    rv.viewer = this.viewer.copy(objHash);
+    rv.view = this.view.copy(objHash);
+    rv.beat = this.beat;
+    rv.movementBeat = this.movementBeat;
+    rv.movementPeriod = this.movementPeriod;
+//    rv.props = JPRO.Common.copyObjVector(this.props, objHash);
+    rv.pos = this.pos.copy(objHash);
+    rv.posProjected = this.posProjected.copy(objHash);
+    return rv; */
+};
+
+/**
+ * Update hand position from hFunc for look-ahead
+ * operation.
+ *
+ * @method lookAheadUpdate
+*/
+//JPRO.Hand.prototype.lookAheadUpdate = function() {
+    
+//};
+
+/**
+ * Update hand position
+ *
+ * @method updatePos
+*/
+JPRO.Hand.prototype.updatePos = function() {
+    var pa = this.hFunc.getPos(0, this.movementBeat);
+    this.pos = this.view.transform(pa[0]); // pa[0] is hand position
+    //this.posProjected = this.view.project(this.pos);
+};
 
 /**
  * Draw this hand on the view screen and may also
@@ -135,7 +192,23 @@ JPRO.Hand.prototype.constructor = JPRO.Hand;
  *
  * @method update
 */
-JPRO.Hand.prototype.update = function() {
+JPRO.Hand.prototype.update = function(timeBetweenThrowsHash) {
+    // New method
+    // use lookAhead
+    var duration = this.viewer.clock.duration(this.name);
+    var time;
+    var timeBetweenThrows = timeBetweenThrowsHash[this.name];
+    if (timeBetweenThrows < 0.01) {
+	time = 0.5;
+    }
+    else {
+	time = duration/timeBetweenThrows;
+    }
+
+//    if (this.name === 'Juggler_0_RH') {
+//	console.log('time=' + this.viewer.clock.totalTime() + ' hand=' + this.name + ' timeBetweenThrows=' + timeBetweenThrows + ' duration=' + duration);
+//    }
+    /*
     // current time within current beat
     var t = this.viewer.clock.t;
     // duration since last throw by this hand
@@ -158,6 +231,8 @@ JPRO.Hand.prototype.update = function() {
     }
     //console.log('time=' + time);
     //var pa = this.fpos(time, this.viewer.clock.beatPeriod);
+    */
+
     var pa = this.hFunc.getPos(time, this.movementBeat);
     var tpos = this.view.project(this.view.transform(pa[1]));
     var wpos = this.view.project(this.view.transform(pa[2]));
@@ -271,16 +346,19 @@ JPRO.Hand.prototype.getDwellRatio = function() {
 
 /**
  * Increment this hand's movement beat
- *
+ * Update hand position
  * @method nextBeat
 */
 JPRO.Hand.prototype.nextBeat = function() {
+    var pa;
     if (this.movementBeat >= this.movementPeriod - 1) {
 	this.movementBeat = 0;
     }
     else {
 	this.movementBeat++;
     }
+    pa = this.hFunc.getPos(0, this.movementBeat);
+    this.pos = this.view.transform(pa[0]);
 };
 
 /**
@@ -302,12 +380,14 @@ JPRO.Hand.prototype.catchProp = function(p, updatePropN) {
  * arrival time.
  *
  * @method throwProp
- * @param destHand {Hand} destination hand
+ * @param origDestHand {Hand} original destination hand
+ * @param destHand {Hand} copy of original destination hand
  * @param destBeatRel {Number} arrival time specified in beats
  *        relative to current beat
  * @return {Prop} the prop being thrown
 */
-JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel, dwell) {
+//JPRO.Hand.prototype.throwProp = function(origDestHand, destHand, destBeatRel, dwell) {
+JPRO.Hand.prototype.throwProp = function(td) {
     var p;
     if (this.props.length > 0) {
 	p = this.props.shift();
@@ -316,9 +396,10 @@ JPRO.Hand.prototype.throwProp = function(destHand, destBeatRel, dwell) {
 	p = this.viewer.grabNewProp();
 	p.pos.setV(this.pos);
     }
-    console.log(this.name + ' throws a ' + destBeatRel + ' to ' + destHand.name);
-    console.log('dwell = ' + dwell);
-    p.throw2Hand(destHand, destBeatRel, dwell);
+    //console.log(this.name + ' throws a ' + destBeatRel + ' to ' + origDestHand.name);
+    //console.log('dwell = ' + dwell);
+    //p.throw2Hand(origDestHand, destHand, destBeatRel, dwell);
+    p.throw2Hand(td);
 };
 
 /**

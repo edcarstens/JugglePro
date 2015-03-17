@@ -3,8 +3,13 @@
 r1 = new JPRO.Vec();
 r2 = new JPRO.Vec(1,2,3);
 r3 = new JPRO.Vec(4,5,6);
+objHash = {};
+r3_copy = r3.copy(objHash);
+
 console.log("r2=" + r2.toString());
 console.log("r3=" + r3.toString());
+console.log("r3_copy=" + r3_copy.toString());
+
 m1 = new JPRO.Matrix(r1,r2,r3);
 console.log("m1=" + m1.toString());
 console.log("XAXIS=" + JPRO.XAXIS);

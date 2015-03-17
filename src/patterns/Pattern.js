@@ -16,12 +16,13 @@
 (function () {
 
 'use strict';
-
-//JPRO.Pattern = function(mhn, rowHands, iters, get_bp_xfun, get_tbb_xfun) {
-JPRO.Pattern = function(mhn, rhMap, iters) {
+JPRO.ID.Pattern = 0;
+/* global $:true, viewer:true */
+JPRO.Pattern = function(mhn, rhMap, iters, name) {
 
     // Call superclass
-    JPRO.ThrowSeq.call(this, mhn, rhMap);
+    this.className = this.className || 'Pattern';
+    JPRO.ThrowSeq.call(this, mhn, rhMap, name);
 
     /**
      * Type string
@@ -29,7 +30,7 @@ JPRO.Pattern = function(mhn, rhMap, iters) {
      * @property type
      * @type String
      */
-    this.type = 'Pattern';
+    //this.type = 'Pattern';
 
     /**
      * Iterations
@@ -60,27 +61,6 @@ JPRO.Pattern = function(mhn, rhMap, iters) {
 JPRO.Pattern.prototype = Object.create( JPRO.ThrowSeq.prototype );
 JPRO.Pattern.prototype.constructor = JPRO.Pattern;
 
-JPRO.Pattern.prototype.copy = function(rhmHash) {
-    var rhMap = rhmHash[this.rhMap.name];
-    if (rhMap === undefined) {
-	rhMap = this.rhMap.copy();
-	//console.log('>>> rowBeats=' + this.rhMap.rowBeats);
-	//console.log('>>> rowBeats=' + rhMap.rowBeats);
-	rhmHash[this.rhMap.name] = rhMap;
-	//console.log('rhmHash[1]=' + rhmHash[1]);
-	//console.log('rhmHash[' + this.rhMap.name + ']=' + rhmHash[this.rhMap.name].name);
-	//console.log('rowBeats=' + rhmHash[this.rhMap.name].rowBeats);
-    }
-    var rv = new JPRO.Pattern(this.mhn, rhMap, this.iters);
-    rv.type = this.type;
-    rv.iterCnt = this.iterCnt;
-    rv.beat = this.beat;
-    rv.maxRows = this.maxRows;
-    rv.maxPeriod = this.maxPeriod;
-    rv.props = this.props;
-    return rv;
-};
-    
 /**
  * 
  *

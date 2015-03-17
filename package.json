@@ -1,6 +1,6 @@
 {
     "name": "JugglePro",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "JugglePro is a juggling pattern viewer.",
     "keywords": ["juggle","throw","catch","throwing","catching",
 		 "siteswap","MHN","state","transition",

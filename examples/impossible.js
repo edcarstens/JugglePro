@@ -17,20 +17,20 @@ viewer.view = new JPRO.View(viewer);
 // timing
 viewer.basePeriod = 7;
 viewer.clock = new JPRO.Clock(viewer.basePeriod);
-viewer.dwellRatio = 0.32;
+viewer.dwellRatio = 0.30;
 
 // jugglers
 // set Adam.hands=0 when customizing hand movements
 var Adam = new JPRO.Juggler(viewer, 'Adam', 0, new JPRO.Vec(0, 200, -170));
 var AdamLFunc = JPRO.Handfun.revCascL(Adam);
 var AdamRFunc = JPRO.Handfun.revCascR(Adam);
-var AdamL = new JPRO.Hand(viewer, AdamLFunc, Adam.name + '_LH', 0);
-var AdamR = new JPRO.Hand(viewer, AdamRFunc, Adam.name + '_RH', 1);
+var AdamL = new JPRO.Hand(viewer, Adam.name + '_LH', AdamLFunc, 0);
+var AdamR = new JPRO.Hand(viewer, Adam.name + '_RH', AdamRFunc, 1);
 Adam.hands = [AdamL, AdamR];
 viewer.jugglers = [Adam];
 
 // routine
-var rhMap = new JPRO.RowHandMapper('rhm', [[Adam.hands[0],Adam.hands[1]]], [[2,2]]);
+var rhMap = new JPRO.RowHandMapper(null, [[Adam.hands[0],Adam.hands[1]]]);
 var pat = new JPRO.Pattern([[ [[0,19]],[[0,17]],[[0,15]] ]], rhMap, 2);
 viewer.routine = new JPRO.Routine([pat]);
 

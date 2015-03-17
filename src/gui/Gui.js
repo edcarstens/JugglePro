@@ -9,7 +9,8 @@
  * @constructor
  * @param viewer {Viewer} the pattern viewer
  */
-
+/* global $:true, viewer:true */
+/* global requestAnimFrame:true, animate:true */
 JPRO.Gui = function(viewer) {
     this.viewer = viewer;
 };
@@ -28,8 +29,22 @@ JPRO.Gui.prototype.init = function() {
     p = v.pattern; if (!p) return;
     //console.log('Gui: Pattern=' + p.toString());
     $('#div1').html(p.toHtml());
-    var bpslider = this.makeSlider('Base Period', 'BasePeriod', viewer.clock.basePeriod, 5, 75, 1, 10, 70, 10);
-    var dwslider = this.makeSlider('Dwell Ratio', 'DwellRatio', viewer.dwellRatio*100, 0, 100, 1, 0, 100, 10);
+    var bpslider = this.makeSlider('Base Period', 'BasePeriod', // viewer.clock.basePeriod, 5, 75, 1, 10, 70, 10);
+				   {val:viewer.clock.basePeriod,
+				    min:5,
+				    max:75,
+				    step:1,
+				    start:10,
+				    end:70,
+				    tstep:10});
+    var dwslider = this.makeSlider('Dwell Ratio', 'DwellRatio', // viewer.dwellRatio*100, 0, 100, 1, 0, 100, 10);
+				   {val:viewer.dwellRatio*100,
+				    min:0,
+				    max:100,
+				    step:1,
+				    start:0,
+				    end:100,
+				    tstep:10});
     //var vslider = this.makeSlider('Test Variable', 'TestVar', viewer.testVar, 0, 100, 1, 0, 100, 10);
     $('#div2').html(bpslider);
     $('#div3').html(dwslider);
@@ -43,17 +58,17 @@ JPRO.Gui.prototype.init = function() {
  *
  * @method 
 */
-JPRO.Gui.prototype.makeSlider = function(label, vname, val, min, max, step, start, end, tstep) {
+JPRO.Gui.prototype.makeSlider = function(label, vname, p) { //val, min, max, step, start, end, tstep) {
     var i;
     var fader = vname + '_fader';
     var settings = vname + '_settings';
     var call = '\"viewer.gui.update' + vname + '(value)\"';
     var rv = '<label for=' + fader + '>' + label + '</label>';
-    rv += '<input type=range min=' + min + ' max=' + max + ' value=' + val;
-    rv += ' id=' + fader + ' step=' + step + ' list=' + settings + ' oninput=' + call + '>';
-    rv += '<output for=' + fader + ' id=' + vname + '>' + val + '</output>';
+    rv += '<input type=range min=' + p.min + ' max=' + p.max + ' value=' + p.val;
+    rv += ' id=' + fader + ' step=' + p.step + ' list=' + settings + ' oninput=' + call + '>';
+    rv += '<output for=' + fader + ' id=' + vname + '>' + p.val + '</output>';
     rv += '<datalist id=' + settings + '>';
-    for (i=start; i<=end; i+=tstep) {
+    for (i=p.start; i<=p.end; i+=p.tstep) {
 	rv += '<option>' + i + '</option>';
     }
     rv += '</datalist>';

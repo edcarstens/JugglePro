@@ -5,7 +5,7 @@
 /**
  * @module JPRO
  */
-var JPRO = JPRO || {};
+var JPRO = JPRO || {}; // jshint ignore:line
 
 /* 
 * 
@@ -14,7 +14,7 @@ var JPRO = JPRO || {};
 */
 
 // version
-JPRO.VERSION = "v0.0.1";
+JPRO.VERSION = "v0.0.2";
 
 // Matrix axes enumeration
 JPRO.XAXIS = 0;
@@ -26,3 +26,7 @@ JPRO.SHOULDERWIDTH = 80;
 JPRO.UPPERARMLENGTH = 100;
 JPRO.FOREARMLENGTH = 120;
 JPRO.HANDLENGTH = 25;
+
+// Object ID
+// This is used to generate unique names for objects
+JPRO.ID = {};

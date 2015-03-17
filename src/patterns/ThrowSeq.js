@@ -12,22 +12,27 @@
  * @constructor
  * @param mhn {Array} MHN throw matrix
  * @param rhMap {RowHandMapper} row-to-hand mapping object
+ * @param name {String} name of this ThrowSeq
  *
  */
 
 (function () {
 
     'use strict';
+    JPRO.ID.ThrowSeq = 0;
+    JPRO.ThrowSeq = function(mhn, rhMap, name) {
+	
+	// Call superclass
+	this.className = this.className || 'ThrowSeq';
+	JPRO.Base.call(this, name);
 
-    JPRO.ThrowSeq = function(mhn, rhMap) {
-    
 	/**
 	 * Type of throw matrix object
 	 *
 	 * @property type
 	 * @type String
 	 */
-	this.type = 'ThrowSeq';
+	//this.type = 'ThrowSeq';
 	
 	/**
 	 * MHN throw matrix
@@ -135,25 +140,31 @@
 	this.maxThrowHeight = 19; // red warning threshold
 
 	this.beat = 0;
+
     };
-    
+
+    JPRO.ThrowSeq.prototype = Object.create(JPRO.Base.prototype);
     JPRO.ThrowSeq.prototype.constructor = JPRO.ThrowSeq;
 
-    JPRO.ThrowSeq.prototype.copy = function(rhmHash) {
-	var rhMap = rhmHash[this.rhMap.name];
-	if (rhMap === undefined) {
-	    rhMap = this.rhMap.copy();
-	    rhmHash[this.rhMap.name] = rhMap;
-	}
-	var rv = new JPRO.ThrowSeq(this.mhn, rhMap);
-	rv.type = this.type;
-	rv.iters = this.iters;
-	rv.iterCnt = this.iterCnt;
-	rv.beat = this.beat;
-	return rv;
+    /**
+     * Copy
+     *
+     * @method copy
+     * @param objHash {Object} tracks all copied objects
+     * @param cFunc {Function} constructor function
+     * @return {ThrowSeq} copied ThrowSeq
+     */
+    JPRO.ThrowSeq.prototype.copy = function(objHash, cFunc) {
+	var pFuncs = {};
+	pFuncs.mhn = JPRO.Common.makeCopyMatrix(4);
+	var skip = {};
+	skip.selectionOrder = 1;
+	skip.selections = 1;
+	skip.isSelected = 1;
+	return this.copyOnce(objHash, cFunc, skip, pFuncs);
     };
 
-    JPRO.ThrowSeq.prototype.isThrowing = function(hand) {
+ /*    JPRO.ThrowSeq.prototype.isThrowing = function(hand) {
 	var i;
 	for (i=0; i<this.mhn.length; i++) {
 	    if (this.rhMap.getHand(i) === hand) {
@@ -162,7 +173,8 @@
 	}
 	return null;
     };
-    
+*/    
+
     /**
      * Indicates whether this object is to be repeated
      *
@@ -176,7 +188,7 @@
 	}
 	else if (this.iterCnt < this.iters-1) {
 	    this.iterCnt++;
-	    console.log('ThrowSeq.repeat: iterCnt=' + this.iterCnt);
+	    //console.log('ThrowSeq.repeat: iterCnt=' + this.iterCnt);
 	    return 1; // restart pattern
 	}
 	else {
@@ -309,7 +321,7 @@
 	    this.isSelected[k] = ++this.selectionOrder;
 	    this.selections++;
 	}
-	console.log('selections:' + this.selections);
+	//console.log('selections:' + this.selections);
     };
 
     /**

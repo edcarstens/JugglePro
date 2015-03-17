@@ -6,62 +6,120 @@
  * Clock is used to provide a rhythm or even a
  * composition of different rhythms. By default
  * the rhythm is simply a constant beat.
- * All beats are some integral multiple of basePeriod.
+ * All beat periods are some integral multiple of basePeriod.
  * By default the basePeriod is 20.
  *
  * @class Clock
  * @constructor
  * @param basePeriod {Number} the juggling base period
  * @param rhythm {Rhythm} the rhythm of beats
-  */
-JPRO.Clock = function(basePeriod, rhythm) {
+ * @param name {String} name of this Clock
+ * @param beatPeriod {Number} current beat's period
+ */
+JPRO.ID.Clock = 0;
+JPRO.Clock = function(basePeriod, rhythm, name, beatPeriod) {
+
+    // Call superclass
+    this.className = this.className || 'Clock';
+    JPRO.Base.call(this, name);
+
+    /**
+     * Base period
+     * The base period is a small time interval which is
+     * multiplied by rhythm sequence numbers to calculate
+     * the beat periods (duration of each beat).
+     *
+     * @property basePeriod
+     * @type Number
+     */
     this.basePeriod = basePeriod || 20;
+
+    /**
+     * Top rhythm
+     * The top rhythm prescribes the entire sequence
+     * of rhythms for the entire juggling routine.
+     * The top rhythm is often a sequence of
+     * repeated rhythms, but it could just be a
+     * simple repeating rhythm. 
+     *
+     * @property rhythm
+     * @type Rhythm
+     */
     this.rhythm = rhythm || new JPRO.Rhythm();
-    console.log(this.rhythm.toString());
-    // current time within beat
+
+    /**
+     * Time counter within a beat
+     *
+     * @property t
+     * @type Number
+     */
     this.t = 0;
     // total time
+
+    /**
+     * Time to current beat
+     * This is the time to the current beat relative to
+     * the start of animation. The current time or total
+     * time since the start of animation is (tt + t).
+     *
+     * @property tt
+     * @type Number
+     */
     this.tt = 0;
-    this.maxTime = 10000; // very low for testing
+
+    /**
+     * Upper bound on time counter, tt
+     * If and when tt ever exceeds maxTime, it will
+     * be adjusted down by maxTime and all timestamps
+     * will also be adjusted down by the same.
+     *
+     * @property maxTime
+     * @type Number
+     */
+    this.maxTime = 30000;
+
+    /**
+     * Timestamps hash
+     *
+     * @property timeStamps
+     * @type Object
+     */
     this.timeStamps = {}; // hash
-    // current beat period
-    this.beatPeriod = this.rhythm.nextBeat()*this.basePeriod;
 
-};
-
-JPRO.Clock.prototype.constructor = JPRO.Clock;
-
-JPRO.Clock.prototype.copy = function() {
-    var rv = new JPRO.Clock(this.basePeriod, this.rhythm);
-    rv.t = this.t;
-    rv.tt = this.tt;
-    rv.maxTime = this.maxTime;
-    rv.timeStamps = this.timeStamps; // fix me?
-};
-
-//JPRO.Clock.prototype.updateBeats = function(beats) {
-//
-//};
-
-/**
- * This method calculates and returns the time between
- * two future beats in the rhythm. The beats are
- * specified relative to the current beat. This is
- * necessary for calculating the flight time of a
- * thrown prop in a juggling pattern.
- *
- * @method timeBetweenBeats
- * @param beat1 {Number} the first beat
- * @param beat2 {Number} the last beat
- */
-JPRO.Clock.prototype.timeBetweenBeats = function(beat1, beat2) {
-    if (beat1 === 0) {
-	return this.rhythm.timeBetweenBeats(0, beat2-1) * this.basePeriod +
-	    this.beatPeriod;
+    /**
+     * 
+     *
+     * @property 
+     * @type 
+     */
+    // Get current beat period (and move forward a beat)
+    if (beatPeriod === undefined) {
+	this.beatPeriod = this.rhythm.nextBeat()*this.basePeriod;
     }
     else {
-	return this.rhythm.timeBetweenBeats(beat1-1, beat2-1) * this.basePeriod;
+	this.beatPeriod = beatPeriod;
     }
+
+};
+
+JPRO.Clock.prototype = Object.create(JPRO.Base.prototype);
+JPRO.Clock.prototype.constructor = JPRO.Clock;
+
+/**
+ * Copy
+ *
+ * @method copy
+ * @param objHash {Object} tracks all copied objects
+ * @param cFunc {Function} constructor function
+ * @return {Clock} copied Clock
+ */
+JPRO.Clock.prototype.copy = function(objHash, cFunc) {
+    var pFuncs = {};
+    pFuncs.timeStamps = JPRO.Common.copyHash;
+    cFunc = cFunc || function() {
+	return new JPRO.Clock(null, 1, null, 1);
+    };
+    return this.copyOnce(objHash, cFunc, {}, pFuncs);
 };
 
 /**
@@ -78,14 +136,14 @@ JPRO.Clock.prototype.update = function() {
     if (this.t >= this.beatPeriod-1) {
 	this.t = 0;
 	this.tt += this.beatPeriod; // used for total time method
-	console.log('tt=' + this.tt);
+	//console.log('tt=' + this.tt);
 	if (this.tt >= this.maxTime) {  // total time rollover!
-	    console.log('Time Rollover!');
-	    this.tt = 0;
+	    //alert('Time Rollover!');
+	    this.tt -= this.maxTime;
 	    this.adjustTimeStamps(this.maxTime);
 	}
 	this.beatPeriod = this.rhythm.nextBeat()*this.basePeriod;
-	//console.log('beatPeriod = ' + this.beatPeriod);
+	console.log('beatPeriod = ' + this.beatPeriod);
 	return 1; // new beat
     }
     else {
@@ -122,6 +180,21 @@ JPRO.Clock.prototype.adjustTimeStamps = function(t) {
 JPRO.Clock.prototype.timeStamp = function(name) {
     this.timeStamps[name] = this.totalTime();
     return this.timeStamps[name];
+};
+
+/**
+ * @method getTimeStamp
+ * @param name
+ * @return {Number} 
+*/
+JPRO.Clock.prototype.getTimeStamp = function(name) {
+    if (this.timeStamps[name] === undefined) {
+	//console.log('name='+name+' ts undefined');
+	return 0;
+    }
+    else {
+	return this.timeStamps[name];
+    }
 };
 
 /**

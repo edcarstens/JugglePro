@@ -10,10 +10,30 @@
  *
  */
 
-JPRO.Config = function() {
+JPRO.ID.Config = 0;
+JPRO.Config = function(name) {
+    // Call superclass
+    this.className = this.className || 'Config';
+    JPRO.Base.call(this, name);
 };
 
+JPRO.Config.prototype = Object.create(JPRO.Base.prototype);
 JPRO.Config.prototype.constructor = JPRO.Config;
+
+JPRO.Config.prototype.copy = function(objHash, cFunc) {
+    var pFuncs = {};
+    pFuncs.jugglers = JPRO.Common.copyObjVector;
+    var scalars = [
+	'dwellRatio', 'basePeriod',
+	'minThrowTime', 'viewWidth', 'viewHeight', 'view',
+	'viewAngle', 'zoomDistance', 'zoomIn', 'zoomOut'
+    ];
+    var objects = [
+	'clock', 'gravity', 'view', 'aerialTurn', 'routine',
+	'pattern'
+    ];
+    return this.directedCopy(objHash, cFunc, pFuncs, scalars, objects);
+};
 
 JPRO.Config.prototype.setDefaults = function() {
     /**
@@ -41,9 +61,11 @@ JPRO.Config.prototype.setDefaults = function() {
      * @property grfx
      * @type {PIXI.Graphics} 
      */
-    this.grfx = new PIXI.Graphics();
-    this.grfx.setStageReference(this.stage);
-    this.stage.addChild(this.grfx);
+    if (this.grfx === undefined) {
+	this.grfx = new PIXI.Graphics();
+	this.grfx.setStageReference(this.stage);
+	this.stage.addChild(this.grfx);
+    }
     
     /**
      * Dwell ratio
@@ -73,7 +95,7 @@ JPRO.Config.prototype.setDefaults = function() {
     else {
 	this.basePeriod = this.clock.basePeriod;
     }
-    this.minThrowTime = (this.clock.basePeriod >> 1) + 1; // 1/2 beat period
+    this.minThrowTime = (this.clock.basePeriod >> 1) + 1; // 1/2 smallest beat period
 
     /**
      * Acceleration of gravity vector
@@ -120,7 +142,7 @@ JPRO.Config.prototype.setDefaults = function() {
     if (this.zoomDistance === undefined) { this.zoomDistance = 4500; }
     
     if (this.jugglers === undefined) {
-	this.jugglers = [new JPRO.Juggler(this, 'Zeke')];
+	this.jugglers = [new JPRO.Juggler(this)];
     }
 
     /**
@@ -130,14 +152,13 @@ JPRO.Config.prototype.setDefaults = function() {
      * @type {Routine}
      */
     if (this.routine === undefined) {
-	var rhMap = new JPRO.RowHandMapper('rhm',
-					   [[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]],
-					   [[2,2]]);
+	var rhMap = new JPRO.RowHandMapper(null,
+					   [[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]]);
 	//console.log('rhMap=' + rhMap);
 	//console.log('rhMap.tpm=' + rhMap.tpm[0][0]);
 	//console.log('rhMap.entryTpm=' + rhMap.entryTpm[0][1]);
-	var pat = new JPRO.Pattern([[ [[0,3]] ]], rhMap, 1);
-	this.routine = new JPRO.Routine([pat]);
+	var pat = new JPRO.Pattern([[ [[0,3]] ]], rhMap, 1, 'pat');
+	this.routine = new JPRO.Routine([pat], -1, 'topRoutine');
     }
 
 };
