@@ -1,8 +1,20 @@
 body {
     margin: 0;
     padding: 0;
-    background-color: #000000;
-    color: #40f0c0;
+    background-color: #f0f0f0;
+    color: #207860;
+}
+
+/* Extend w3.css */
+/*
+.w3-light-blue,.w3-hover-light-blue:hover{color:#000 !important;background-color:#87CEEB !important}
+.w3-khaki,.w3-hover-khaki:hover{color:#000 !important;background-color:#f0e68c !important}
+*/
+.w3-jp-light-blue,.w3-jp-hover-light-blue:hover{color:#000 !important;background-color:#81c2df !important}
+.w3-jp-khaki,.w3-jp-hover-khaki:hover{color:#000 !important;background-color:#e4db86 !important}
+
+body {
+    background-color:#aaa;
 }
 
 /* MHN Table */
