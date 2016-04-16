@@ -1,0 +1,23 @@
+<div class="w3-container">
+  <h1> JugglePro Pattern Editor </h1>
+  <h2>MHN - {{p.name}}</h2>
+  <div class="w3-btn-group">
+    <button ng-click="clickSwap()" ng-disabled="swapDis" class="w3-btn w3-green"> SWAP </button>
+    <button ng-click="clickReset()" class="w3-btn w3-lightblue"> AC </button>
+    <button ng-click="clickNewRow()" class="w3-btn w3-green"> NEWROW </button>
+    <button ng-click="clickNewCol()" class="w3-btn w3-lightblue"> NEWCOL </button>
+    <button ng-click="clickTA(1)" class="w3-btn w3-green"> +BALL </button>
+    <button ng-click="clickTA(-1)" class="w3-btn w3-green"> -BALL </button>
+  </div>
+  <div ng-repeat="jts in p.jugThrowSeqs track by $index" class="w3-btn-group">
+	<span ng-repeat="jtm in jts.jugThrows.itemList track by $index">
+	  <button ng-repeat="jt in jtm track by $index" class="w3-btn {{jt.w3GetColor(jts.row)}}"
+		  style="width:{{100/jts.period/jtm.length}}%"
+		  ng-click="clickThrow(jt)">
+	    <b>{{jt.toString()}}</b>
+	  </button>
+	</span>
+	<br><br>
+  </div>
+</div>
+

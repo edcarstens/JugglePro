@@ -1,0 +1,127 @@
+<!DOCTYPE HTML>
+<html>
+  <head><meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+    <title>JugglePro Editor Example8</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="../jp3d.css">
+    <script src="../src/JPRO.js"></script>
+    <script src="../src/base/Base.js"></script>
+    <script src="../src/base/Seq.js"></script>
+    <script src="../src/base/RptSeq.js"></script>
+    <script src="../src/base/HierRptSeq.js"></script>
+    <script src="../src/math/Vec.js"></script>
+    <script src="../src/time/Clock.js"></script>
+    <script src="../src/patterns/State.js"></script>
+    <script src="../src/patterns/JugThrow.js"> </script>
+    <script src="../src/patterns/JugThrowSeq.js"> </script>
+    <script src="../src/patterns/JugPattern.js"> </script>
+    <script src="JPE.js"> </script>
+    <script>
+      JPE(angular, [
+      [ [0,0], [0,0], [0,0], [0,0], [0,0], [0,0] ],
+      [ [1,0], [1,0], [1,0], [1,0] ],
+      [ [2,0], [2,0], [2,0], [2,0], [2,0] ]
+      ], 'Slow-Fast Triangle');
+    </script>
+  </head>
+
+<body ng-app="JpeApp" ng-controller="JpeCtl">
+<!-- THIS CODE WILL BE INCLUDED FROM JPE.html -->
+<div class="w3-container">
+  <h1 class="w3-blue w3-center"> <b> JPE {{p.name}} </b> </h1>
+  <div class="w3-tiny"> <br> </div>
+  <div class="w3-btn-group">
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> {{toolTipAC()}} </span>
+      <button ng-click="clickAC()" class="w3-btn w3-blue" style="width:15%"> AC </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Swap two selected throws </span>
+      <button ng-click="clickSwap()" ng-disabled="swapDis" class="w3-btn w3-green"> SWAP </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Swap two selected rows </span>
+      <button ng-click="clickSwapRows()" ng-disabled="swapRowsDis" class="w3-btn w3-blue"> SWAP ROWS </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Add a new row </span>
+      <button ng-click="clickAddRow()" class="w3-btn w3-green"> +ROW </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Add a new column </span>
+      <button ng-click="clickAddCol()" ng-disabled="hideNewCol" class="w3-btn w3-blue"> +COL </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Add ball(s) </span>
+      <button ng-click="clickTA(1)" class="w3-btn w3-green"> +BALL </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Subtract ball(s) </span>
+      <button ng-click="clickTA(-1)" class="w3-btn w3-blue"> -BALL </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Rotate throws right one beat </span>
+      <button ng-click="clickRotate(-1)" class="w3-btn w3-green"> ROR </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Rotate throws left one beat </span>
+      <button ng-click="clickRotate(1)" class="w3-btn w3-blue"> ROL </button>
+    </div>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Reset to null pattern </span>
+      <button ng-click="clickReset()" class="w3-btn w3-green"> RESET </button>
+    </div>
+    <button ng-click="clickUndo()" ng-disabled="undoDis" class="w3-btn w3-blue"> UNDO </button>
+    <button ng-click="clickRedo()" ng-disabled="redoDis" class="w3-btn w3-green"> REDO </button>
+    <div class="w3-tooltip">
+      <span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:6px"> Toggle MHN format between normal and compact </span>
+      <button ng-click="clickFormat()" class="w3-btn w3-blue"> FORMAT </button>
+    </div>
+  </div>
+  <div class="w3-tiny"> <br><br> </div>
+  <div ng-repeat="jts in p.jugThrowSeqs track by $index" class="w3-btn-group">
+    <div class="w3-dropdown-hover w3-left" style="width:15%">
+      <button class="w3-btn w3-blue w3-small" style="width:100%"> <b> {{rowToChar($index)}} </b> </button>
+      <div class="w3-dropdown-content">
+	<div class="w3-tooltip">
+	  <span class="w3-text" style="position:absolute; left:0; bottom:4px"> Add ball(s) </span>
+	  <button ng-click="clickRT($index,1)" class="w3-btn w3-green w3-small" style="width:50%"> +BALL </button>
+	</div>
+	<div class="w3-tooltip">
+	  <span class="w3-text" style="position:absolute; left:0; bottom:4px"> Subtract ball(s) </span>
+	  <button ng-click="clickRT($index,-1)" class="w3-btn w3-red w3-small" style="width:50%"> -BALL </button>
+	</div>
+	<br><br>
+	<div class="w3-tooltip">
+	  <span class="w3-text" style="position:absolute; left:0; bottom:48px"> Add multiplexed ball </span>
+	  <button ng-click="clickMT($index)" class="w3-btn w3-light-grey w3-small" style="width:100%"> MPLEX </button>
+	</div>
+	<br><br>
+	<div class="w3-tooltip">
+	  <span class="w3-text" style="position:absolute; left:0; bottom:92px"> Add new column </span>
+	  <button ng-click="clickAddCol($index)" ng-hide="hideAddCol($index)" class="w3-btn w3-green w3-small" style="width:50%"> +COL </button>
+	</div>
+	<div class="w3-tooltip">
+	  <span class="w3-text" style="position:absolute; left:0; bottom:92px"> Remove last column </span>
+	  <button ng-click="clickSubCol($index)" ng-hide="hideAddCol($index)" class="w3-btn w3-red w3-small" style="width:50%"> -COL </button>
+	</div>
+      </div>
+    </div>
+    <span ng-repeat="jtm in jts.jugThrows.itemList track by $index">
+      <div class="w3-tooltip">
+	<span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:4px"> Select/deselect this throw </span>
+	<button ng-repeat="jt in jtm track by $index" class="w3-btn w3-small {{jt.w3GetColor(jts.row)}}"
+		style="width:{{85/(jts.period*jtm.length)}}%"
+		ng-click="clickThrow(jt)">
+	  <b>{{jt.toString()}}</b>
+	</button>
+      </div>
+    </span>
+    <div class={{space}}> <br><br> </div>
+  </div>
+</div>
+<!---------------------------------------------->
+</body>
+  
+</html>

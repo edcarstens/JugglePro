@@ -10,14 +10,14 @@
  * By default the basePeriod is 20.
  *
  * @class Clock
+ * @extends Base
  * @constructor
  * @param basePeriod {Number} the juggling base period
  * @param rhythm {Rhythm} the rhythm of beats
  * @param name {String} name of this Clock
- * @param beatPeriod {Number} current beat's period
  */
 JPRO.ID.Clock = 0;
-JPRO.Clock = function(basePeriod, rhythm, name, beatPeriod) {
+JPRO.Clock = function(basePeriod, rhythm, name) {
 
     // Call superclass
     this.className = this.className || 'Clock';
@@ -45,8 +45,22 @@ JPRO.Clock = function(basePeriod, rhythm, name, beatPeriod) {
      * @property rhythm
      * @type Rhythm
      */
-    this.rhythm = rhythm || new JPRO.Rhythm();
-
+    if (rhythm === undefined) {
+	this.rhythm = JPRO.HierRptSeq.create([1]);
+	this.rhythm.name = 'rhythm';
+    }
+    else {
+	this.rhythm = rhythm;
+    }
+    
+    /**
+     * MHN rows that are in this clock domain
+     *
+     * @property mhnRows
+     * @type Array
+     */
+    this.mhnRows = [];
+    
     /**
      * Time counter within a beat
      *
@@ -54,7 +68,6 @@ JPRO.Clock = function(basePeriod, rhythm, name, beatPeriod) {
      * @type Number
      */
     this.t = 0;
-    // total time
 
     /**
      * Time to current beat
@@ -93,12 +106,7 @@ JPRO.Clock = function(basePeriod, rhythm, name, beatPeriod) {
      * @type 
      */
     // Get current beat period (and move forward a beat)
-    if (beatPeriod === undefined) {
-	this.beatPeriod = this.rhythm.nextBeat()*this.basePeriod;
-    }
-    else {
-	this.beatPeriod = beatPeriod;
-    }
+    this.beatPeriod = this.rhythm.nextItem()*this.basePeriod;
 
 };
 
@@ -117,7 +125,7 @@ JPRO.Clock.prototype.copy = function(objHash, cFunc) {
     var pFuncs = {};
     pFuncs.timeStamps = JPRO.Common.copyHash;
     cFunc = cFunc || function() {
-	return new JPRO.Clock(null, 1, null, 1);
+	return new JPRO.Clock(1, null);
     };
     return this.copyOnce(objHash, cFunc, {}, pFuncs);
 };
@@ -142,8 +150,8 @@ JPRO.Clock.prototype.update = function() {
 	    this.tt -= this.maxTime;
 	    this.adjustTimeStamps(this.maxTime);
 	}
-	this.beatPeriod = this.rhythm.nextBeat()*this.basePeriod;
-	console.log('beatPeriod = ' + this.beatPeriod);
+	this.beatPeriod = this.rhythm.nextItem()*this.basePeriod;
+	//console.log('beatPeriod = ' + this.beatPeriod);
 	return 1; // new beat
     }
     else {
@@ -219,4 +227,12 @@ JPRO.Clock.prototype.duration = function(name) {
 */
 JPRO.Clock.prototype.deleteTimeStamp = function(name) {
     delete this.timeStamps[name];
+};
+
+JPRO.Clock.prototype.getInterval = function(beat1, beat2) {
+    var sum = 0;
+    var b = beat1;
+    while (b < beat2)
+	sum += this.rhythm.getItem(b++)
+    return sum;
 };

@@ -7,7 +7,9 @@
  *
  * @class Vec
  * @constructor
- * @param
+ * @param x
+ * @param y
+ * @param z
  *
  *
  */
@@ -153,6 +155,32 @@ JPRO.Vec.prototype.scale = function(sc) {
     this.x = this.x << sc;
     this.y = this.y << sc;
     this.z = this.z << sc;
+};
+
+/**
+ * Returns new Vec = 1/2 this Vec
+ *
+ * @method half
+ * @return {Vec}
+ */
+JPRO.Vec.prototype.half = function() {
+    return new JPRO.Vec(
+	this.x >> 1,
+	this.y >> 1,
+	this.z >> 1
+    );
+};
+
+/**
+ * Negates all three coordinates
+ *
+ * @method neg
+ * @param sc {number} Coordinates are all negated
+*/
+JPRO.Vec.prototype.neg = function() {
+    this.x = -this.x;
+    this.y = -this.y;
+    this.z = -this.z;
 };
 
 /**

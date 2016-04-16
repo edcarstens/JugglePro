@@ -15,14 +15,19 @@
  * @constructor
  * @param mhn {Array} the MHN throw matrix
  * @param props {Number} number of props juggled
+ * @param name {String} name of this object
  *
  */
 (function () {
 
 'use strict';
+JPRO.ID.State = 0;
+JPRO.State = function(mhn, props, name) {
 
-JPRO.State = function(mhn, props) {
-    
+    // Call superclass
+    this.className = this.className || 'State';
+    JPRO.Base.call(this, name);
+
     /**
      * MHN+ (Multi-hand notation) throw matrix
      *
@@ -45,7 +50,7 @@ JPRO.State = function(mhn, props) {
 	var state = [[]]; // 2D matrix
 	var destRow, destTimeRel, scol, timeIdx, maxThrowHeight;
 	maxThrowHeight = getMaxThrowHeight(mhn);
-	console.log('maxThrowHeight=' + maxThrowHeight);
+	//this.debug('maxThrowHeight=' + maxThrowHeight);
 	for (i=0; i<mhn.length; i++) {
 	    // proceed from end of pattern backwards in time
 	    // repeating the pattern until all props accounted for
@@ -60,7 +65,7 @@ JPRO.State = function(mhn, props) {
 			destRow = mhn[i][j][k][0];
 			destTimeRel = mhn[i][j][k][1];
 			scol = destTimeRel - timeIdx;
-			console.log('i=' + i + ' j=' + j + ' k=' + k + ' th=' + destTimeRel + ' scol=' + scol);
+			//this.debug('i=' + i + ' j=' + j + ' k=' + k + ' th=' + destTimeRel + ' scol=' + scol);
 			if (scol >= 0) {
 			    if ((state[destRow] === undefined) || (state[destRow][scol] === undefined)) {
 				state[destRow][scol] = 1;
@@ -103,9 +108,16 @@ JPRO.State = function(mhn, props) {
      */
     this.state = getState(mhn, props);
 
+    this.debugLevel = 0;
 };
 
+JPRO.State.prototype = Object.create(JPRO.Base.prototype);
 JPRO.State.prototype.constructor = JPRO.State;
+
+JPRO.State.prototype.debug = function(s) {
+    if (this.debugLevel)
+	console.log(s);
+};
 
 /**
  * Increments specified row/column of this state matrix.
@@ -138,7 +150,7 @@ JPRO.State.prototype.incr = function(row, col) {
  * @param th {Number} throw-height (beats to arrival, relative to current beat)
 */
 JPRO.State.prototype.makeThrow = function(row, destRow, th) {
-    console.log('makeThrow called with row=' + row + ' destRow=' + destRow + ' th=' + th);
+    this.debug('makeThrow called with row=' + row + ' destRow=' + destRow + ' th=' + th);
     var b = this.state[row][0];
     if ((b === undefined) || (b === 0)) {
 	if (th > 0) {
@@ -258,7 +270,7 @@ JPRO.State.prototype.getTransition = function(tso) {
 	} // for i
     } // while
     //cs = this.state;
-    console.log('0 transSeq = ' + this.mhnToString(transSeq));
+    this.debug('0 transSeq = ' + this.mhnToString(transSeq));
     // Compare state heights
     var csh = this.getHeight();
     var tsh = tso.getHeight();
@@ -266,7 +278,7 @@ JPRO.State.prototype.getTransition = function(tso) {
     if (tlen < 0) {
 	tlen = 1;
     }
-    console.log('csh=' + csh + ' tsh=' + tsh + ' tlen=' + tlen);
+    this.debug('csh=' + csh + ' tsh=' + tsh + ' tlen=' + tlen);
     // Find number of beats (tlen) from current state for which
     // target state is reachable
     csi = csh - 1; // max index of a prop in current state
@@ -275,11 +287,12 @@ JPRO.State.prototype.getTransition = function(tso) {
 	tlen++;
 	tsi = csi - tlen;
     } // while
-    console.log('tlen=' + tlen);
+    this.debug('tlen=' + tlen);
     // push transition seq throws
     transSeq = this.pushTransThrows(transSeq, cs, ts, tlen);
-    console.log('1 transSeq = ' + this.mhnToString(transSeq));
-    return new JPRO.ThrowSeq(transSeq);
+    this.debug('1 transSeq = ' + this.mhnToString(transSeq));
+    //return new JPRO.ThrowSeq(transSeq);
+    return new JPRO.JugThrowSeq(transSeq, this.name + '_to_' + tso.name);
 };
     
 /**
@@ -308,7 +321,7 @@ JPRO.State.prototype.unreachable = function(cs, csi, ts, tsi) {
 	} // for i
 	csiTmp--;
     } // for j
-    console.log('target state is reachable without having to go through ground state');
+    this.debug('target state is reachable without having to go through ground state');
     return 0;
 };
 
@@ -367,7 +380,7 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
 	    } // if
 	} // for i
     } // for j
-    console.log('0 transSeqTmp = ' + this.mhnToString(transSeqTmp));
+    this.debug('0 transSeqTmp = ' + this.mhnToString(transSeqTmp));
 
     // build target state
     for (j=0; j<ts[0].length; j++) {
@@ -381,8 +394,8 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
 		jj = throwIJ[1];
 		cs[ii][jj] = this.toInt(cs[ii][jj]) - 1;
 		cs[i][k]++;
-		console.log('From ii=' + ii + ' jj=' + jj);
-		console.log('  To  i=' + i + '  k=' + k);
+		this.debug('From ii=' + ii + ' jj=' + jj);
+		this.debug('  To  i=' + i + '  k=' + k);
 		if (transSeqTmp[ii][jj] === undefined) {
 		    transSeqTmp[ii][jj] = [[i, k-jj]];
 		}
@@ -393,7 +406,7 @@ JPRO.State.prototype.pushTransThrows = function(transSeq, cs, ts, tlen) {
 	    } // while
 	} // for i
     } // for j
-    console.log('1 transSeqTmp = ' + this.mhnToString(transSeqTmp));
+    this.debug('1 transSeqTmp = ' + this.mhnToString(transSeqTmp));
 
     // append transSeqTmp to transSeq
     for (i=0; i<transSeq.length; i++) {

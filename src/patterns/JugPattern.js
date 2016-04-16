@@ -1,0 +1,1073 @@
+/**
+ * @author Ed Carstens
+ */
+
+/**
+ * A JugPattern is a juggling pattern, a periodic (repeatable) sequence
+ * of throws involving one or more jugglers. It could represent a non-
+ * repeatable sequence of throws, in which case the isRepeatable flag
+ * is null and iters is either 0 or 1.
+ *
+ * @class JugPattern
+ * @extends Base
+ * @constructor
+ * @param mhn {Number|Array} siteswap, multiplex, MHN, or MHN+ throw matrix
+ * @param iters {Number} number of iterations of pattern to be executed
+ * @param name {String} name of this object
+ *
+ */
+(function () {
+
+    'use strict';
+    JPRO.ID.JugPattern = 0;
+    JPRO.JugPattern = function(mhn, clocks, cpm, iters, name) {
+
+	// Call superclass
+	this.className = this.className || 'JugPattern';
+	JPRO.Base.call(this, name);
+	
+	/**
+	 * Array of clocks for this pattern
+	 *
+	 * @property clocks
+	 * @type Array
+	 */
+	this.clocks = clocks || [];
+	
+	/**
+	 * Array of jugThrowSeq's for this pattern (MHN rows)
+	 *
+	 * @property jugThrowSeqs
+	 * @type Array
+	 */
+	this.jugThrowSeqs = [];
+	
+	/**
+	 * Control point mapper
+	 *
+	 * @property cpMapper
+	 * @type ControlPointMapper
+	 *
+	 */
+	this.cpMapper = cpm;
+
+	/**
+	 * Iterations
+	 *
+	 * @property iters
+	 * @type Number
+	 */
+	if (iters === undefined) {
+	    this.iters = 1;
+	    this.isRepeatable = null;
+	}
+	else if (iters === null) {
+	    this.iters = 0;
+	    this.isRepeatable = null;
+	}
+	else {
+	    this.iters = iters;
+	    this.isRepeatable = 1;
+	}
+	
+	mhn = mhn || 0;
+	// Convert MHN by using JugThrowSeq constructor
+	// for each row of MHN
+	var clk;
+	var dim = this.dimensionOf(mhn);
+	if (dim < 3) { // only one MHN row
+	    this.setJugThrowSeqs1(mhn, dim, iters, clocks);
+	}
+	else { // multiple MHN rows
+	    this.setJugThrowSeqsN(mhn, dim, iters, clocks);
+	}
+
+	/**
+	 * Maximum number of rows
+	 *
+	 * @property maxRows
+	 * @type Number
+	 */
+	this.maxRows = 10; // limit to 10 rows
+	
+	/**
+	 * Maximum period
+	 *
+	 * @property maxPeriod
+	 * @type Number
+	 */
+	this.maxPeriod = 32;
+	
+	/**
+	 * Used in ordering selected throws
+	 *
+	 * @property selectionOrder
+	 * @type Number
+	 */
+	//this.selectionOrder = 0;
+
+	/**
+	 * Number of throws selected
+	 *
+	 * @property selections
+	 * @type Number
+	 */
+	this.selections = 0;
+
+	this.states = [];
+	this.undoIdx = 0;
+	// inherit some stuff from JugThrowSeq
+	//this.rows = tmp.rows;
+	//this.getMHN = tmp.getMHN;
+
+	// methods
+	//this.swap = tmp.swap;
+	//this.clean = tmp.clean;
+	//this.cleanList = tmp.cleanList;
+	//this.select = tmp.select;
+	//this.getSelectedThrows = tmp.getSelectedThrows;
+	//this.clearSelections = tmp.clearSelections;
+	//this.toHandSymbol = tmp.toHandSymbol;
+	//this.period = tmp.period;
+	
+	/**
+	 * number of props juggled
+	 *
+	 * @property props
+	 * @type Number
+	 */
+	this.props = this.calcProps();
+	//this.props = JPRO.JugPattern.prototype.calcProps.call(this);
+    };
+
+    JPRO.JugPattern.prototype = Object.create( JPRO.Base.prototype );
+    JPRO.JugPattern.prototype.constructor = JPRO.JugPattern;
+
+    JPRO.JugPattern.prototype.dimensionOf = function(x, dim) {
+	var typ, d;
+	typ = typeof(x);
+	d = dim || 0;
+	if (typ === 'number') {
+	    return d;
+	}
+	else {
+	    return this.dimensionOf(x[0], d+1);
+	}
+    };
+
+    JPRO.JugPattern.prototype.setJugThrowSeqs1 = function(mhn, dim, iters, clocks) {
+	var clk;
+	this.rows = 1;
+	if (clocks) {
+	    clk = clocks[0];
+	    clk.mhnRows = [0];
+	}
+	else {
+	    clk = new JPRO.Clock();
+	    this.clocks.push(clk);
+	    clk.mhnRows.push(0);
+	}
+	this.jugThrowSeqs.push(new JPRO.JugThrowSeq(mhn, dim, iters,
+						    clk, 0));
+    };
+
+    JPRO.JugPattern.prototype.setJugThrowSeqsN = function(mhn, dim, iters, clocks) {
+	var i, jts, p2c, pd, basePeriod, totalTime;
+	var slowFast = null;
+	var bp0 = mhn[0].length;
+	this.rows = mhn.length;
+	// Find maximum period
+	// Is any MHN row beat period different?
+	var maxPd = 0;
+	basePeriod = 12;
+	totalTime = basePeriod * maxPd;
+	for (i=0; i<this.rows; i++) {
+	    if (mhn[i].length !== bp0) slowFast = 1;
+	    if (mhn[i].length > maxPd) maxPd = mhn[i].length;
+	}
+	// Is the destination throw-height specified?
+	if ((dim === 3) && (mhn[0][0].length > 2)) {
+	    slowFast = 1;
+	}
+	if ((dim === 4) && (mhn[0][0][0].length > 2)) {
+	    slowFast = 1;
+	}
+	if (clocks) {
+	    // Clocks specified
+	    for (i=0; i<this.rows; i++) {
+		clocks[i].mhnRows.push(i);
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clocks[i], i);
+		this.jugThrowSeqs.push(jts);
+	    }
+	}
+	else if (slowFast) {
+	    // If the MHN indicates a slow-fast pattern, create clocks
+	    // with different periods as needed for each row.
+	    p2c = {};
+	    for (i=0; i<this.rows; i++) {
+		pd = mhn[i].length;
+		if (p2c[pd]) {
+		    p2c[pd].mhnRows.push(i);
+		}
+		else {
+		    var t,err,j,rt,beatLst,r;
+		    beatLst = [];
+		    //basePeriod = 120/pd; // only handles pd=1 up to 6
+		    t = totalTime/pd;
+		    err = 0;
+		    for (j=0; j<pd; j++) {
+			rt = Math.round(t + err);
+			err = t - rt;
+			beatLst.push(rt);
+		    }
+		    r = JPRO.HierRptSeq.create(beatLst, -1);
+		    p2c[pd] = new JPRO.Clock(1, r);
+		    p2c[pd].mhnRows = [i];
+		    this.clocks.push(p2c[pd]);
+		}
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, p2c[pd], i);
+		this.jugThrowSeqs.push(jts);
+	    }
+	    //console.log('jugThrowSeqs');
+	    //console.log(this.jugThrowSeqs);
+	}
+	else {
+	    // If the MHN does not indicate a slow-fast pattern, use
+	    // just one clock for all rows
+	    var clk = new JPRO.Clock();
+	    this.clocks.push(clk);
+	    for (i=0; i<this.rows; i++) {
+		clk.mhnRows.push(i);
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clk, i);
+		this.jugThrowSeqs.push(jts);
+	    }
+	}
+    };
+    
+    /**
+     * Copies this JugPattern
+     *
+     * @method copy
+     * @param objHash {Object} hash
+     * @param cFunc {Function} constructor
+     * @return {JugPattern} copied object
+     */
+    /*
+    JPRO.JugPattern.prototype.copy = function(objHash, cFunc) {
+	var obj = JPRO.JugThrowSeq.prototype.copy.call(this, objHash, cFunc);
+	obj.iterCnt = this.iterCnt;
+	obj.iterCntLA = this.iterCntLA;
+	obj.props = this.props;
+	return obj;
+    };
+    */
+
+    /**
+     * Facilitates operations on all juggling throws in MHN
+     *
+     * @method mapThrows
+     * @param h {Object} hash used as scope container
+     * @param f {Function} f(h), operation to be applied to every throw
+     * @return {Object} scope container
+     */
+    /*
+    JPRO.JugPattern.prototype.mapThrows = function(a1,a2) {
+	var h,f,i,j,k,jt;
+	if (a2) { // if both args specified
+	    h = a1 || {};
+	    f = a2;
+	}
+	else { // if only one argument specified, then it is f
+	    h = {};
+	    f = a1;
+	}
+	for (i=0; i<this.jugThrowSeqs.length; i++) {
+	    jt = this.jugThrowSeqs[i].jugThrows.itemList;
+	    h.jt = jt;
+	    h.i = i;
+	    for (j=0; j<jt.length; j++) {
+		h.j = j;
+		for (k=0; k<jt[j].length; k++) {
+		    h.k = k;
+		    h.jThrow = jt[j][k];
+		    f(h);
+		}
+	    }
+	}
+	return h;
+    };
+    */
+
+    /**
+     * Facilitates MHN operations (outer loop on MHN rows)
+     *
+     * @method forI
+     * @param h {Object} hash used as scope container
+     * @param f {Function} f(h), operation to be applied inside loop
+     * @return {Object} scope container
+     */
+    JPRO.JugPattern.prototype.forI = function(a1,a2) {
+	var f = a2 || a1;
+	var h = a2 ? a1 : {};
+	h.parent = this;
+	for (h.i=0; h.i<this.jugThrowSeqs.length; h.i++) {
+	    h.jts = this.jugThrowSeqs[h.i];
+	    h.clk = h.jts.clock;
+	    h.jt = h.jts.jugThrows.itemList;
+	    f(h);
+	}
+	return h;
+    };
+    
+    /**
+     * Facilitates MHN operations (inner loop on MHN cols)
+     *
+     * @method forJ
+     * @param h {Object} hash used as scope container
+     * @param f {Function} f(h), operation to be applied inside loop
+     * @return {Object} scope container
+     */
+    JPRO.JugPattern.prototype.forJ = function(a1,a2) {
+	var f = a2 || a1;
+	var h = a2 ? a1 : {};
+	for (h.j=0; h.j<h.jt.length; h.j++) {
+	    h.jtj = h.jt[h.j];
+	    f(h);
+	}
+	return h;
+    };
+
+    /**
+     * Facilitates MHN operations (innermost loop on MHN multiplexed throws)
+     *
+     * @method forK
+     * @param h {Object} hash used as scope container
+     * @param f {Function} f(h), operation to be applied inside loop
+     * @return {Object} scope container
+     */
+    JPRO.JugPattern.prototype.forK = function(a1,a2) {
+	var f = a2 || a1;
+	var h = a2 ? a1 : {};
+	for (h.k=0; h.k<h.jtj.length; h.k++) {
+	    h.jtjk = h.jtj[h.k];
+	    f(h);
+	}
+	return h;
+    };
+
+    JPRO.JugPattern.prototype.forIJ = function(a1,a2) {
+	var f = a2 || a1;
+	var h = a2 ? a1 : {};
+	return this.forI(h, function(h) {
+	    h.parent.forJ(h, f);
+	});
+    };
+    
+    JPRO.JugPattern.prototype.forIJK = function(a1,a2) {
+	var f = a2 || a1;
+	var h = a2 ? a1 : {};
+	return this.forIJ(h, function(h) {
+	    h.parent.forK(h, f);
+	});
+    };
+    
+    /**
+     * Converts this pattern of throws to MHN+ matrix
+     *
+     * @method getMHN
+     * @return {Array} MHN+ (a 4-d matrix)
+     */
+    JPRO.JugPattern.prototype.getMHN = function() {
+	var h = {};
+	h.mhn = [];
+	this.forI(h, function(h) {
+	    h.mhn.push(h.jts.getMHN());
+	});
+	return h.mhn;
+    };
+
+    /**
+     * Saves MHN to an array for the undo function
+     *
+     * @method saveMHN
+     */
+    JPRO.JugPattern.prototype.saveMHN = function() {
+	this.undoIdx++;
+	if (this.undoIdx > this.states.length) {
+	    this.states.push(this.getMHN());
+	}
+	else if (this.undoIdx < this.states.length) {
+	    this.states.splice(this.undoIdx); // remove remaining states
+	}
+	//console.log(this.states);
+	//console.log(this.undoIdx);
+    };
+
+    JPRO.JugPattern.prototype.undoDisabled = function() {
+	return (this.undoIdx === 0);
+    };
+    
+    /**
+     * Undo the last operation
+     *
+     * @method undo
+     * @return {JugPattern} new JugPattern from saved MHN state
+     */
+    JPRO.JugPattern.prototype.undo = function() {
+	if (this.undoIdx === 0) return this;
+	if (this.undoIdx === this.states.length) {
+	    // Save current state for redo
+	    this.states.push(this.getMHN());
+	}
+	this.undoIdx--;
+	//console.log(this.states[this.undoIdx]);
+	// construct a new JugPattern with the same name from an old MHN state
+	var jp = new JPRO.JugPattern(this.states[this.undoIdx], null, this.cpm, this.iters, this.name);
+	jp.states = this.states.slice(0); // copy
+	jp.undoIdx = this.undoIdx;
+	return jp;
+    };
+
+    JPRO.JugPattern.prototype.redoDisabled = function() {
+	return (this.undoIdx >= this.states.length - 1);
+    };
+
+    /**
+     * Redo
+     *
+     * @method redo
+     * @return {JugPattern} new JugPattern from saved MHN state
+     */
+    JPRO.JugPattern.prototype.redo = function() {
+	if (this.undoIdx >= this.states.length - 1) return this;
+	this.undoIdx++;
+	//console.log(this.states[this.undoIdx]);
+	var jp = new JPRO.JugPattern(this.states[this.undoIdx], null, this.cpm, this.iters, this.name);
+	jp.states = this.states.slice(0); // copy
+	jp.undoIdx = this.undoIdx;
+	return jp;
+    };
+    
+    /**
+     * Set a null pattern with specified period and number of rows
+     *
+     * @method setPeriodRows
+     * @param period {Number}
+     * @param rows {Number}  If omitted, rows=1
+     */
+    JPRO.JugPattern.prototype.setPeriodRows = function(period, rows) {
+	var i,j,r,s,clk;
+	this.saveMHN(); // save MHN for undo
+	clk = new JPRO.Clock();
+	this.jugThrowSeqs = [];
+	rows = rows || 1;
+	for (i=0; i<rows; i++) {
+	    r = [];
+	    for (j=0; j<period; j++) {
+		r.push([new JPRO.JugThrow(i,0)]);
+	    }
+	    s = new JPRO.RptSeq(r, this.iters);
+	    this.jugThrowSeqs.push(
+		new JPRO.JugThrowSeq(s, 0, this.iters, clk, i, 0.5)
+	    );
+	}
+	this.props = 0;
+	return this;
+    };
+    
+    /**
+     * Return JugThrow at specified row, col, and mslot
+     *
+     * @method getJugThrow
+     * @param row {Number}
+     * @param col {Number}
+     * @param mslot {Number}
+     * @return {JugThrow}
+     */
+    JPRO.JugPattern.prototype.getJugThrow = function(row, col, mslot) {
+	return this.jugThrowSeqs[row].jugThrows.itemList[col][mslot];
+    };
+
+    /**
+     * Return array of JugThrow's at specified row and col
+     *
+     * @method getJugThrows
+     * @param row {Number}
+     * @param col {Number}
+     * @return {Array}
+     */
+    JPRO.JugPattern.prototype.getJugThrows = function(row, col) {
+	return this.jugThrowSeqs[row].jugThrows.itemList[col];
+    };
+    
+    /**
+     * Swap two throws in MHN+ matrix
+     *
+     * @method swap
+     * @param loc1 {Array}
+     * @param loc2 {Array}
+     * @return {JugPattern} this object
+     */
+    JPRO.JugPattern.prototype.swap = function(loc1, loc2) {
+	var r1 = loc1[0];
+	var t1 = loc1[1];
+	var ms1 = loc1[2];
+	var f1 = this.jugThrowSeqs[r1].period;
+	var r2 = loc2[0];
+	var t2 = loc2[1];
+	var ms2 = loc2[2];
+	var f2 = this.jugThrowSeqs[r2].period;
+	var p1 = this.getJugThrow(r1, t1, ms1);
+	var p2 = this.getJugThrow(r2, t2, ms2);
+	var p1r = p1.destRow;
+	var p1t = p1.fltBeats - p1.destBeats + t1; // absolute sync/dest beat
+	var p1td = p1.destBeats; // plus destination beats
+	var p1f = this.jugThrowSeqs[p1r].period;
+	var p2r = p2.destRow;
+	var p2t = p2.fltBeats - p2.destBeats + t2; // absolute sync/dest beat
+	var p2td = p2.destBeats; // plus destination beats
+	var p2f = this.jugThrowSeqs[p2r].period;
+	this.saveMHN(); // save MHN for undo
+	// Swap destination rows
+	p1.destRow = p2r;
+	p2.destRow = p1r;
+	// Convert p2 self beats into (N periods + T self beats)
+	var n2 = 0;
+	while (p2t >= f2) {
+	    p2t -= f2;
+	    n2++;
+	}
+	while (p2t < 0) {
+	    p2t += f2;
+	    n2--;
+	}
+	//console.log('r2 = ' + r2 + 't2 = ' + t2);
+	//console.log('n2 = ' + n2);
+	//console.log('p2t = ' + p2t);
+	//console.log('p2td = ' + p2td);
+	p1.destBeats = (p2td === 0) ? p2t : p2td;
+	p1.fltBeats = p1.destBeats + n2*f1 - t1;
+	//console.log('destBeats = ' + p1.destBeats);
+	//console.log('fltBeats = ' + p1.fltBeats);
+	// If destination clock is the same, then the destination beats
+	// are the same as self beats, so clear destBeats
+	if (this.jugThrowSeqs[r1].clock === this.jugThrowSeqs[p2r].clock) {
+	    p1.destBeats = 0;
+	}
+	// Choose to minimize destination beats
+	while (p1.destBeats > p2f/2) {
+	    p1.destBeats -= p2f;
+	    p1.fltBeats += f1-p2f;
+	}
+	while (p1.destBeats < -p2f/2) {
+	    p1.destBeats += p2f;
+	    p1.fltBeats += p2f-f1;
+	}
+
+	// Do the same with throw p2
+	// Convert p1 self beats into (N periods + T self beats)
+	var n1 = 0;
+	//console.log('p1t = ' + p1t);
+	//console.log('f1 = ' + f1);
+	while (p1t >= f1) {
+	    p1t -= f1;
+	    n1++;
+	}
+	while (p1t < 0) {
+	    p1t += f1;
+	    n1--;
+	}
+	//console.log('n1 = ' + n1);
+	//console.log('p1t = ' + p1t);
+	//console.log('p1td = ' + p1td);
+	p2.destBeats = (p1td === 0) ? p1t : p1td;
+	p2.fltBeats = p2.destBeats + n1*f2 - t2;
+	//console.log('destBeats = ' + p2.destBeats);
+	//console.log('fltBeats = ' + p2.fltBeats);
+	// If destination clock is the same, then the destination beats
+	// are the same as self beats, so clear destBeats
+	if (this.jugThrowSeqs[r2].clock === this.jugThrowSeqs[p1r].clock) {
+	    p2.destBeats = 0;
+	}
+	// Choose to minimize destination beats
+	while (p2.destBeats > p1f/2) {
+	    p2.destBeats -= p1f;
+	    p2.fltBeats += f2-p1f;
+	}
+	while (p2.destBeats < -p1f/2) {
+	    p2.destBeats += p1f;
+	    p2.fltBeats += p1f-f2;
+	}
+	
+	return this;
+    };
+
+    /**
+     * Return maximum number of multiplex throws and extend all
+     * multiplex slots with zeros to the same number of throws.
+     *
+     * @method getMultiplex
+     * @return {Number} number of multiplex throws (slots)
+     */
+    JPRO.JugPattern.prototype.getMultiplex = function() {
+	var i,mslots,rv;
+	rv = 0;
+	for (i=0; i<this.jugThrowSeqs.length; i++) {
+	    mslots = this.jugThrowSeqs[i].getMultiplex();
+	    if (mslots > rv) {
+		rv = mslots;
+	    }
+	}
+	return rv;
+    };
+    
+    /**
+     * Add offset to all throws in MHN row
+     *
+     * @method translateRow
+     * @param offset {Number}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.translateRow = function(row, offset, noUndo) {
+	noUndo || this.saveMHN(); // save MHN for undo
+	this.props += this.jugThrowSeqs[row].translateRow(offset);
+	return this;
+    };
+
+    /**
+     * Adds an offset to all throws in the throw matrix
+     *
+     * @method translateAll
+     * @param offset {Number}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.translateAll = function(offset) {
+	var i;
+	this.saveMHN(); // save MHN for undo
+	for (i=0; i<this.jugThrowSeqs.length; i++) {
+	    this.translateRow(i, offset, 1);
+	}
+	return this;
+    };
+
+    /**
+     * Add multiple of the period to a throw
+     *
+     * @method translateThrow
+     * @param loc {Array}
+     * @param mult {Number}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.translateThrow = function(loc, mult) {
+	var r = loc.shift();
+	var jtSeq = this.jugThrowSeqs[r];
+	var mult1 = (mult === undefined) ? 1 : mult; // default to 1
+	this.saveMHN(); // save MHN for undo
+	jtSeq.translateThrow(loc, mult1);
+	this.props += mult1;
+	return this;
+    };
+
+    /**
+     * Adds multiple of the period to selected throws
+     *
+     * @method translateThrowsSelected
+     * @param mult {Number}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.translateThrowsSelected = function(mult) {
+	var a,i;
+	a = this.getSelectedThrows();
+	for (i=0; i<a.length; i++) {
+	    this.translateThrow(a[i], mult);
+	}
+	return this;
+    };
+    
+    /**
+     * Add new multiplex slots to specified MHN row
+     *
+     * @method multiplexTranslate
+     * @param row {Number}
+     * @param offset {Number}
+     */
+    JPRO.JugPattern.prototype.multiplexTranslate = function(row, offset) {
+	var j;
+	var row1 = row || 0; // default row to zero
+	var offset1 = (offset === undefined) ? 1 : offset; // default offset to 1
+	this.saveMHN(); // save MHN for undo
+	this.jugThrowSeqs[row1].multiplexTranslate(offset1);
+	this.props += offset1;
+	this.jugThrowSeqs[row1].w3Colorize();
+	return this;
+    };
+
+    /**
+     * Rotates throws so that column x becomes column 0.
+     * This is not valid (so not allowed) for slow-fast patterns.
+     * It may be possible to change the sync point for slow-fast patterns
+     * to rotate throws.
+     *
+     * @method rotateThrows
+     * @param x {Number}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.rotateThrows = function(x) {
+	//console.log('rotateThrows called');
+	if (this.clocks.length > 1) return this.rotateThrowsSF(x);
+	this.saveMHN(); // save MHN for undo
+	var h = this.forI(function(h) {
+	    h.njt = [];
+	    h.parent.forJ(h, function(h) {
+		var idx = (h.j + h.jt.length + x) % h.jt.length;
+		h.njt.push(h.jt[idx]);
+	    });
+	    h.parent.jugThrowSeqs[h.i].jugThrows.itemList = h.njt;
+	    h.parent.jugThrowSeqs[h.i].w3Colorize();
+	});
+	return this;
+    };
+
+    JPRO.JugPattern.prototype.rotateThrowsSF = function(x) {
+	//console.log('rotateThrowsSF called');
+	// for now ignore x and just rotate by +1 (x=-1)
+	this.saveMHN(); // save MHN for undo
+	var h = this.forI(function(h) {
+	    h.njt = [];
+	    h.parent.forJ(h, function(h) {
+		var idx = (h.j + h.jt.length + x) % h.jt.length;
+		h.jtj = h.jt[idx]; // change h.jtj
+		h.parent.forK(h, function(h) {
+		    var r = h.jtjk.destRow;
+		    if (h.parent.jugThrowSeqs[r].clock !== h.clk) {
+			var db = h.jtjk.destBeats;     // dest beats
+			var sb = h.jtjk.fltBeats - db; // self beats
+			db -= x;
+			sb += x;
+			var df1 = h.parent.jugThrowSeqs[r].period;
+			var sf1 = h.jts.period;
+			while (db > df1/2) {
+			    db -= df1;
+			    sb += sf1;
+			}
+			while (db <= -df1/2) {
+			    db += df1;
+			    sb -= sf1;
+			}
+			h.jtjk.destBeats = db;
+			h.jtjk.fltBeats = sb+db;
+		    }
+		});
+		h.njt.push(h.jtj);
+	    });
+	    h.parent.jugThrowSeqs[h.i].jugThrows.itemList = h.njt;
+	    h.parent.jugThrowSeqs[h.i].w3Colorize();
+	});
+	return this;
+    };
+    
+    /**
+     * Permutes (remaps) rows in MHN+
+     *
+     * @method permuteRows
+     * @param mapping {Array}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.permuteRows = function(mapping) {
+	var i,idx,njts;
+	//console.log('permuteRows called..');
+	if (this.rows < 2) {
+	    return this;
+	}
+	this.saveMHN(); // save MHN for undo
+	njts = [];
+	for (i=0; i<this.jugThrowSeqs.length; i++) {
+	    idx = mapping[i];
+	    njts[idx] = this.jugThrowSeqs[i].permuteRows(mapping);
+	    njts[idx].row = idx;
+	}
+	this.jugThrowSeqs = njts;
+	return this;
+    };
+
+    /**
+     * Swaps rows in MHN+
+     *
+     * @method swapRows
+     * @param row1 {Number}
+     * @param row2 {Number}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.swapRows = function(row1, row2) {
+	var mapping, i;
+	//console.log('swapRows called..');
+	mapping = [];
+	for (i=0; i<this.jugThrowSeqs.length; i++) {
+	    mapping[i] = i;
+	}
+	mapping[row1] = row2;
+	mapping[row2] = row1;
+	return this.permuteRows(mapping);
+    };
+
+    JPRO.JugPattern.prototype.setClock = function(row) {
+	var basePeriod;
+	// remove row from its clock's mhnRows list
+	var clk = this.jugThrowSeqs[row].clock;
+	var idx = clk.mhnRows.indexOf(row);
+	clk.mhnRows.splice(idx, 1); // remove
+	
+	// if mhnRows list is empty, remove clock
+	if (clk.mhnRows.length === 0) {
+	    idx = this.clocks.indexOf(clk);
+	    this.clocks.splice(idx, 1); // remove
+	}
+	
+	// search rows for a matching period
+	var pd = this.jugThrowSeqs[row].period;
+	var jts = null;
+	this.jugThrowSeqs.forEach(function(x,i) {
+	    if ((i !== row) && (x.period === pd)) {
+		jts = x;
+	    }
+	});
+	
+	// if found, set row's clock and add row to clock's mhnRows
+	if (jts) {
+	    this.jugThrowSeqs[row].clock = jts.clock;
+	    jts.clock.mhnRows.push(row);
+	}
+	// otherwise, create clock with mhnRows, add to clocks
+	else {
+	    basePeriod = 120/pd;
+	    clk = new JPRO.Clock(basePeriod, undefined, [row]);
+	    this.clocks.push(clk);
+	    this.jugThrowSeqs[row].clock = clk;
+	}
+    };
+    
+    /**
+     * @method decPeriod
+     * @param row {Number} MHN row
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.decPeriod = function(row) {
+	this.saveMHN(); // save MHN for undo
+	if ((this.jugThrowSeqs[row].period > 1) && (this.jugThrowSeqs[row].isZeros())) {
+	    this.jugThrowSeqs[row].jugThrows.itemList.pop();
+	    this.jugThrowSeqs[row].period--;
+	    this.setClock(row);
+	}
+	return this;
+    };
+    
+    /**
+     * Extends period by one, choosing legal throw-heights
+     * This is not valid for slow-fast patterns.
+     *
+     * @method extendPeriod
+     * @param row {Number} optional MHN row
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.extendPeriod = function(row) {
+	//console.log('extendPeriod called');
+	var period,adjust,i,mslots,jt,msThrows,k;
+	var n = 0; // amount subtracted from each throw
+	var h = {};
+	this.saveMHN(); // save MHN for undo
+	if (row !== undefined) {
+	    if (this.jugThrowSeqs[row].isZeros()) {
+		msThrows = [];
+		mslots = this.jugThrowSeqs[row].getMultiplex();
+		for (k=0; k<mslots; k++) {
+		    msThrows.push(new JPRO.JugThrow(row, 0, 0, 0.5));
+		}
+		this.jugThrowSeqs[row].push(msThrows);
+		this.setClock(row);
+	    }
+	    return this;
+	}
+	if (this.clocks.length > 1) return this;
+	period = this.jugThrowSeqs[0].period;
+	if (period >= this.maxPeriod) { // kid proofed
+	    alert('Period upper limit is ' + this.maxPeriod);
+	    return this;
+	}
+
+	//console.log('props = ' + this.props);
+	//console.log('period = ' + period);
+	h.sum = 0;
+	while (h.sum < this.props*period) {
+	    this.forIJK(h, function(h) {
+		h.jtjk.fltBeats--;
+		h.sum++;
+	    });
+	    n++;
+	} // while
+	//console.log('sum = ' + h.sum);
+	if (h.sum > this.props*period) {
+	    adjust = 1;
+	}
+	else {
+	    adjust = 0;
+	}
+	this.forIJK(h, function(h) {
+	    h.t = h.jtjk.fltBeats + h.j + adjust; // absolute beat time
+	    h.x = Math.floor(h.t/period); // adjusted for extra column
+	    h.jtjk.fltBeats += h.x + n; // add n back in to each throw
+	});
+
+	// Extend the period by one column
+	this.forI(h, function(h) {
+	    var k;
+	    var mslots = h.parent.jugThrowSeqs[h.i].getMultiplex();
+	    var msThrows = [];
+	    for (k=0; k<mslots; k++) {
+		msThrows.push(new JPRO.JugThrow(h.i, n-adjust, 0, 0.5));
+	    } // for k
+	    h.parent.jugThrowSeqs[h.i].push(msThrows);	    
+	});
+	return this;
+    };
+
+    /**
+     * Extends rows by one, using specified throw-height
+     *
+     * @method extendRows
+     * @param throwHeight {Number}
+     * @return {JugPattern} this pattern
+     */
+    JPRO.JugPattern.prototype.extendRows = function(rowIdx, throwHeight) {
+	var r = rowIdx || 0;
+	var t = throwHeight || 0;
+	var row = [];
+	var j,s;
+	var period = this.jugThrowSeqs[r].period;
+	var clk = this.jugThrowSeqs[r].clock;
+	if (this.rows >= this.maxRows) { // kid proofed
+	    alert('Rows upper limit is ' + this.maxRows);
+	    return this;
+	}
+	this.saveMHN(); // save MHN for undo
+	for (j=0; j<period; j++) {
+	    row.push([new JPRO.JugThrow(this.rows, t)]);
+	}
+	s = new JPRO.RptSeq(row, this.iters);
+	this.jugThrowSeqs.push(
+	    new JPRO.JugThrowSeq(s, 0, this.iters, clk, this.rows, 0.5)
+	);
+	clk.mhnRows.push(this.rows);
+	this.rows++; // increment rows
+	return this;
+    };
+
+    /**
+     * Resets the pattern to the single row, period=1, null pattern
+     *
+     * @method reset
+     */
+    JPRO.JugPattern.prototype.reset = function() {
+	var s,clk;
+	this.saveMHN(); // save MHN for undo
+	//this.period = 1;
+	this.rows = 1;
+	s = new JPRO.RptSeq([[new JPRO.JugThrow(0,0)]], this.iters);
+	clk = new JPRO.Clock(12, undefined, [0]);
+	this.jugThrowSeqs = [new JPRO.JugThrowSeq(s, 0, this.iters, clk)];
+	this.clocks = [this.jugThrowSeqs[0].clock];
+	this.jugThrowSeqs[0].preDwellRatio = 0.5;
+	this.props = 0;
+    };
+    
+    /**
+     * Cleans the MHN+ matrix by removing any
+     * multiplex slots that exist but are not
+     * a throw (i.e. zero throw-height and to
+     * the same row).
+     *
+     * @method clean
+     * @return {JugPattern} this object
+     */
+    JPRO.JugPattern.prototype.clean = function() {
+	var i;
+	this.saveMHN(); // save MHN for undo
+	for (i in this.jugThrowSeqs) {
+	    this.jugThrowSeqs[i].clean().w3Colorize();
+	}
+	return this;
+    };
+
+    /**
+     * Calculate and return number of props juggled
+     * in this pattern.
+     *
+     * @method calcProps
+     * @return {Number} calculated number of props
+     */
+    JPRO.JugPattern.prototype.calcProps = function() {
+	var h,i,rv,rvInt;
+	//console.log('calcProps called');
+	h = {};
+	h.sum = []; // keep a sum for each row
+	for (i in this.jugThrowSeqs) {
+	    h.sum.push(0);
+	}
+	this.forIJK(h, function(h) {
+	    var x = h.jtjk;
+	    h.sum[h.i] += x.fltBeats - x.destBeats;
+	    h.sum[x.destRow] += x.destBeats;
+	});
+	
+	rv = 0;
+	for (i=0; i<this.jugThrowSeqs.length; i++) {
+	    rv += h.sum[i]/this.jugThrowSeqs[i].period;
+	}
+	rvInt = Math.round(rv);
+	if (Math.abs(rv - rvInt) > 0.01) {
+	    console.log('WARNING from calcProps: Number of props not an integer (' + rv + ')');
+	}
+	return rvInt;
+    };
+
+    /**
+     * Finds a minimum throw sequence to transition from
+     * this pattern to the specified one.
+     *
+     * @method getTranstion
+     * @param destPat {JugPattern}
+     * @return {ThrowSeq} throw sequence to get from this pattern
+     *     to destination pattern
+     */
+    JPRO.JugPattern.prototype.getTransition = function(destPat) {
+	var destState = new JPRO.State(destPat.getMHN(), destPat.props, destPat.name + '_state');
+	var myState = new JPRO.State(this.getMHN(), this.props, this.name + '_state');
+	return myState.getTransition(destState);
+    };
+
+    /**
+     * Returns list of selected throws
+     *
+     * @method getSelectedThrows
+     * @return {Array} selected throws
+     */
+    JPRO.JugPattern.prototype.getSelectedThrows = function() {
+	var h = this.forIJK({a:[]}, function(h) {
+	    if (h.jtjk.w3IsSelected) {
+		h.a.push([h.i, h.j, h.k]);
+	    }
+	});
+	return h.a;
+    };
+
+    /**
+     * Clears all throw selections
+     *
+     * @method clearSelections
+     */
+    JPRO.JugPattern.prototype.clearSelections = function() {
+	this.forIJK(function(h) {
+	    h.jtjk.w3IsSelected = 0;
+	});
+    };
+
+})();

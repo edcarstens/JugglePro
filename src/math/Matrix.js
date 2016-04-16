@@ -155,6 +155,20 @@ JPRO.Matrix.prototype.xV = function(v) {
 };
 
 /**
+ * Return new matrix, which is transposition of this matrix.
+ *
+ * @method transpose
+ * @return transposition (matrix)
+*/
+// Returns this matrix after v=M*v
+JPRO.Matrix.prototype.transpose = function() {
+    var r1 = new JPRO.Vec(this.m[0], this.m[3], this.m[6]);
+    var r2 = new JPRO.Vec(this.m[1], this.m[4], this.m[7]);
+    var r3 = new JPRO.Vec(this.m[2], this.m[5], this.m[8]);
+    return new JPRO.Matrix(r1, r2, r3);
+};
+
+/**
  * Return string representing matrix
  *
  * @method toString
