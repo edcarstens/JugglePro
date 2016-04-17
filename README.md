@@ -6,6 +6,8 @@ I've decided to start an open source project for the new improved JugglePro, wri
 
 This is going to be something like-minded programmers/jugglers can contribute to which could make this open source the best juggling pattern animator ever!
 
-[JugglePro](http://edcarstens.github.io/JugglePro/) is a 3D pattern viewer based on an extended multi-hand notation (MHN+). The extension allows for true multiplexing.
+[JugglePro](http://edcarstens.github.io/JugglePro/) is a 3D pattern viewer based on an extended multi-hand notation (MHN+). The extension allows for true multiplexing. I've recently extended MHN again to represent slow-fast patterns.
+
+Go to [JugglePro](http://jugglepro.org/jp3) to see some examples and movies.
 
 -Ed Carstens
