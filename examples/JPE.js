@@ -1,7 +1,9 @@
 JPE = function(angular, mhn, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
+	$scope.version = "1.0";
 	var p = new JPRO.JugPattern(mhn);
 	p.name = pname;
+	//$scope.pname = pname;
 	//console.log(p);
 	// Variables
 	// Always use $scope when modifying variables
