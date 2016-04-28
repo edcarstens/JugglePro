@@ -99,7 +99,7 @@
       <div class="w3-tooltip">
 	<span class="w3-text w3-text-black" style="position:absolute; left:0; bottom:4px"> Select/deselect this throw </span>
 	<button ng-repeat="jt in jtm track by $index" class="w3-btn w3-small {{jt.w3GetColor(jts.row)}}"
-		style="width:{{85/(jts.period*jtm.length)}}%"
+		style="width:{{85*$parent.$parent.jts.beatRatio($parent.$index)}}%"
 		ng-click="clickThrow(jt)">
 	  <b>{{jt.toString()}}</b>
 	</button>
