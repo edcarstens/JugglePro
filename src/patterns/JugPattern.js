@@ -12,6 +12,7 @@
  * @extends Base
  * @constructor
  * @param mhn {Number|Array} siteswap, multiplex, MHN, or MHN+ throw matrix
+ * @param clocks {Array} array of Clock objects (one for each MHN row)
  * @param iters {Number} number of iterations of pattern to be executed
  * @param name {String} name of this object
  *
@@ -32,7 +33,10 @@
 	 * @property clocks
 	 * @type Array
 	 */
-	this.clocks = clocks || [];
+	if (clocks) {
+	    this.clocks = clocks;
+	}
+	//this.clocks = clocks || [];
 	
 	/**
 	 * Array of jugThrowSeq's for this pattern (MHN rows)
@@ -156,15 +160,26 @@
     };
 
     JPRO.JugPattern.prototype.setJugThrowSeqs1 = function(mhn, dim, iters, clocks) {
-	var clk;
+	var clk,beatLst,j,r;
 	this.rows = 1;
 	if (clocks) {
 	    clk = clocks[0];
 	    clk.mhnRows = [0];
 	}
 	else {
-	    clk = new JPRO.Clock();
-	    this.clocks.push(clk);
+	    //clk = new JPRO.Clock();
+	    beatLst = [];
+	    if (dim === 0) {
+		beatLst.push(12);
+	    }
+	    else {
+		for (j=0; j<mhn.length; j++) {
+		    beatLst.push(12);
+		}
+	    }
+	    r = JPRO.HierRptSeq.create(beatLst, -1);
+	    clk = new JPRO.Clock(1, r);
+	    this.clocks = [clk];
 	    clk.mhnRows.push(0);
 	}
 	this.jugThrowSeqs.push(new JPRO.JugThrowSeq(mhn, dim, iters,
@@ -172,19 +187,20 @@
     };
 
     JPRO.JugPattern.prototype.setJugThrowSeqsN = function(mhn, dim, iters, clocks) {
-	var i, jts, p2c, pd, basePeriod, totalTime;
+	var i,jts,p2c,pd,maxPd,basePeriod,totalTime;
+	var t,err,j,rt,beatLst,r,clk;
 	var slowFast = null;
 	var bp0 = mhn[0].length;
 	this.rows = mhn.length;
 	// Find maximum period
 	// Is any MHN row beat period different?
-	var maxPd = 0;
+	maxPd = 0;
 	basePeriod = 12;
-	totalTime = basePeriod * maxPd;
 	for (i=0; i<this.rows; i++) {
 	    if (mhn[i].length !== bp0) slowFast = 1;
 	    if (mhn[i].length > maxPd) maxPd = mhn[i].length;
 	}
+	totalTime = basePeriod * maxPd;
 	// Is the destination throw-height specified?
 	if ((dim === 3) && (mhn[0][0].length > 2)) {
 	    slowFast = 1;
@@ -204,13 +220,13 @@
 	    // If the MHN indicates a slow-fast pattern, create clocks
 	    // with different periods as needed for each row.
 	    p2c = {};
+	    this.clocks = [];
 	    for (i=0; i<this.rows; i++) {
 		pd = mhn[i].length;
 		if (p2c[pd]) {
 		    p2c[pd].mhnRows.push(i);
 		}
 		else {
-		    var t,err,j,rt,beatLst,r;
 		    beatLst = [];
 		    //basePeriod = 120/pd; // only handles pd=1 up to 6
 		    t = totalTime/pd;
@@ -234,7 +250,14 @@
 	else {
 	    // If the MHN does not indicate a slow-fast pattern, use
 	    // just one clock for all rows
-	    var clk = new JPRO.Clock();
+	    //clk = new JPRO.Clock();
+	    beatLst = [];
+	    for (j=0; j<mhn[0].length; j++) {
+		beatLst.push(12);
+	    }
+	    r = JPRO.HierRptSeq.create(beatLst, -1);
+	    clk = new JPRO.Clock(1, r);
+	    this.clocks = [clk];
 	    this.clocks.push(clk);
 	    for (i=0; i<this.rows; i++) {
 		clk.mhnRows.push(i);
@@ -456,9 +479,15 @@
      * @param rows {Number}  If omitted, rows=1
      */
     JPRO.JugPattern.prototype.setPeriodRows = function(period, rows) {
-	var i,j,r,s,clk;
+	var i,j,r,s,clk,beatLst;
 	this.saveMHN(); // save MHN for undo
-	clk = new JPRO.Clock();
+	//clk = new JPRO.Clock();
+	beatLst = [];
+	for (j=0; j<period; j++) {
+	    beatLst.push(12);
+	}
+	r = JPRO.HierRptSeq.create(beatLst, -1);
+	clk = new JPRO.Clock(1, r);
 	this.jugThrowSeqs = [];
 	rows = rows || 1;
 	for (i=0; i<rows; i++) {
@@ -729,8 +758,7 @@
     };
 
     JPRO.JugPattern.prototype.rotateThrowsSF = function(x) {
-	//console.log('rotateThrowsSF called');
-	// for now ignore x and just rotate by +1 (x=-1)
+	console.log('rotateThrowsSF called');
 	this.saveMHN(); // save MHN for undo
 	var h = this.forI(function(h) {
 	    h.njt = [];
@@ -811,10 +839,11 @@
     };
 
     JPRO.JugPattern.prototype.setClock = function(row) {
-	var basePeriod;
+	var clk,idx,pd,jts,beatLst,i,maxPd,basePeriod;
+	var totalTime,t,err,j,rt,r;
 	// remove row from its clock's mhnRows list
-	var clk = this.jugThrowSeqs[row].clock;
-	var idx = clk.mhnRows.indexOf(row);
+	clk = this.jugThrowSeqs[row].clock;
+	idx = clk.mhnRows.indexOf(row);
 	clk.mhnRows.splice(idx, 1); // remove
 	
 	// if mhnRows list is empty, remove clock
@@ -824,8 +853,8 @@
 	}
 	
 	// search rows for a matching period
-	var pd = this.jugThrowSeqs[row].period;
-	var jts = null;
+	pd = this.jugThrowSeqs[row].period;
+	jts = null;
 	this.jugThrowSeqs.forEach(function(x,i) {
 	    if ((i !== row) && (x.period === pd)) {
 		jts = x;
@@ -839,8 +868,25 @@
 	}
 	// otherwise, create clock with mhnRows, add to clocks
 	else {
-	    basePeriod = 120/pd;
-	    clk = new JPRO.Clock(basePeriod, undefined, [row]);
+	    //basePeriod = 120/pd;
+	    //var t,err,j,rt,beatLst,r;
+	    beatLst = [];
+	    maxPd = 0;
+	    for (i=0; i<this.rows; i++) {
+		if (this.jugThrowSeqs[row].period > maxPd) maxPd = this.jugThrowSeqs[row].period;
+	    }
+	    basePeriod = 12;
+	    totalTime = basePeriod * maxPd;
+	    t = totalTime/pd;
+	    err = 0;
+	    for (j=0; j<pd; j++) {
+		rt = Math.round(t + err);
+		err = t - rt;
+		beatLst.push(rt);
+	    }
+	    r = JPRO.HierRptSeq.create(beatLst, -1);
+	    clk = new JPRO.Clock(1, r);
+	    clk.mhnRows = [row];
 	    this.clocks.push(clk);
 	    this.jugThrowSeqs[row].clock = clk;
 	}
@@ -884,6 +930,7 @@
 		}
 		this.jugThrowSeqs[row].push(msThrows);
 		this.setClock(row);
+		console.log(this);
 	    }
 	    return this;
 	}
@@ -927,6 +974,9 @@
 	    } // for k
 	    h.parent.jugThrowSeqs[h.i].push(msThrows);	    
 	});
+
+	// Extend the clock's rhythm by one beat
+	this.clocks[0].rhythm.itemList[0].push(12);
 	return this;
     };
 
@@ -934,6 +984,7 @@
      * Extends rows by one, using specified throw-height
      *
      * @method extendRows
+     * @param rowIdx {Number} match this MHN row's period
      * @param throwHeight {Number}
      * @return {JugPattern} this pattern
      */
@@ -967,12 +1018,15 @@
      * @method reset
      */
     JPRO.JugPattern.prototype.reset = function() {
-	var s,clk;
+	var s,clk,r;
 	this.saveMHN(); // save MHN for undo
 	//this.period = 1;
 	this.rows = 1;
 	s = new JPRO.RptSeq([[new JPRO.JugThrow(0,0)]], this.iters);
-	clk = new JPRO.Clock(12, undefined, [0]);
+	//clk = new JPRO.Clock(12, undefined);
+	r = JPRO.HierRptSeq.create([12], -1);
+	clk = new JPRO.Clock(1, r);
+	clk.mhnRows = [0];
 	this.jugThrowSeqs = [new JPRO.JugThrowSeq(s, 0, this.iters, clk)];
 	this.clocks = [this.jugThrowSeqs[0].clock];
 	this.jugThrowSeqs[0].preDwellRatio = 0.5;

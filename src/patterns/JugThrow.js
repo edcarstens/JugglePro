@@ -174,5 +174,5 @@
 	}
 	return this.w3Color;
     };
-    
+
 })();
