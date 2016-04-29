@@ -13,7 +13,7 @@
  * @extends Base
  * @constructor
  * @param basePeriod {Number} the juggling base period
- * @param rhythm {Rhythm} the rhythm of beats
+ * @param rhythm {HierRptSeq} the rhythm of beats
  * @param name {String} name of this Clock
  */
 JPRO.ID.Clock = 0;

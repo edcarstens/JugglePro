@@ -1,8 +1,20 @@
-JPE = function(angular, mhn, pname) {
+JPE = function(angular, pat, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
 	$scope.version = "1.0";
-	var p = new JPRO.JugPattern(mhn);
-	p.name = pname;
+	var p,r,i,rhythm;
+	if (pat.mhn) {
+	    pat.clocks = [];
+	    r = pat.rhythm;
+	    for (i=0; i<r.length; i++) {
+		rhythm = JPRO.HierRptSeq.create(r[i], -1);
+		pat.clocks.push(new JPRO.Clock(1, rhythm));
+	    }
+	    p = new JPRO.JugPattern(pat.mhn, pat.clocks); 
+	}
+	else {
+	    p = new JPRO.JugPattern(pat);
+	}
+	p.name = pname || pat.name || 'Untitled';
 	//$scope.pname = pname;
 	//console.log(p);
 	// Variables

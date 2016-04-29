@@ -48,7 +48,19 @@ JPRO.JugThrowSeq = function(mhn, dim, iters, clock,
      * @property clock
      * @type Clock
      */
-    this.clock = (clock === undefined) ? new JPRO.Clock() : clock;
+    if (clock !== undefined) {
+	this.clock = clock;
+    }
+    else {
+	var j,beatLst,r;
+	beatLst = [];
+	for (j=0; j<this.period; j++) {
+	    beatLst.push(12);
+	}
+	r = JPRO.HierRptSeq.create(beatLst, -1);
+	this.clock = new JPRO.Clock(1, r);
+    }
+    //this.clock = (clock === undefined) ? new JPRO.Clock() : clock;
 
     /**
      * MHN row corresponding to this throw sequence
@@ -169,6 +181,28 @@ JPRO.JugThrowSeq.prototype.copy = function(objHash, cFunc) {
     var scalars = ['preDwellRatio','postDwellRatio'];
     //var cf = function() { return obj; };
     return this.directedCopy(objHash, cFunc, {}, scalars);
+};
+
+/**
+ * Return a ratio of the beat at specified column to
+ * the total time in the rhythm
+ *
+ * @method beatRatio
+ * @param col
+ * @return {Number} ratio of beat time to total time
+ */
+JPRO.JugThrowSeq.prototype.beatRatio = function(col) {
+    var r,mslots,totalTime,rv;
+    console.log(this.clock);
+    r = this.clock.rhythm.itemList[0].itemList[col];
+    mslots = this.jugThrows.itemList[col].length;
+    totalTime = this.clock.getInterval(0, this.clock.rhythm.itemList[0].period);
+    console.log('col=' + col);
+    console.log('r=' + r);
+    console.log('totalTime=' + totalTime);
+    rv = r/mslots/totalTime;
+    console.log('rv=' + rv);
+    return rv;
 };
 
 /**

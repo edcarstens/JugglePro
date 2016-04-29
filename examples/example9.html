@@ -74,7 +74,7 @@
     </div>
     <span ng-repeat="jtm in jts.jugThrows.itemList track by $index">
 	<button ng-repeat="jt in jtm track by $index" class="w3-btn w3-small {{jt.w3GetColor(jts.row)}}"
-		style="width:{{85/(jts.period*jtm.length)}}%"
+		style="width:{{85*$parent.$parent.jts.beatRatio($parent.$index)}}%"
 		ng-click="clickThrow(jt)">
 	  <b>{{jt.toString()}}</b>
 	</button>
