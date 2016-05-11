@@ -116,7 +116,7 @@
 	 * @property selections
 	 * @type Number
 	 */
-	this.selections = 0;
+	//this.selections = 0;
 
 	this.states = [];
 	this.undoIdx = 0;
