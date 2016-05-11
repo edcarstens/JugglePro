@@ -1,6 +1,6 @@
 JPE = function(angular, pat, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
-	$scope.version = "1.0";
+	$scope.version = "1.1";
 	var p,r,i,rhythm;
 	if (pat.mhn) {
 	    pat.clocks = [];
@@ -76,6 +76,7 @@ JPE = function(angular, pat, pname) {
 	$scope.clickReset = function() {
 	    this.p.reset();
 	    this.update();
+	    this.clearSelections();
 	};
 	$scope.clickAddRow = function() {
 	    var a = this.p.getSelectedThrows();
@@ -147,10 +148,12 @@ JPE = function(angular, pat, pname) {
 	$scope.clickUndo = function() {
 	    $scope.p = this.p.undo();
 	    this.update();
+	    this.clearSelections();
 	};
 	$scope.clickRedo = function() {
 	    $scope.p = this.p.redo();
 	    this.update();
+	    this.clearSelections();
 	};
     });
 
