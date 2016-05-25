@@ -1,25 +1,30 @@
-JPE = function(angular, pat, pname) {
+JPE = function(angular, pats, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
-	$scope.version = "1.1";
-	var p,r,i,rhythm;
-	if (pat.mhn) {
-	    pat.clocks = [];
-	    r = pat.rhythm;
-	    for (i=0; i<r.length; i++) {
-		rhythm = JPRO.HierRptSeq.create(r[i], -1);
-		pat.clocks.push(new JPRO.Clock(1, rhythm));
+	$scope.version = "1.3";
+	var i,pat,r,j,rhythm,p;
+	$scope.pats = [];
+	for (i in pats) {
+	    pat = pats[i]
+	    if (pat.mhn) {
+		// pat is JSON with a rhythm and mhn
+		pat.clocks = [];
+		r = pat.rhythm;
+		for (j=0; j<r.length; j++) {
+		    rhythm = JPRO.HierRptSeq.create(r[j], -1);
+		    pat.clocks.push(new JPRO.Clock(1, rhythm));
+		}
+		p = new JPRO.JugPattern(pat.mhn, pat.clocks);
 	    }
-	    p = new JPRO.JugPattern(pat.mhn, pat.clocks); 
+	    else {
+		// pat is simple MHN
+		p = new JPRO.JugPattern(pat);
+	    }
+	    $scope.pats.push(p);
 	}
-	else {
-	    p = new JPRO.JugPattern(pat);
-	}
-	p.name = pname || pat.name || 'Untitled';
-	//$scope.pname = pname;
-	//console.log(p);
+	$scope.pname = pname || 'Untitled';
 	// Variables
 	// Always use $scope when modifying variables
-	$scope.p = p;
+	$scope.p = $scope.pats[0];
 	$scope.selections = 0;
 	$scope.swapDis = true;
 	$scope.swapRowsDis = true;
@@ -155,8 +160,17 @@ JPE = function(angular, pat, pname) {
 	    this.update();
 	    this.clearSelections();
 	};
+	$scope.clickDestBeat = function(x) {
+	    if (this.selections) {
+		var a = this.p.getSelectedThrows();
+		this.p.modDestBeat(a[0], x);
+		this.clearSelections();
+	    }
+	};
+	$scope.clickSC = function(r) {
+	    this.p.jugThrowSeqs[r].w3ToggleColor();
+	}
     });
 
 //console.log(angular);
 };
-

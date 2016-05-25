@@ -232,16 +232,27 @@ JPRO.JugThrowSeq.prototype.push = function(item) {
     this.jugThrows.push(item);
     this.w3Colorize();
     this.period++;
+}
+
+/**
+ */
+JPRO.JugThrowSeq.prototype.w3ToggleColor = function() {
+    var firstColor, jt;
+    jt = this.jugThrows.itemList;
+    firstColor = 0;
+    if (jt[0][0].w3Color == 'w3-light-blue')
+	firstColor = 1;
+    this.w3Colorize(firstColor);
 };
 
 /**
  */
-JPRO.JugThrowSeq.prototype.w3Colorize = function() {
+JPRO.JugThrowSeq.prototype.w3Colorize = function(firstColor) {
     var jt,j,k,colorTable,row,col;
     colorTable = [['w3-light-blue', 'w3-jp-light-blue'],
 		  ['w3-khaki', 'w3-jp-khaki']];
     jt = this.jugThrows.itemList;
-    row = 0;
+    row = firstColor || 0;
     for (j=0; j<jt.length; j++) {
 	col = 0;
 	for (k=0; k<jt[j].length; k++) {

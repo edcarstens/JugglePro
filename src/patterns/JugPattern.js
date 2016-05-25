@@ -632,6 +632,23 @@
     };
 
     /**
+     * 
+     */
+    JPRO.JugPattern.prototype.modDestBeat = function(loc1, x) {
+	var p1 = this.getJugThrow(loc1[0], loc1[1], loc1[2]);
+	var f1 = this.jugThrowSeqs[loc1[0]].period;
+	var p1r = p1.destRow;
+	var p1f = this.jugThrowSeqs[p1r].period;
+	var p1td = p1.destBeats;
+	var p1t = p1.fltBeats - p1td; // self beats
+	p1t -= x*f1;
+	p1td += x*p1f;
+	p1.destBeats = p1td;
+	p1.fltBeats = p1t + p1td;
+	return this;
+    };
+    
+    /**
      * Return maximum number of multiplex throws and extend all
      * multiplex slots with zeros to the same number of throws.
      *
