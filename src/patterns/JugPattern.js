@@ -445,7 +445,7 @@
 	this.undoIdx--;
 	//console.log(this.states[this.undoIdx]);
 	// construct a new JugPattern with the same name from an old MHN state
-	var jp = new JPRO.JugPattern(this.states[this.undoIdx], null, this.cpm, this.iters, this.name);
+	var jp = new JPRO.JugPattern(this.states[this.undoIdx], this.clocks, this.cpm, this.iters, this.name);
 	jp.states = this.states.slice(0); // copy
 	jp.undoIdx = this.undoIdx;
 	return jp;
@@ -465,7 +465,7 @@
 	if (this.undoIdx >= this.states.length - 1) return this;
 	this.undoIdx++;
 	//console.log(this.states[this.undoIdx]);
-	var jp = new JPRO.JugPattern(this.states[this.undoIdx], null, this.cpm, this.iters, this.name);
+	var jp = new JPRO.JugPattern(this.states[this.undoIdx], this.clocks, this.cpm, this.iters, this.name);
 	jp.states = this.states.slice(0); // copy
 	jp.undoIdx = this.undoIdx;
 	return jp;

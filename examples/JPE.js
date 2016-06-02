@@ -1,8 +1,9 @@
 JPE = function(angular, pats, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
-	$scope.version = "1.3";
+	$scope.version = "1.4";
 	var i,pat,r,j,rhythm,p;
 	$scope.pats = [];
+	$scope.rowDis = [];
 	for (i in pats) {
 	    pat = pats[i]
 	    if (pat.mhn) {
@@ -13,6 +14,7 @@ JPE = function(angular, pats, pname) {
 		    rhythm = JPRO.HierRptSeq.create(r[j], -1);
 		    pat.clocks.push(new JPRO.Clock(1, rhythm));
 		}
+		console.log(pat);
 		p = new JPRO.JugPattern(pat.mhn, pat.clocks);
 	    }
 	    else {
@@ -20,11 +22,14 @@ JPE = function(angular, pats, pname) {
 		p = new JPRO.JugPattern(pat);
 	    }
 	    $scope.pats.push(p);
+	    $scope.rowDis.push(true);
 	}
 	$scope.pname = pname || 'Untitled';
 	// Variables
 	// Always use $scope when modifying variables
-	$scope.p = $scope.pats[0];
+	$scope.pidx = 0;
+	$scope.rowDis[$scope.pidx] = false;
+	$scope.p = $scope.pats[$scope.pidx];
 	$scope.selections = 0;
 	$scope.swapDis = true;
 	$scope.swapRowsDis = true;
@@ -52,6 +57,16 @@ JPE = function(angular, pats, pname) {
 	    $scope.selections = 0;
 	    $scope.swapDis = true;
 	    $scope.swapRowsDis = true;
+	};
+	$scope.selectPat = function(pidx) {
+	    if (pidx != this.pidx) {
+		$scope.rowDis[this.pidx] = true;
+		$scope.rowDis[pidx] = false;
+		this.clearSelections();
+		this.update();
+		$scope.pidx = pidx;
+		$scope.p = this.pats[pidx];
+	    }
 	};
 	$scope.clickFormat = function() {
 	    $scope.space = (this.space === "w3-small") ? "w3-large" : "w3-small";
@@ -90,11 +105,13 @@ JPE = function(angular, pats, pname) {
 	    this.p.extendRows(r);
 	    this.update();
 	};
-	$scope.clickAddCol = function(r) {
+	$scope.clickAddCol = function(r,pidx) {
+	    this.selectPat(pidx);
 	    this.p.extendPeriod(r);
 	    this.update();
 	};
-	$scope.clickSubCol = function(r) {
+	$scope.clickSubCol = function(r,pidx) {
+	    this.selectPat(pidx);
 	    this.p.decPeriod(r);
 	    this.update();
 	};
@@ -111,7 +128,9 @@ JPE = function(angular, pats, pname) {
 	    this.clearSelections();
 	    this.update();
 	};
-	$scope.clickThrow = function(jt) {
+
+	$scope.clickThrow = function(jt,pidx) {
+	    this.selectPat(pidx);
 	    $scope.selections += jt.w3ToggleSelect();
 	    $scope.swapDis = (this.selections !== 2);
 	    if (this.selections === 2) {
@@ -122,7 +141,8 @@ JPE = function(angular, pats, pname) {
 		$scope.swapRowsDis = true;
 	    }
 	};
-	$scope.clickRT = function(r,x) {
+	$scope.clickRT = function(r,x,pidx) {
+	    this.selectPat(pidx);
 	    if (this.selections) {
 		this.p.translateThrowsSelected(x);
 		this.clearSelections();
@@ -146,17 +166,20 @@ JPE = function(angular, pats, pname) {
 	    this.p.rotateThrows(x);
 	    this.update();
 	};
-	$scope.clickMT = function(r) {
+	$scope.clickMT = function(r,pidx) {
+	    this.selectPat(pidx);
 	    this.p.multiplexTranslate(r);
 	    this.update();
 	};
 	$scope.clickUndo = function() {
 	    $scope.p = this.p.undo();
+	    $scope.pats[this.pidx] = this.p;
 	    this.update();
 	    this.clearSelections();
 	};
 	$scope.clickRedo = function() {
 	    $scope.p = this.p.redo();
+	    $scope.pats[this.pidx] = this.p;
 	    this.update();
 	    this.clearSelections();
 	};
@@ -167,7 +190,8 @@ JPE = function(angular, pats, pname) {
 		this.clearSelections();
 	    }
 	};
-	$scope.clickSC = function(r) {
+	$scope.clickSC = function(r,pidx) {
+	    this.selectPat(pidx);
 	    this.p.jugThrowSeqs[r].w3ToggleColor();
 	}
     });
