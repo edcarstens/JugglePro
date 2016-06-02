@@ -1,6 +1,6 @@
 JPE = function(angular, pats, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
-	$scope.version = "1.4";
+	$scope.version = "1.5";
 	var i,pat,r,j,rhythm,p;
 	$scope.pats = [];
 	$scope.rowDis = [];
@@ -106,12 +106,12 @@ JPE = function(angular, pats, pname) {
 	    this.update();
 	};
 	$scope.clickAddCol = function(r,pidx) {
-	    this.selectPat(pidx);
+	    this.selectPat(pidx || this.pidx);
 	    this.p.extendPeriod(r);
 	    this.update();
 	};
 	$scope.clickSubCol = function(r,pidx) {
-	    this.selectPat(pidx);
+	    this.selectPat(pidx || this.pidx);
 	    this.p.decPeriod(r);
 	    this.update();
 	};
