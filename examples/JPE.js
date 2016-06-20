@@ -1,6 +1,6 @@
 JPE = function(angular, pats, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
-	$scope.version = "1.5";
+	$scope.version = "1.6";
 	var i,pat,r,j,rhythm,p;
 	$scope.pats = [];
 	$scope.rowDis = [];
@@ -63,9 +63,9 @@ JPE = function(angular, pats, pname) {
 		$scope.rowDis[this.pidx] = true;
 		$scope.rowDis[pidx] = false;
 		this.clearSelections();
-		this.update();
 		$scope.pidx = pidx;
 		$scope.p = this.pats[pidx];
+		this.update();
 	    }
 	};
 	$scope.clickFormat = function() {
