@@ -35,6 +35,7 @@
     // Call makeCopyMatrix(d) to create a
     // conforming property copy function.
     JPRO.Common.copyMatrix = function(m, d) {
+	if (d === 1) return m.slice();
 	if (d === 0) {
 	    return m;
 	}

@@ -122,12 +122,12 @@ JPRO.Clock.prototype.constructor = JPRO.Clock;
  * @return {Clock} copied Clock
  */
 JPRO.Clock.prototype.copy = function(objHash, cFunc) {
+    var scalars = ['basePeriod'];
     var pFuncs = {};
     pFuncs.timeStamps = JPRO.Common.copyHash;
-    cFunc = cFunc || function() {
-	return new JPRO.Clock(1, null);
-    };
-    return this.copyOnce(objHash, cFunc, {}, pFuncs);
+    pFuncs.mhnRows = function(x, objHash) {return x.slice(0); };
+    var objects = ['rhythm'];
+    return this.directedCopy(objHash, cFunc, pFuncs, scalars, objects);
 };
 
 /**
