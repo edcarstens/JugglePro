@@ -121,10 +121,10 @@
 	pFuncs = pFuncs || {};
 	scalars = scalars || [];
 	objects = objects || [];
-	x = JPRO.ID[this.className];
+	//x = JPRO.ID[this.className];
 	obj = cFunc.call(this);
-	JPRO.ID[this.className] = x;
-	obj.name = this.name + '_copy';
+	//JPRO.ID[this.className] = x;
+	//obj.name = this.name + '_copy';
 	objHash[this.name] = obj;
 	objHash[obj.name] = this;
 	for (p in pFuncs) {

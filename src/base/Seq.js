@@ -75,12 +75,14 @@ JPRO.Seq.prototype.constructor = JPRO.Seq;
 JPRO.Seq.prototype.copy = function(objHash, cFunc) {
     var pFuncs = {};
     var x = typeof this.itemList[0];
-    if (x === 'object')
+    if (this.itemList[0].constructor === Array)
+	pFuncs.itemList = JPRO.Common.copyObjMatrix;
+    else if (x === 'object')
 	pFuncs.itemList = JPRO.Common.copyObjVector;
     var scalars = ['entryCB', 'exitCB', 'currentIdx', 'period',
 		  'iters'];
     var obj = this.directedCopy(objHash, cFunc, pFuncs, scalars);
-    if (x !== 'object')
+    if (pFuncs.itemList === undefined)
 	obj.itemList = this.itemList.slice(0);
     return obj;
 };

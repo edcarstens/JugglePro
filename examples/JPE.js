@@ -1,9 +1,10 @@
 JPE = function(angular, pats, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
-	$scope.version = "1.6";
+	$scope.version = "1.8";
 	var i,pat,r,j,rhythm,p;
 	$scope.pats = [];
 	$scope.rowDis = [];
+	$scope.undoHist = [];
 	for (i in pats) {
 	    pat = pats[i]
 	    if (pat.mhn) {
@@ -23,6 +24,7 @@ JPE = function(angular, pats, pname) {
 	    }
 	    $scope.pats.push(p);
 	    $scope.rowDis.push(true);
+	    $scope.undoHist.push(new JPRO.UndoHist(p));
 	}
 	$scope.pname = pname || 'Untitled';
 	// Variables
@@ -33,17 +35,22 @@ JPE = function(angular, pats, pname) {
 	$scope.selections = 0;
 	$scope.swapDis = true;
 	$scope.swapRowsDis = true;
+	$scope.dbeatDis = true;
 	$scope.space = "w3-large";
 	// Methods
 	$scope.hideAddCol = function(r) {
-	    return !this.p.jugThrowSeqs[r].isZeros();
+	    return !$scope.p.jugThrowSeqs[r].isZeros();
 	};
-	$scope.update = function() {
+	$scope.update = function(noUndo) {
+	    if (!noUndo) {
+		// push a copy of p in the undo history for pidx
+		this.undoHist[this.pidx].pushState(this.p);
+	    }
 	    $scope.hideNewCol = (this.p.clocks.length > 1);
-	    $scope.undoDis = this.p.undoDisabled();
-	    $scope.redoDis = this.p.redoDisabled();
+	    $scope.undoDis = this.undoHist[this.pidx].undoDisabled();
+	    $scope.redoDis = this.undoHist[this.pidx].redoDisabled();
 	};
-	$scope.update();
+	$scope.update(1);
 	$scope.rowToChar = function(r) {
 	    return String.fromCharCode(65 + r);
 	};
@@ -57,6 +64,7 @@ JPE = function(angular, pats, pname) {
 	    $scope.selections = 0;
 	    $scope.swapDis = true;
 	    $scope.swapRowsDis = true;
+	    $scope.dbeatDis = true;
 	};
 	$scope.selectPat = function(pidx) {
 	    if (pidx != this.pidx) {
@@ -65,7 +73,7 @@ JPE = function(angular, pats, pname) {
 		this.clearSelections();
 		$scope.pidx = pidx;
 		$scope.p = this.pats[pidx];
-		this.update();
+		this.update(1);
 	    }
 	};
 	$scope.clickFormat = function() {
@@ -115,6 +123,7 @@ JPE = function(angular, pats, pname) {
 	    this.p.decPeriod(r);
 	    this.update();
 	};
+	
 	$scope.clickSwap = function() {
 	    var a = this.p.getSelectedThrows();
 	    this.p.swap(a[0], a[1]);
@@ -133,6 +142,7 @@ JPE = function(angular, pats, pname) {
 	    this.selectPat(pidx);
 	    $scope.selections += jt.w3ToggleSelect();
 	    $scope.swapDis = (this.selections !== 2);
+	    $scope.dbeatDis = (this.selections === 0);
 	    if (this.selections === 2) {
 		var a = this.p.getSelectedThrows();
 		$scope.swapRowsDis = (a[0][0] === a[1][0]);
@@ -140,6 +150,7 @@ JPE = function(angular, pats, pname) {
 	    else {
 		$scope.swapRowsDis = true;
 	    }
+	    // No update here because this is just a select/deselect
 	};
 	$scope.clickRT = function(r,x,pidx) {
 	    this.selectPat(pidx);
@@ -172,27 +183,31 @@ JPE = function(angular, pats, pname) {
 	    this.update();
 	};
 	$scope.clickUndo = function() {
-	    $scope.p = this.p.undo();
+	    //$scope.p = this.p.undo();
+	    $scope.p = this.undoHist[this.pidx].undo();
 	    $scope.pats[this.pidx] = this.p;
-	    this.update();
+	    this.update(1);
 	    this.clearSelections();
 	};
 	$scope.clickRedo = function() {
-	    $scope.p = this.p.redo();
+	    //$scope.p = this.p.redo();
+	    $scope.p = this.undoHist[this.pidx].redo();
 	    $scope.pats[this.pidx] = this.p;
-	    this.update();
+	    this.update(1);
 	    this.clearSelections();
 	};
 	$scope.clickDestBeat = function(x) {
 	    if (this.selections) {
 		var a = this.p.getSelectedThrows();
 		this.p.modDestBeat(a[0], x);
+		this.update();
 		this.clearSelections();
 	    }
 	};
 	$scope.clickSC = function(r,pidx) {
 	    this.selectPat(pidx);
 	    this.p.jugThrowSeqs[r].w3ToggleColor();
+	    this.update();
 	}
     });
 

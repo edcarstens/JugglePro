@@ -38,6 +38,9 @@ JPRO.JugThrowSeq = function(mhn, dim, iters, clock,
      * @property jugThrows
      * @type RptSeq
      */
+    mhn = mhn || 0;
+    dim = dim || 0;
+    iters = iters || 0;
     this.jugThrows = this.mhn2Seq(mhn, dim, iters);
     this.w3Colorize();
     this.period = this.jugThrows.itemList.length;
@@ -131,7 +134,7 @@ JPRO.JugThrowSeq.prototype.mp2Seq = function(mhn, iters) {
     for (j=0; j<mhn.length; j++) { // col
 	mt = [];
 	for (k=0; k<mhn[j].length; k++) { // multiplex throw
-	    mt.push([new JPRO.JugThrow(0, mhn[j][k])]);
+	    mt.push(new JPRO.JugThrow(0, mhn[j][k]));
 	}
 	rv.push(mt);
     }
@@ -178,9 +181,12 @@ JPRO.JugThrowSeq.prototype.mrmp2Seq = function(mhn, iters) {
  */
 JPRO.JugThrowSeq.prototype.copy = function(objHash, cFunc) {
 //    var obj = JPRO.Seq.prototype.copy.call(this, objHash, cFunc);
-    var scalars = ['preDwellRatio','postDwellRatio'];
+    var scalars = ['preDwellRatio','postDwellRatio','period','row'];
+    var pFuncs = {};
+    //pFuncs.jugThrows = JPRO.Common.copyObjVector;
+    var objects = ['jugThrows','clock'];
     //var cf = function() { return obj; };
-    return this.directedCopy(objHash, cFunc, {}, scalars);
+    return this.directedCopy(objHash, cFunc, pFuncs, scalars, objects);
 };
 
 /**
@@ -193,15 +199,15 @@ JPRO.JugThrowSeq.prototype.copy = function(objHash, cFunc) {
  */
 JPRO.JugThrowSeq.prototype.beatRatio = function(col) {
     var r,mslots,totalTime,rv;
-    console.log(this.clock);
+    //console.log(this.clock);
     r = this.clock.rhythm.itemList[0].itemList[col];
     mslots = this.jugThrows.itemList[col].length;
     totalTime = this.clock.getInterval(0, this.clock.rhythm.itemList[0].period);
-    console.log('col=' + col);
-    console.log('r=' + r);
-    console.log('totalTime=' + totalTime);
+    //console.log('col=' + col);
+    //console.log('r=' + r);
+    //console.log('totalTime=' + totalTime);
     rv = r/mslots/totalTime;
-    console.log('rv=' + rv);
+    //console.log('rv=' + rv);
     return rv;
 };
 

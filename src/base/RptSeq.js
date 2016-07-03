@@ -111,8 +111,14 @@ JPRO.RptSeq.prototype.copy = function(objHash, cFunc) {
     var obj = JPRO.Seq.prototype.copy.call(this, objHash, cFunc);
     obj.iterCnt = this.iterCnt;
     obj.iterCntLA = this.iterCntLA;
-    obj.entrySeq = this.entrySeq.copy(objHash);
-    obj.exitSeq = this.exitSeq.copy(objHash);
+    if (this.entrySeq)
+	obj.entrySeq = this.entrySeq.copy(objHash);
+    else
+	obj.entrySeq = null;
+    if (this.exitSeq)
+	obj.exitSeq = this.exitSeq.copy(objHash);
+    else
+	obj.exitSeq = null;
     return obj;
 };
 
