@@ -23,69 +23,8 @@
   </head>
 
 <body ng-app="JpeApp" ng-controller="JpeCtl">
-<!-- THIS CODE WILL BE INCLUDED FROM JPE.html -->
-<div class="w3-container">
-  <div class="w3-row w3-blue">
-    <span class="w3-col m2 w3-xlarge w3-center w3-text-shadow w3-opacity">
-      <b><i> JPE {{version}} </i></b>
-    </span>
-    <span class="w3-dropdown-hover w3-col m8">
-      <button class="w3-btn w3-blue w3-xlarge w3-center w3-text-shadow"
-	      style="width:100%">
-	<b> {{p.name}} </b>
-      </button>
-      <span class="w3-dropdown-content w3-border">
-	<input class="w3-input" type="text" ng-model="p.name">
-      </span>
-    </span>
-    <span class="w3-col m2 w3-xlarge w3-center w3-text-shadow w3-opacity">
-      <b><i> JPE {{version}} </i></b>
-    </span>
+  <div ng-include="'JPE2.html'">
   </div>
-  <div class="w3-tiny"> <br><br> </div>
-  <div class="w3-btn-group">
-    <button ng-click="clickAC()" class="w3-btn w3-blue" style="width:15%"> AC </button>
-    <button ng-click="clickSwap()" ng-disabled="swapDis" class="w3-btn w3-green"> SWAP </button>
-    <button ng-click="clickSwapRows()" ng-disabled="swapRowsDis" class="w3-btn w3-blue"> SWAP ROWS </button>
-    <button ng-click="clickAddRow()" class="w3-btn w3-green"> +ROW </button>
-    <button ng-click="clickAddCol()" ng-disabled="hideNewCol" class="w3-btn w3-blue"> +COL </button>
-    <button ng-click="clickTA(1)" class="w3-btn w3-green"> +BALL </button>
-    <button ng-click="clickTA(-1)" class="w3-btn w3-blue"> -BALL </button>
-    <button ng-click="clickRotate(-1)" class="w3-btn w3-green"> ROR </button>
-    <button ng-click="clickRotate(1)" class="w3-btn w3-blue"> ROL </button>
-    <button ng-click="clickReset()" class="w3-btn w3-green"> RESET </button>
-    <button ng-click="clickUndo()" ng-disabled="undoDis" class="w3-btn w3-blue"> UNDO </button>
-    <button ng-click="clickRedo()" ng-disabled="redoDis" class="w3-btn w3-green"> REDO </button>
-    <button ng-click="clickFormat()" class="w3-btn w3-blue"> FORMAT </button>
-    <button ng-click="clickDestBeat(1)" class="w3-btn w3-green"> +DBEAT </button>
-    <button ng-click="clickDestBeat(-1)" class="w3-btn w3-blue"> -DBEAT </button>
-  </div>
-  <div class="w3-tiny"> <br><br> </div>
-  <div ng-repeat="jts in p.jugThrowSeqs track by $index" class="w3-btn-group">
-    <div class="w3-dropdown-hover w3-left" style="width:15%">
-      <button class="w3-btn w3-blue w3-small" style="width:100%"> <b> {{rowToChar($index)}} </b> </button>
-      <div class="w3-dropdown-content">
-	<button ng-click="clickRT($index,1)" class="w3-btn w3-green w3-small" style="width:50%"> +BALL </button>
-	<button ng-click="clickRT($index,-1)" class="w3-btn w3-red w3-small" style="width:50%"> -BALL </button>
-	<br><br>
-	<button ng-click="clickMT($index)" class="w3-btn w3-light-grey w3-small" style="width:50%"> MPLEX </button>
-	<button ng-click="clickSC($index)" class="w3-btn w3-light-blue w3-small" style="width:50%"> SWAPC </button>
-	<br><br>
-	<button ng-click="clickAddCol($index)" ng-hide="hideAddCol($index)" class="w3-btn w3-green w3-small" style="width:50%"> +COL </button>
-	<button ng-click="clickSubCol($index)" ng-hide="hideAddCol($index)" class="w3-btn w3-red w3-small" style="width:50%"> -COL </button>
-      </div>
-    </div>
-    <span ng-repeat="jtm in jts.jugThrows.itemList track by $index">
-	<button ng-repeat="jt in jtm track by $index" class="w3-btn w3-small {{jt.w3GetColor(jts.row)}}"
-		style="width:{{85*$parent.$parent.jts.beatRatio($parent.$index)}}%"
-		ng-click="clickThrow(jt)">
-	  <b>{{jt.toString()}}</b>
-	</button>
-    </span>
-    <div class={{space}}> <br><br> </div>
-  </div>
-</div>
-<!---------------------------------------------->
 </body>
   
 </html>
