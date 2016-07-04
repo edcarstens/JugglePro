@@ -20,20 +20,54 @@
   <div class="w3-tiny"> <br><br> </div>
   <div class="w3-btn-group">
     <button ng-click="clickAC()" class="w3-btn w3-blue" style="width:15%"> AC </button>
-    <button ng-click="clickSwap()" ng-disabled="swapDis" class="w3-btn w3-green"> SWAP </button>
-    <button ng-click="clickSwapRows()" ng-disabled="swapRowsDis" class="w3-btn w3-blue"> SWAP ROWS </button>
-    <button ng-click="clickAddRow()" class="w3-btn w3-green"> +ROW </button>
-    <button ng-click="clickAddCol()" ng-disabled="hideNewCol" class="w3-btn w3-blue"> +COL </button>
-    <button ng-click="clickTA(1)" class="w3-btn w3-green"> +BALL </button>
-    <button ng-click="clickTA(-1)" class="w3-btn w3-blue"> -BALL </button>
-    <button ng-click="clickRotate(-1)" class="w3-btn w3-green"> ROR </button>
-    <button ng-click="clickRotate(1)" class="w3-btn w3-blue"> ROL </button>
-    <button ng-click="clickReset()" class="w3-btn w3-green"> RESET </button>
-    <button ng-click="clickUndo()" ng-disabled="undoDis" class="w3-btn w3-blue"> UNDO </button>
-    <button ng-click="clickRedo()" ng-disabled="redoDis" class="w3-btn w3-green"> REDO </button>
-    <button ng-click="clickFormat()" class="w3-btn w3-blue"> FORMAT </button>
-    <button ng-click="clickDestBeat(1)" class="w3-btn w3-green"> +DBEAT </button>
-    <button ng-click="clickDestBeat(-1)" class="w3-btn w3-blue"> -DBEAT </button>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-light-blue w3-left w3-small" style="width:100%"> <b> PERMUTE </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-light-blue w3-small" style="width:100%"> <b> PERMUTE </b> </button>
+	<br><br>
+	<button ng-click="clickSwap()" ng-disabled="swapDis" class="w3-btn w3-green"> SWAP THROWS </button>
+	<br><br>
+	<button ng-click="clickSwapRows()" ng-disabled="swapRowsDis" class="w3-btn w3-green"> SWAP ROWS </button>
+	<br><br>
+	<button ng-click="clickRotate(-1)" class="w3-btn w3-green"> ROR </button>
+	<br><br>
+	<button ng-click="clickRotate(1)" class="w3-btn w3-green"> ROL </button>
+      </span>
+    </span>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-khaki w3-left w3-small" style="width:100%"> <b> RESIZE </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-khaki w3-small" style="width:100%"> <b> RESIZE </b> </button>
+	<br><br>
+	<button ng-click="clickAddRow()" class="w3-btn w3-green" style="width:100%"> +ROW </button>
+	<br><br>
+	<button ng-click="clickAddCol()" ng-disabled="hideNewCol" class="w3-btn w3-green" style="width:100%"> +COL </button>
+      </span>
+    </span>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-light-blue w3-left w3-small" style="width:100%"> <b> PROPS </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-light-blue w3-small" style="width:100%"> <b> PROPS </b> </button>
+	<br><br>
+	<button ng-click="clickTA(1)" class="w3-btn w3-green" style="width:100%"> +PROP </button>
+	<br><br>
+	<button ng-click="clickTA(-1)" class="w3-btn w3-green" style="width:100%"> -PROP </button>
+      </span>
+    </span>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-khaki w3-left w3-small" style="width:100%"> <b> DBEAT </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-khaki w3-small" style="width:100%"> <b> DBEAT </b> </button>
+	<br><br>
+	<button ng-click="clickDestBeat(1)" ng-disabled="dbeatDis" class="w3-btn w3-green" style="width:100%"> +DBEAT </button>
+	<br><br>
+	<button ng-click="clickDestBeat(-1)" ng-disabled="dbeatDis" class="w3-btn w3-green" style="width:100%"> -DBEAT </button>
+      </span>
+    </span>
+    <button ng-click="clickFormat()" class="w3-btn w3-light-blue w3-small" style="width:10%"> <b> FORMAT </b> </button>
+    <button ng-click="clickUndo()" ng-disabled="undoDis" class="w3-btn w3-khaki w3-small" style="width:10%"> <b> UNDO </b> </button>
+    <button ng-click="clickRedo()" ng-disabled="redoDis" class="w3-btn w3-light-blue w3-small" style="width:10%"> <b> REDO </b> </button>
+    <button ng-click="clickReset()" class="w3-btn w3-khaki w3-small" style="width:15%"> <b> RESET </b> </button>
   </div>
   <div class="w3-tiny"> <br><br> </div>
   <div ng-repeat="pp in pats track by $index">
