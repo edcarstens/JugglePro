@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+  <head><meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+    <title>JugglePro Editor Example14</title>
+    <script src="../bin/angular.min.js"></script>
+    <link rel="stylesheet" href="../w3.css">
+    <link rel="stylesheet" href="../jp3d.css">
+    <script src="../src/Jpro.js"></script>
+    <script src="../src/common/Common.js"></script>
+    <script src="../src/base/Base.js"></script>
+    <script src="../src/base/Seq.js"></script>
+    <script src="../src/base/RptSeq.js"></script>
+    <script src="../src/base/HierRptSeq.js"></script>
+    <script src="../src/math/Vec.js"></script>
+    <script src="../src/time/Clock.js"></script>
+    <script src="../src/hands/ControlPointMapper.js"></script>
+    <script src="../src/patterns/State.js"></script>
+    <script src="../src/patterns/JugThrow.js"> </script>
+    <script src="../src/patterns/JugThrowSeq.js"> </script>
+    <script src="../src/patterns/JugPattern.js"> </script>
+    <script src="../src/gui/UndoHist.js"> </script>
+    <script src="JPE.js"> </script>
+    <script>
+      JPE(angular, [
+      [ [[1,3,3],[0,3],[0,3]],
+      [[0,3,3],[1,3],[1,3],[1,3]] ],
+      [ [[1,3,3],[0,3],[0,3],[0,3]],
+      [[0,3,3],[1,3],[1,3]] ],
+      [ [[1,3,3],[0,3],[0,3]],
+      [[0,3,3],[1,3],[1,3],[1,3]] ],
+      [ [[1,3,3],[0,3],[0,3],[0,3]],
+      [[0,3,3],[1,3],[1,3]] ],
+      ],
+      'Slow-Fast 34 Out of Phase');
+    </script>
+  </head>
+
+<body ng-app="JpeApp" ng-controller="JpeCtl">
+<!-- THIS CODE WILL BE INCLUDED FROM JPE.html -->
+<div class="w3-container">
+  <div class="w3-row w3-blue">
+    <span class="w3-col m2 w3-xlarge w3-center w3-text-shadow w3-opacity">
+      <b><i> JPE {{version}} </i></b>
+    </span>
+    <span class="w3-dropdown-hover w3-col m8">
+      <button class="w3-btn w3-blue w3-xlarge w3-center w3-text-shadow"
+	      style="width:100%">
+	<b> {{pname}} </b>
+      </button>
+      <span class="w3-dropdown-content w3-border">
+	<input class="w3-input" type="text" ng-model="pname">
+      </span>
+    </span>
+    <span class="w3-col m2 w3-xlarge w3-center w3-text-shadow w3-opacity">
+      <b><i> JPE {{version}} </i></b>
+    </span>
+  </div>
+  <div class="w3-tiny"> <br><br> </div>
+  <div class="w3-btn-group">
+    <button ng-click="clickAC()" class="w3-btn w3-blue w3-small" style="width:15%"> <b> AC </b> </button>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-light-blue w3-left w3-small" style="width:100%"> <b> PERMUTE </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-light-blue w3-small" style="width:100%"> <b> PERMUTE </b> </button>
+	<br><br>
+	<button ng-click="clickSwap()" ng-disabled="swapDis" class="w3-btn w3-green"> SWAP THROWS </button>
+	<br><br>
+	<button ng-click="clickSwapRows()" ng-disabled="swapRowsDis" class="w3-btn w3-green"> SWAP ROWS </button>
+	<br><br>
+	<button ng-click="clickRotate(-1)" class="w3-btn w3-green"> ROR </button>
+	<br><br>
+	<button ng-click="clickRotate(1)" class="w3-btn w3-green"> ROL </button>
+      </span>
+    </span>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-khaki w3-left w3-small" style="width:100%"> <b> RESIZE </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-khaki w3-small" style="width:100%"> <b> RESIZE </b> </button>
+	<br><br>
+	<button ng-click="clickAddRow()" class="w3-btn w3-green" style="width:100%"> +ROW </button>
+	<br><br>
+	<button ng-click="clickAddCol()" ng-disabled="hideNewCol" class="w3-btn w3-green" style="width:100%"> +COL </button>
+      </span>
+    </span>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-light-blue w3-left w3-small" style="width:100%"> <b> PROPS </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-light-blue w3-small" style="width:100%"> <b> PROPS </b> </button>
+	<br><br>
+	<button ng-click="clickTA(1)" class="w3-btn w3-green" style="width:100%"> +PROP </button>
+	<br><br>
+	<button ng-click="clickTA(-1)" class="w3-btn w3-green" style="width:100%"> -PROP </button>
+      </span>
+    </span>
+    <span class="w3-dropdown-hover w3-left" style="width:10%">
+      <button class="w3-btn w3-khaki w3-left w3-small" style="width:100%"> <b> DBEAT </b> </button>
+      <span class="w3-dropdown-content">
+	<button class="w3-btn w3-khaki w3-small" style="width:100%"> <b> DBEAT </b> </button>
+	<br><br>
+	<button ng-click="clickDestBeat(1)" ng-disabled="dbeatDis" class="w3-btn w3-green" style="width:100%"> +DBEAT </button>
+	<br><br>
+	<button ng-click="clickDestBeat(-1)" ng-disabled="dbeatDis" class="w3-btn w3-green" style="width:100%"> -DBEAT </button>
+      </span>
+    </span>
+    <button ng-click="clickFormat()" class="w3-btn w3-light-blue w3-small" style="width:10%"> <b> FORMAT </b> </button>
+    <button ng-click="clickUndo()" ng-disabled="undoDis" class="w3-btn w3-khaki w3-small" style="width:10%"> <b> UNDO </b> </button>
+    <button ng-click="clickRedo()" ng-disabled="redoDis" class="w3-btn w3-light-blue w3-small" style="width:10%"> <b> REDO </b> </button>
+    <button ng-click="clickReset()" class="w3-btn w3-khaki w3-small" style="width:15%"> <b> RESET </b> </button>
+  </div>
+  <div class="w3-tiny"> <br><br> </div>
+  <div ng-repeat="pp in pats track by $index">
+    <br><br>
+    <div ng-repeat="jts in pp.jugThrowSeqs track by $index" class="w3-btn-group">
+      <div class="w3-dropdown-hover w3-left" style="width:15%">
+	<button class="w3-btn w3-blue w3-small" ng-disabled="rowDis[$parent.$index]" style="width:100%"> <b> {{rowToChar($index)}} </b> </button>
+	<div class="w3-dropdown-content">
+	  <button ng-click="clickRT($index,1,$parent.$index)" class="w3-btn w3-green w3-small" style="width:50%"> +BALL </button>
+	  <button ng-click="clickRT($index,-1,$parent.$index)" class="w3-btn w3-red w3-small" style="width:50%"> -BALL </button>
+	  <br><br>
+	  <button ng-click="clickMT($index,$parent.$index)" class="w3-btn w3-light-grey w3-small" style="width:50%"> MPLEX </button>
+	  <button ng-click="clickSC($index,$parent.$index)" class="w3-btn w3-light-blue w3-small" style="width:50%"> SWAPC </button>
+	  <br><br>
+	  <button ng-click="clickAddCol($index,$parent.$index)" ng-hide="hideAddCol($index)" class="w3-btn w3-green w3-small" style="width:50%"> +COL </button>
+	  <button ng-click="clickSubCol($index,$parent.$index)" ng-hide="hideAddCol($index)" class="w3-btn w3-red w3-small" style="width:50%"> -COL </button>
+	</div>
+      </div>
+      <span ng-repeat="jtm in jts.jugThrows.itemList track by $index">
+	<button ng-repeat="jt in jtm track by $index" class="w3-btn w3-small {{jt.w3GetColor(jts.row)}}"
+		style="width:{{85*$parent.$parent.jts.beatRatio($parent.$index)}}%"
+		ng-click="clickThrow(jt,$parent.$parent.$parent.$index)">
+	  <b>{{jt.toString()}}</b>
+	</button>
+      </span>
+      <div class={{space}}> <br><br> </div>
+    </div>
+  </div>
+</div>
+<!---------------------------------------------->
+</body>
+  
+</html>

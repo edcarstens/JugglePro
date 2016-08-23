@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+  <head><meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+    <title>JugglePro Editor Example13</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
+    <link rel="stylesheet" href="../jp3d.css">
+    <script src="../src/Jpro.js"></script>
+    <script src="../src/common/Common.js"></script>
+    <script src="../src/base/Base.js"></script>
+    <script src="../src/base/Seq.js"></script>
+    <script src="../src/base/RptSeq.js"></script>
+    <script src="../src/base/HierRptSeq.js"></script>
+    <script src="../src/math/Vec.js"></script>
+    <script src="../src/time/Clock.js"></script>
+    <script src="../src/hands/ControlPointMapper.js"></script>
+    <script src="../src/patterns/State.js"></script>
+    <script src="../src/patterns/JugThrow.js"> </script>
+    <script src="../src/patterns/JugThrowSeq.js"> </script>
+    <script src="../src/patterns/JugPattern.js"> </script>
+    <script src="../src/gui/UndoHist.js"> </script>
+    <script src="JPE.js"> </script>
+    <script>
+      JPE(angular, [
+      { mhn: [
+      [[2,3],[3,3],[0,3],[2,3],[1,3],[0,3]],
+      [[1,3],[1,3],[1,3],[1,3],[0,3]],
+      [[0,3],[2,3],[2,3],[0,3],[2,3],[2,3],[2,3]],
+      [[3,3],[0,3],[3,3],[3,3],[3,3]]
+      ],
+      rhythm: [ [20,20,20,20,20,20],
+      [24,24,24,24,24],
+      [20,20,20,15,15,15,15],
+      [24,24,24,24,24] ]},
+      { mhn: [
+      [[2,3],[3,3],[0,3],[2,3],[1,3],[0,3]],
+      [[1,3],[1,3],[1,3],[1,3],[0,3]],
+      [[0,3],[2,3],[2,3],[0,3],[2,3],[2,3],[2,3]],
+      [[3,3],[0,3],[3,3],[3,3],[3,3]]
+      ],
+      rhythm: [ [20,20,20,20,20,20],
+      [24,24,24,24,24],
+      [20,20,20,15,15,15,15],
+      [24,24,24,24,24] ]}
+      ],
+      'Slow-Fast 6-to-5-7-5 Sweep');
+    </script>
+  </head>
+
+<body ng-app="JpeApp" ng-controller="JpeCtl">
+  <div ng-include="'JPE2.html'">
+  </div>
+</body>
+  
+</html>
