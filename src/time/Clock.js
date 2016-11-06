@@ -15,9 +15,10 @@
  * @param basePeriod {Number} the juggling base period
  * @param rhythm {HierRptSeq} the rhythm of beats
  * @param name {String} name of this Clock
+ * @param initDelay {Number} optional initial delay
  */
 JPRO.ID.Clock = 0;
-JPRO.Clock = function(basePeriod, rhythm, name) {
+JPRO.Clock = function(basePeriod, rhythm, name, initDelay) {
 
     // Call superclass
     this.className = this.className || 'Clock';
@@ -32,7 +33,7 @@ JPRO.Clock = function(basePeriod, rhythm, name) {
      * @property basePeriod
      * @type Number
      */
-    this.basePeriod = basePeriod || 20;
+    this.basePeriod = basePeriod || 1;
 
     /**
      * Top rhythm
@@ -67,7 +68,12 @@ JPRO.Clock = function(basePeriod, rhythm, name) {
      * @property t
      * @type Number
      */
-    this.t = 0;
+    if (initDelay) {
+	this.t = -initDelay;
+    }
+    else {
+	this.t = -1;
+    }
 
     /**
      * Time to current beat
@@ -78,7 +84,7 @@ JPRO.Clock = function(basePeriod, rhythm, name) {
      * @property tt
      * @type Number
      */
-    this.tt = 0;
+    this.tt = this.t;
 
     /**
      * Upper bound on time counter, tt
@@ -89,7 +95,7 @@ JPRO.Clock = function(basePeriod, rhythm, name) {
      * @property maxTime
      * @type Number
      */
-    this.maxTime = 30000;
+    this.maxTime = 16384;
 
     /**
      * Timestamps hash
@@ -106,7 +112,8 @@ JPRO.Clock = function(basePeriod, rhythm, name) {
      * @type 
      */
     // Get current beat period (and move forward a beat)
-    this.beatPeriod = this.rhythm.nextItem()*this.basePeriod;
+    this.beatPeriod = -this.tt; // same as initial delay before first beat
+    //this.beatPeriod = this.rhythm.nextItem()*this.basePeriod;
 
 };
 
@@ -141,7 +148,7 @@ JPRO.Clock.prototype.copy = function(objHash, cFunc) {
  * @return {Number} 1 when there is a new beat, otherwise null
 */
 JPRO.Clock.prototype.update = function() {
-    if (this.t >= this.beatPeriod-1) {
+    if ((this.t >= this.beatPeriod-1) || (this.t === -1)) {
 	this.t = 0;
 	this.tt += this.beatPeriod; // used for total time method
 	//console.log('tt=' + this.tt);
@@ -229,10 +236,123 @@ JPRO.Clock.prototype.deleteTimeStamp = function(name) {
     delete this.timeStamps[name];
 };
 
+JPRO.Clock.prototype.getPeriod = function() {
+    var lst = this.rhythm.itemList[0].itemList;
+    var i,sum;
+    sum = 0;
+    for (i=0; i<lst.length; i++) {
+	sum += Math.abs(lst[i]);
+    }
+    return sum;
+};
+
 JPRO.Clock.prototype.getInterval = function(beat1, beat2) {
+    var x;
     var sum = 0;
     var b = beat1;
-    while (b < beat2)
-	sum += this.rhythm.getItem(b++)
+    var b2 = beat2;
+    while (b < b2) {
+	x = this.rhythm.getItem(b++);
+	if (x < 0) {
+	    sum -= x;
+	    b2++; // account for this split beat
+	    x = this.rhythm.getItem(b);
+	    if (x < 0) {
+		sum -= x;
+		b++;
+	    }
+	}
+	else {
+	    sum += x;
+	}
+    }
     return sum;
+};
+
+JPRO.Clock.prototype.findSync = function(t,rd) {
+    var x;
+    var sum = 0;
+    var lastSum = 0;
+    var b = 0;
+    var sb = 0; // split beats
+    var rv = {};
+    //console.log('t=' + t);
+    rd = rd || 0; // round direction (1=round down)
+    while (sum < t) {
+	lastSum = sum;
+	x = this.rhythm.getItem(b++);
+	if (x < 0) {
+	    sum -= x;
+	    sb++;
+	    x = this.rhythm.getItem(b);
+	    if (x < 0) {
+		sum -= x;
+		b++;
+	    }
+	}
+	else {
+	    sum += x;
+	}
+    }
+    b -= sb; // subtract split beats
+    if (sum - t <= t - lastSum - rd) {
+	// round up
+	rv.b = b; // beats
+	rv.ofs = t - sum; // negative offset
+	rv.bw = x; // beat width
+    }
+    else {
+	// round down
+	rv.b = b - 1; // beats
+	rv.ofs = t - lastSum; // positive offset
+	rv.bw = x; // beat width
+    }
+    //console.log(rv);
+    return rv;
+};
+
+JPRO.Clock.prototype.findBestSync = function(dclk, db) {
+    var x,t,odb,b,err,cost,minCost,s,spd,dpd;
+    //console.log('findBestSync called with db=' + db);
+    //console.log(dclk);
+    x = {}; // object to be returned
+    odb = 0; // offset dest beats
+    minCost = 9999;
+    spd = this.rhythm.itemList[0].itemList.length;
+    dpd = dclk.rhythm.itemList[0].itemList.length;
+    //console.log('spd=' + spd + ' dpd=' + dpd);
+    if (this.rhythm.getItem(0) < 0) {
+	spd--;
+    }
+    if (dclk.rhythm.getItem(0) < 0) {
+	dpd--;
+    }
+    //spd = 0;
+    //dpd = 0;
+    db += dpd;
+    //console.log('db=' + db);
+    while (odb <= dpd) {
+	t = dclk.getInterval(0, db - odb);
+	//console.log('t=' + t);
+	s = this.findSync(t,1); // round down if in middle
+	//console.log(s);
+	b = s.b;
+	err = Math.abs(s.ofs);
+	cost = err*64/s.bw + Math.abs(odb);
+	if (odb < 0) cost += 1 - odb; // discourage negative dBeats
+	if (cost < minCost) {
+	    //console.log('odb=' + odb + ' b=' + b + ' err=' + err + ' cost=' + cost);
+	    minCost = cost;
+	    x.sBeats = b - spd;
+	    x.dBeats = odb;
+	    x.sOffset = s.ofs;
+	}
+	if (odb > 0) {
+	    odb = -odb;
+	}
+	else {
+	    odb = -odb + 1;
+	}
+    }
+    return x;
 };

@@ -13,6 +13,7 @@
  * @constructor
  * @param mhn {Number|Array} siteswap, multiplex, MHN, or MHN+ throw matrix
  * @param clocks {Array} array of Clock objects (one for each MHN row)
+ * @param cpm {ControlPointMapper} maps each beat to a control point
  * @param iters {Number} number of iterations of pattern to be executed
  * @param name {String} name of this object
  *
@@ -50,10 +51,10 @@
 	 * Control point mapper
 	 *
 	 * @property cpMapper
-	 * @type ControlPointMapper
+	 * @type Array
 	 *
 	 */
-	this.cpMapper = cpm || new JPRO.ControlPointMapper();
+	this.cpMapper = cpm || [];
 
 	/**
 	 * Iterations
@@ -80,10 +81,10 @@
 	var clk;
 	var dim = this.dimensionOf(mhn);
 	if (dim < 3) { // only one MHN row
-	    this.setJugThrowSeqs1(mhn, dim, iters, clocks);
+	    this.setJugThrowSeqs1(mhn, dim, iters, clocks, cpm);
 	}
 	else { // multiple MHN rows
-	    this.setJugThrowSeqsN(mhn, dim, iters, clocks);
+	    this.setJugThrowSeqsN(mhn, dim, iters, clocks, cpm);
 	}
 
 	/**
@@ -159,7 +160,7 @@
 	}
     };
 
-    JPRO.JugPattern.prototype.setJugThrowSeqs1 = function(mhn, dim, iters, clocks) {
+    JPRO.JugPattern.prototype.setJugThrowSeqs1 = function(mhn, dim, iters, clocks, cpm) {
 	var clk,beatLst,j,r;
 	this.rows = 1;
 	if (clocks) {
@@ -182,11 +183,14 @@
 	    this.clocks = [clk];
 	    clk.mhnRows.push(0);
 	}
+	if (!cpm) {
+	    this.cpMapper = [JPRO.HierRptSeq.create([0,1], -1)];
+	}
 	this.jugThrowSeqs.push(new JPRO.JugThrowSeq(mhn, dim, iters,
-						    clk, 0));
+						    clk, 0, this.cpMapper[0]));
     };
 
-    JPRO.JugPattern.prototype.setJugThrowSeqsN = function(mhn, dim, iters, clocks) {
+    JPRO.JugPattern.prototype.setJugThrowSeqsN = function(mhn, dim, iters, clocks, cpm) {
 	var i,jts,p2c,pd,maxPd,basePeriod,totalTime;
 	var t,err,j,rt,beatLst,r,clk;
 	var slowFast = null;
@@ -208,11 +212,16 @@
 	if ((dim === 4) && (mhn[0][0][0].length > 2)) {
 	    slowFast = 1;
 	}
+	if (!cpm) {
+	    for (i=0; i<this.rows; i++) {
+		this.cpMapper.push(JPRO.HierRptSeq.create([0,1], -1));
+	    }
+	}
 	if (clocks) {
 	    // Clocks specified
 	    for (i=0; i<this.rows; i++) {
 		clocks[i].mhnRows.push(i);
-		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clocks[i], i);
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clocks[i], i, this.cpMapper[i]);
 		this.jugThrowSeqs.push(jts);
 	    }
 	}
@@ -241,7 +250,7 @@
 		    p2c[pd].mhnRows = [i];
 		    this.clocks.push(p2c[pd]);
 		}
-		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, p2c[pd], i);
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, p2c[pd], i, this.cpMapper[i].itemList[0]);
 		this.jugThrowSeqs.push(jts);
 	    }
 	    //console.log('jugThrowSeqs');
@@ -261,7 +270,7 @@
 	    this.clocks.push(clk);
 	    for (i=0; i<this.rows; i++) {
 		clk.mhnRows.push(i);
-		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clk, i);
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clk, i, this.cpMapper[i].itemList[0]);
 		this.jugThrowSeqs.push(jts);
 	    }
 	}
@@ -276,11 +285,12 @@
      * @return {JugPattern} copied object
      */
     JPRO.JugPattern.prototype.copy = function(objHash, cFunc) {
-	var scalars = ['iters', 'isRepeatable', 'maxRows', 'maxPeriod', 'undoIdx'];
-	var pFuncs = {'jugThrowSeqs':JPRO.Common.copyObjVector,
+	var scalars = ['iters', 'isRepeatable', 'maxRows', 'maxPeriod', 'undoIdx', 'rows'];
+	var pFuncs = {'cpMapper':JPRO.Common.copyObjVector,
+		      'jugThrowSeqs':JPRO.Common.copyObjVector,
 		      'states':function(p,objHash) {return p.slice(0)},
 		      'clocks':JPRO.Common.copyObjVector};
-	var objects = ['cpMapper'];
+	var objects = null; //['cpMapper'];
 	return this.directedCopy(objHash, cFunc, pFuncs, scalars, objects);
     };
     
@@ -447,6 +457,14 @@
 	var f2 = this.jugThrowSeqs[r2].period;
 	var p1 = this.getJugThrow(r1, t1, ms1);
 	var p2 = this.getJugThrow(r2, t2, ms2);
+	var p1SyncOffset = p1.syncOffset || 0;
+	var p2SyncOffset = p2.syncOffset || 0;
+	//console.log('p1=');
+	//console.log(p1);
+	if (this.jugThrowSeqs[r1].clock.rhythm.getItem(0) < 0)
+	    t1--;
+	if (this.jugThrowSeqs[r2].clock.rhythm.getItem(0) < 0)
+	    t2--;
 	var p1r = p1.destRow;
 	var p1t = p1.fltBeats - p1.destBeats + t1; // absolute sync/dest beat
 	var p1td = p1.destBeats; // plus destination beats
@@ -458,74 +476,129 @@
 	// Swap destination rows
 	p1.destRow = p2r;
 	p2.destRow = p1r;
-	// Convert p2 self beats into (N periods + T self beats)
-	var n2 = 0;
-	while (p2t >= f2) {
-	    p2t -= f2;
-	    n2++;
-	}
-	while (p2t < 0) {
-	    p2t += f2;
-	    n2--;
-	}
-	//console.log('r2 = ' + r2 + 't2 = ' + t2);
-	//console.log('n2 = ' + n2);
-	//console.log('p2t = ' + p2t);
-	//console.log('p2td = ' + p2td);
-	p1.destBeats = (p2td === 0) ? p2t : p2td;
-	p1.fltBeats = p1.destBeats + n2*f1 - t1;
-	//console.log('destBeats = ' + p1.destBeats);
-	//console.log('fltBeats = ' + p1.fltBeats);
-	// If destination clock is the same, then the destination beats
-	// are the same as self beats, so clear destBeats
-	if (this.jugThrowSeqs[r1].clock === this.jugThrowSeqs[p2r].clock) {
-	    p1.destBeats = 0;
-	}
-	// Choose to minimize destination beats
-	while (p1.destBeats > p2f/2) {
-	    p1.destBeats -= p2f;
-	    p1.fltBeats += f1-p2f;
-	}
-	while (p1.destBeats < -p2f/2) {
-	    p1.destBeats += p2f;
-	    p1.fltBeats += p2f-f1;
-	}
 
-	// Do the same with throw p2
-	// Convert p1 self beats into (N periods + T self beats)
-	var n1 = 0;
-	//console.log('p1t = ' + p1t);
-	//console.log('f1 = ' + f1);
-	while (p1t >= f1) {
-	    p1t -= f1;
-	    n1++;
+	if (1) {
+	    // New approach
+	    var p1tt = this.jugThrowSeqs[r1].clock.getInterval(0, p1t) + p1SyncOffset; // p1t converted to base time
+	    var s = this.jugThrowSeqs[p1r].clock.findSync(p1tt);
+	    var p1s = s.b; // src-dest sync point in dest beats
+	    var p1dta = p1s + p1td; // absolute dest beat
+	    var p1dtt = this.jugThrowSeqs[p1r].clock.getInterval(0, p1dta) + s.ofs; // p1dta converted to base time
+	    // if destination is the same clock as loc2's row (r2)
+	    if (this.jugThrowSeqs[r2].clock === this.jugThrowSeqs[p1r].clock) {
+		console.log('same clock2');
+		p2.destBeats = 0;
+		s = this.jugThrowSeqs[r2].clock.findSync(p1dtt);
+		p2.fltBeats = s.b - t2;
+		p2.syncOffset = s.ofs;
+	    }
+	    else {
+		// find a good sync point for p1dta relative to the row r2 clock
+		var x = this.jugThrowSeqs[r2].clock.findBestSync(this.jugThrowSeqs[p1r].clock, p1dta);
+		p2.destBeats = x.dBeats;
+		p2.fltBeats = x.sBeats - t2 + x.dBeats;
+		p2.syncOffset = x.sOffset;
+		console.log('t2=' + t2);
+		console.log(x);
+		console.log(p2);
+	    }
+	    
+	    var p2tt = this.jugThrowSeqs[r2].clock.getInterval(0, p2t) + p2SyncOffset; // p2t converted to base time
+	    s = this.jugThrowSeqs[p2r].clock.findSync(p2tt);
+	    var p2s = s.b; // src-dest sync point in dest beats
+	    var p2dta = p2s + p2td; // absolute dest beat
+	    var p2dtt = this.jugThrowSeqs[p2r].clock.getInterval(0, p2dta) + s.ofs; // p2dta converted to base time
+	    //console.log('p2tt=' + p2tt + ' p2s=' + p2s + ' p2dta=' + p2dta + ' p2dtt=' + p2dtt);
+	    // if destination is the same clock as loc1's row (r1)
+	    if (this.jugThrowSeqs[r1].clock === this.jugThrowSeqs[p2r].clock) {
+		console.log('same clock1');
+		p1.destBeats = 0;
+		s = this.jugThrowSeqs[r1].clock.findSync(p2dtt);
+		p1.fltBeats = s.b - t1;
+		p1.syncOffset = s.ofs;
+		//console.log('p2dtt=' + p2dtt + ' b=' + s.b);
+	    }
+	    else {
+		var x = this.jugThrowSeqs[r1].clock.findBestSync(this.jugThrowSeqs[p2r].clock, p2dta);
+		p1.destBeats = x.dBeats;
+		p1.fltBeats = x.sBeats - t1 + x.dBeats;
+		p1.syncOffset = x.sOffset;
+		console.log('t1=' + t1);
+		console.log(x);
+		console.log(p1);
+	    }
 	}
-	while (p1t < 0) {
-	    p1t += f1;
-	    n1--;
-	}
-	//console.log('n1 = ' + n1);
-	//console.log('p1t = ' + p1t);
-	//console.log('p1td = ' + p1td);
-	p2.destBeats = (p1td === 0) ? p1t : p1td;
-	p2.fltBeats = p2.destBeats + n1*f2 - t2;
-	//console.log('destBeats = ' + p2.destBeats);
-	//console.log('fltBeats = ' + p2.fltBeats);
-	// If destination clock is the same, then the destination beats
-	// are the same as self beats, so clear destBeats
-	if (this.jugThrowSeqs[r2].clock === this.jugThrowSeqs[p1r].clock) {
-	    p2.destBeats = 0;
-	}
-	// Choose to minimize destination beats
-	while (p2.destBeats > p1f/2) {
-	    p2.destBeats -= p1f;
-	    p2.fltBeats += f2-p1f;
-	}
-	while (p2.destBeats < -p1f/2) {
-	    p2.destBeats += p1f;
+	else {
+	    // Old approach
+	    
+	    // Convert p2 self beats into (N periods + T self beats)
+	    var n2 = 0;
+	    while (p2t >= f2) {
+		p2t -= f2;
+		n2++;
+	    }
+	    while (p2t < 0) {
+		p2t += f2;
+		n2--;
+	    }
+	    //console.log('r2 = ' + r2 + 't2 = ' + t2);
+	    //console.log('n2 = ' + n2);
+	    //console.log('p2t = ' + p2t);
+	    //console.log('p2td = ' + p2td);
+	    p1.destBeats = (p2td === 0) ? p2t : p2td;
+	    p1.fltBeats = p1.destBeats + n2*f1 - t1;
+	    //console.log('destBeats = ' + p1.destBeats);
+	    //console.log('fltBeats = ' + p1.fltBeats);
+	    // If destination clock is the same, then the destination beats
+	    // are the same as self beats, so clear destBeats
+	    if (this.jugThrowSeqs[r1].clock === this.jugThrowSeqs[p2r].clock) {
+		p1.destBeats = 0;
+	    }
+	    // Choose to minimize destination beats
+	    while (p1.destBeats > p2f/2) {
+		p1.destBeats -= p2f;
+		p1.fltBeats += f1-p2f;
+	    }
+	    while (p1.destBeats < -p2f/2) {
+		p1.destBeats += p2f;
+		p1.fltBeats += p2f-f1;
+	    }
+	    
+	    // Do the same with throw p2
+	    // Convert p1 self beats into (N periods + T self beats)
+	    var n1 = 0;
+	    //console.log('p1t = ' + p1t);
+	    //console.log('f1 = ' + f1);
+	    while (p1t >= f1) {
+		p1t -= f1;
+		n1++;
+	    }
+	    while (p1t < 0) {
+		p1t += f1;
+		n1--;
+	    }
+	    //console.log('n1 = ' + n1);
+	    //console.log('p1t = ' + p1t);
+	    //console.log('p1td = ' + p1td);
+	    p2.destBeats = (p1td === 0) ? p1t : p1td;
+	    p2.fltBeats = p2.destBeats + n1*f2 - t2;
+	    //console.log('destBeats = ' + p2.destBeats);
+	    //console.log('fltBeats = ' + p2.fltBeats);
+	    // If destination clock is the same, then the destination beats
+	    // are the same as self beats, so clear destBeats
+	    if (this.jugThrowSeqs[r2].clock === this.jugThrowSeqs[p1r].clock) {
+		p2.destBeats = 0;
+	    }
+	    // Choose to minimize destination beats
+	    while (p2.destBeats > p1f/2) {
+		p2.destBeats -= p1f;
+		p2.fltBeats += f2-p1f;
+	    }
+	    while (p2.destBeats < -p1f/2) {
+		p2.destBeats += p1f;
 	    p2.fltBeats += p1f-f2;
+	    }
 	}
-	
 	return this;
     };
 
@@ -533,16 +606,47 @@
      * 
      */
     JPRO.JugPattern.prototype.modDestBeat = function(loc1, x) {
-	var p1 = this.getJugThrow(loc1[0], loc1[1], loc1[2]);
-	var f1 = this.jugThrowSeqs[loc1[0]].period;
+	var r1 = loc1[0];
+	var t1 = loc1[1];
+	var ms1 = loc1[2];
+	var p1 = this.getJugThrow(r1, t1, ms1);
+	var f1 = this.jugThrowSeqs[r1].period;
 	var p1r = p1.destRow;
 	var p1f = this.jugThrowSeqs[p1r].period;
 	var p1td = p1.destBeats;
-	var p1t = p1.fltBeats - p1td; // self beats
-	p1t -= x*f1;
-	p1td += x*p1f;
-	p1.destBeats = p1td;
-	p1.fltBeats = p1t + p1td;
+	if (this.jugThrowSeqs[r1].clock.rhythm.getItem(0) < 0)
+	    t1--;
+	var spd = f1;
+	var p1t = p1.fltBeats - p1td + t1 + spd; // absolute self beat
+	var p1SyncOffset = p1.syncOffset || 0;
+	if (1) {
+	    // New approach
+	    var p1tt = this.jugThrowSeqs[r1].clock.getInterval(0, p1t) + p1SyncOffset; // p1t converted to base time
+	    var s = this.jugThrowSeqs[p1r].clock.findSync(p1tt);
+	    //var p1s = s.b; // src-dest sync point in dest beats
+	    var p1dta = s.b + p1td; // absolute dest beat
+	    var p1dtt = this.jugThrowSeqs[p1r].clock.getInterval(0, p1dta); // p1dta converted to base time
+	    p1td += x; // modify the # of dest beats
+	    if (p1dta > p1td) {
+		var p1stt = this.jugThrowSeqs[p1r].clock.getInterval(0, p1dta - p1td); // new self-beat base time
+		console.log('p1td=' + p1td + ' p1tt=' + p1tt + ' p1dta=' + p1dta + ' p1dtt=' + p1dtt + ' p1stt=' + p1stt);
+		var ns = this.jugThrowSeqs[r1].clock.findSync(p1stt,1); // round down if in middle of self beat
+		console.log(ns);
+		p1.destBeats = p1td;
+		p1.fltBeats = p1td + ns.b - t1 - spd;
+		p1.syncOffset = ns.ofs;
+	    }
+	    else {
+		console.log('too few self beats');
+	    }
+	}
+	else {
+	    // old approach
+	    p1t -= x*f1;
+	    p1td += x*p1f;
+	    p1.destBeats = p1td;
+	    p1.fltBeats = p1t + p1td;
+	}
 	return this;
     };
     
@@ -672,27 +776,44 @@
 	var h = this.forI(function(h) {
 	    h.njt = [];
 	    h.parent.forJ(h, function(h) {
-		var idx = (h.j + h.jt.length + x) % h.jt.length;
-		h.jtj = h.jt[idx]; // change h.jtj
+		// if destRow < 0, idx=0 is not rotated
+		//console.log('j=' + h.j + ' destRow=' + h.jt[0][0].destRow);
+		if (h.jt[0][0].destRow < 0) {
+		    if (h.j !== 0) {
+			var pd = h.jt.length - 1;
+			var idx = ((h.j - 1 + pd + x) % pd) + 1;
+			h.jtj = h.jt[idx];
+			//console.log('idx=' + idx + ' j=' + h.j);
+		    }
+		}
+		else {
+		    var idx = (h.j + h.jt.length + x) % h.jt.length;
+		    h.jtj = h.jt[idx]; // change h.jtj
+		}
 		h.parent.forK(h, function(h) {
 		    var r = h.jtjk.destRow;
-		    if (h.parent.jugThrowSeqs[r].clock !== h.clk) {
-			var db = h.jtjk.destBeats;     // dest beats
-			var sb = h.jtjk.fltBeats - db; // self beats
-			db -= x;
-			sb += x;
-			var df1 = h.parent.jugThrowSeqs[r].period;
-			var sf1 = h.jts.period;
-			while (db > df1/2) {
-			    db -= df1;
-			    sb += sf1;
+		    if (r >= 0) {
+			if (h.parent.jugThrowSeqs[r].clock !== h.clk) {
+			    var db = h.jtjk.destBeats;     // dest beats
+			    var sb = h.jtjk.fltBeats - db; // self beats
+			    db -= x;
+			    sb += x;
+			    var df1 = h.parent.jugThrowSeqs[r].period;
+			    var sf1 = h.jts.period;
+			    //while (db > df1/2) {
+			    while (db >= df1 - 1) {
+				//console.log('df1=' + df1 + ' db=' + db);
+				db -= df1;
+				sb += sf1;
+			    }
+			    //while (db <= -df1/2) {
+			    while (db <= -2) {
+				db += df1;
+				sb -= sf1;
+			    }
+			    h.jtjk.destBeats = db;
+			    h.jtjk.fltBeats = sb+db;
 			}
-			while (db <= -df1/2) {
-			    db += df1;
-			    sb -= sf1;
-			}
-			h.jtjk.destBeats = db;
-			h.jtjk.fltBeats = sb+db;
 		    }
 		});
 		h.njt.push(h.jtj);
@@ -746,9 +867,23 @@
 	return this.permuteRows(mapping);
     };
 
+    JPRO.JugPattern.prototype.createBeats = function(pd, totalTime) {
+	var err, j, rt, t, rv;
+	t = totalTime/pd;
+	//console.log('t=' + t);
+	err = 0;
+	rv = [];
+	for (j=0; j<pd; j++) {
+	    rt = Math.round(t + err);
+	    err = t - rt;
+	    rv.push(rt);
+	}
+	return rv;
+    };
+    
     JPRO.JugPattern.prototype.setClock = function(row) {
 	var clk,idx,pd,jts,beatLst,i,maxPd,basePeriod;
-	var totalTime,t,err,j,rt,r;
+	var totalTime,r;
 	// remove row from its clock's mhnRows list
 	clk = this.jugThrowSeqs[row].clock;
 	idx = clk.mhnRows.indexOf(row);
@@ -776,27 +911,27 @@
 	}
 	// otherwise, create clock with mhnRows, add to clocks
 	else {
-	    //basePeriod = 120/pd;
-	    //var t,err,j,rt,beatLst,r;
-	    beatLst = [];
 	    maxPd = 0;
 	    for (i=0; i<this.rows; i++) {
-		if (this.jugThrowSeqs[row].period > maxPd) maxPd = this.jugThrowSeqs[row].period;
+		if (this.jugThrowSeqs[i].period > maxPd) maxPd = this.jugThrowSeqs[i].period;
 	    }
+	    
+	    console.log('maxPd=' + maxPd + ' pd=' + pd + ' rows=' + this.rows);
 	    basePeriod = 12;
 	    totalTime = basePeriod * maxPd;
-	    t = totalTime/pd;
-	    err = 0;
-	    for (j=0; j<pd; j++) {
-		rt = Math.round(t + err);
-		err = t - rt;
-		beatLst.push(rt);
-	    }
+	    beatLst = this.createBeats(pd, totalTime);
 	    r = JPRO.HierRptSeq.create(beatLst, -1);
 	    clk = new JPRO.Clock(1, r);
 	    clk.mhnRows = [row];
 	    this.clocks.push(clk);
 	    this.jugThrowSeqs[row].clock = clk;
+	    // recalculate the other clocks' rhythms
+	    for (i=0; i<this.clocks.length; i++) {
+		pd = this.clocks[i].rhythm.itemList[0].itemList.length;
+		beatLst = this.createBeats(pd, totalTime);
+		r = JPRO.HierRptSeq.create(beatLst, -1);
+		this.clocks[i].rhythm = r;
+	    }
 	}
     };
     
@@ -816,7 +951,6 @@
     
     /**
      * Extends period by one, choosing legal throw-heights
-     * This is not valid for slow-fast patterns.
      *
      * @method extendPeriod
      * @param row {Number} optional MHN row
@@ -895,6 +1029,7 @@
      * @return {JugPattern} this pattern
      */
     JPRO.JugPattern.prototype.extendRows = function(rowIdx, throwHeight) {
+	//console.log('extendRows called..');
 	var r = rowIdx || 0;
 	var t = throwHeight || 0;
 	var row = [];
@@ -910,7 +1045,7 @@
 	}
 	s = new JPRO.RptSeq(row, this.iters);
 	this.jugThrowSeqs.push(
-	    new JPRO.JugThrowSeq(s, 0, this.iters, clk, this.rows, 0.5)
+	    new JPRO.JugThrowSeq(s, 0, this.iters, clk, this.rows, null, 0.5)
 	);
 	clk.mhnRows.push(this.rows);
 	this.rows++; // increment rows
@@ -925,14 +1060,15 @@
     JPRO.JugPattern.prototype.reset = function() {
 	var s,clk,r;
 	this.rows = 1;
-	s = new JPRO.RptSeq([[new JPRO.JugThrow(0,0)]], this.iters);
+	//s = new JPRO.RptSeq([[new JPRO.JugThrow(0,0)]], this.iters);
 	r = JPRO.HierRptSeq.create([12], -1);
 	clk = new JPRO.Clock(1, r);
 	clk.mhnRows = [0];
-	this.jugThrowSeqs = [new JPRO.JugThrowSeq(s, 0, this.iters, clk)];
+	this.jugThrowSeqs = [new JPRO.JugThrowSeq(0, 0, this.iters, clk, 0)];
 	this.clocks = [this.jugThrowSeqs[0].clock];
 	this.jugThrowSeqs[0].preDwellRatio = 0.5;
 	this.props = 0;
+	//console.log(this.jugThrowSeqs);
     };
     
     /**

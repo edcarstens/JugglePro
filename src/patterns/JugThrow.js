@@ -143,13 +143,23 @@
 
     JPRO.JugThrow.prototype.toString = function() {
 	var destBeats = '';
-	if (this.destBeats !== 0) {
+	var syncOffset = '';
+	if (this.destRow < 0) {
+	    return '-';
+	}
+	if ((this.destBeats !== 0) || this.syncOffset) {
 	    destBeats = '.' + this.destBeats;
 	}
-	return String.fromCharCode(65 + this.destRow) + this.fltBeats + destBeats;
+	if (this.syncOffset) {
+	    syncOffset = '.' + this.syncOffset;
+	}
+	return String.fromCharCode(65 + this.destRow) + this.fltBeats + destBeats + syncOffset;
     };
 
     JPRO.JugThrow.prototype.w3ToggleSelect = function() {
+	if (this.destRow < 0) {
+	    return 0;
+	}
 	if (this.w3IsSelected) {
 	    this.w3IsSelected = null;
 	    return -1;
@@ -165,6 +175,9 @@
 	var dr = this.destRow;
 	if (this.w3IsSelected) {
 	    return 'w3-deep-purple';
+	}
+	if (dr < 0) {
+	    return this.w3Color;
 	}
 	if ((t > this.maxThrowHeight) || (t < 0) || (t === 0) && (dr !== row)) {
 	    return 'w3-red';

@@ -1,26 +1,49 @@
 JPE = function(angular, pats, pname) {
     angular.module('JpeApp', []).controller('JpeCtl', function($scope) {
-	$scope.version = "1.8";
-	var i,pat,r,j,rhythm,p;
+	$scope.version = "1.9";
+	var i,pat,r,j,rhythm,p,ph,pd,k,t,beat1,nmhn,nr,clk;
 	$scope.pats = [];
 	$scope.rowDis = [];
 	$scope.undoHist = [];
 	for (i in pats) {
 	    pat = pats[i]
 	    if (pat.mhn) {
-		// pat is JSON with a rhythm and mhn
+		// pat is JSON with a rhythm, phase, mhn, [cpm]
 		pat.clocks = [];
+		//ph = pat.phase;
+		//console.log('phases');
+		//console.log(ph);
+		//console.log(ph[0]);
+		//console.log(ph[1]);
 		r = pat.rhythm;
 		for (j=0; j<r.length; j++) {
 		    rhythm = JPRO.HierRptSeq.create(r[j], -1);
-		    pat.clocks.push(new JPRO.Clock(1, rhythm));
+		    clk = new JPRO.Clock(1, rhythm);
+		    //clk.mhnRows.push(j);
+		    pat.clocks.push(clk);
 		}
-		console.log(pat);
-		p = new JPRO.JugPattern(pat.mhn, pat.clocks);
+		pat.cpms = null;
+		if (pat.cpm) {
+		    // create hierrptseq for each row
+		    cpm = pat.cpm;
+		    pat.cpms = [];
+		    for (j=0; j<cpm.length; j++) {
+			cpmj = JPRO.HierRptSeq.create(cpm[j], -1);
+			pat.cpms.push(cpmj);
+		    }
+		}
+		//console.log(pat);
+		p = new JPRO.JugPattern(pat.mhn, pat.clocks, pat.cpms);
 	    }
 	    else {
 		// pat is simple MHN
 		p = new JPRO.JugPattern(pat);
+	    }
+	    if (pat.phase) {
+		// take care of phases now
+		for (j=0; j<pat.phase.length; j++) {
+		    p.jugThrowSeqs[j].phaseAdjust(pat.phase[j]);
+		}
 	    }
 	    $scope.pats.push(p);
 	    $scope.rowDis.push(true);
@@ -38,7 +61,12 @@ JPE = function(angular, pats, pname) {
 	$scope.dbeatDis = true;
 	$scope.space = "w3-large";
 	// Methods
-	$scope.hideAddCol = function(r) {
+	$scope.hideAddCol = function(r,pidx) {
+	    if (pidx !== this.pidx) {
+		return 1;
+	    }
+	    //console.log('r=' + r);
+	    //console.log($scope.p);
 	    return !$scope.p.jugThrowSeqs[r].isZeros();
 	};
 	$scope.update = function(noUndo) {

@@ -24,7 +24,7 @@
  */
 JPRO.ID.JugThrowSeq = 0;
 JPRO.JugThrowSeq = function(mhn, dim, iters, clock,
-			    row, preDwellRatio,
+			    row, cpm, preDwellRatio,
 			    postDwellRatio,
 			    name) {
 
@@ -42,8 +42,19 @@ JPRO.JugThrowSeq = function(mhn, dim, iters, clock,
     dim = dim || 0;
     iters = iters || 0;
     this.jugThrows = this.mhn2Seq(mhn, dim, iters);
+
+    /**
+     * Control point map
+     *
+     * @property cpm
+     * @type HierRptSeq
+     */
+    this.cpm = cpm || JPRO.HierRptSeq.create([0,1], -1);
+    
+    //this.w3Colorize(cpm ? cpm.getItem(0) : 0);
     this.w3Colorize();
     this.period = this.jugThrows.itemList.length;
+    if (this.jugThrows.itemList[0][0].destRow < 0) this.period--;
     
     /**
      * Clock for this JugThrowSeq (MHN row)
@@ -184,7 +195,7 @@ JPRO.JugThrowSeq.prototype.copy = function(objHash, cFunc) {
     var scalars = ['preDwellRatio','postDwellRatio','period','row'];
     var pFuncs = {};
     //pFuncs.jugThrows = JPRO.Common.copyObjVector;
-    var objects = ['jugThrows','clock'];
+    var objects = ['jugThrows','clock','cpm'];
     //var cf = function() { return obj; };
     return this.directedCopy(objHash, cFunc, pFuncs, scalars, objects);
 };
@@ -200,9 +211,10 @@ JPRO.JugThrowSeq.prototype.copy = function(objHash, cFunc) {
 JPRO.JugThrowSeq.prototype.beatRatio = function(col) {
     var r,mslots,totalTime,rv;
     //console.log(this.clock);
-    r = this.clock.rhythm.itemList[0].itemList[col];
+    r = this.clock.rhythm.getItem(col);
+    r = Math.abs(r); // split beats
     mslots = this.jugThrows.itemList[col].length;
-    totalTime = this.clock.getInterval(0, this.clock.rhythm.itemList[0].period);
+    totalTime = this.clock.getPeriod();
     //console.log('col=' + col);
     //console.log('r=' + r);
     //console.log('totalTime=' + totalTime);
@@ -225,7 +237,7 @@ JPRO.JugThrowSeq.prototype.isZeros = function() {
 	for (k=0; k<jt[j].length; k++) {
 	    jtjk = jt[j][k];
 	    if ((jtjk.destRow !== this.row) || (jtjk.fltBeats !== 0) ||
-		(jtjk.destBeats !== 0))
+		 (jtjk.destBeats !== 0))
 		rv = null;
 	}
     }
@@ -244,11 +256,14 @@ JPRO.JugThrowSeq.prototype.push = function(item) {
  */
 JPRO.JugThrowSeq.prototype.w3ToggleColor = function() {
     var firstColor, jt;
-    jt = this.jugThrows.itemList;
-    firstColor = 0;
-    if (jt[0][0].w3Color == 'w3-light-blue')
-	firstColor = 1;
-    this.w3Colorize(firstColor);
+    //jt = this.jugThrows.itemList;
+    //firstColor = 0;
+    //if (jt[0][0].w3Color == 'w3-light-blue')
+	//firstColor = 1;
+    //this.w3Colorize(firstColor);
+
+    this.cpm.nextItem();
+    this.w3Colorize();
 };
 
 /**
@@ -256,16 +271,19 @@ JPRO.JugThrowSeq.prototype.w3ToggleColor = function() {
 JPRO.JugThrowSeq.prototype.w3Colorize = function(firstColor) {
     var jt,j,k,colorTable,row,col;
     colorTable = [['w3-light-blue', 'w3-jp-light-blue'],
-		  ['w3-khaki', 'w3-jp-khaki']];
+		  ['w3-khaki', 'w3-jp-khaki'],
+		  ['w3-light-green', 'w3-light-green'],
+		  ['w3-sand','w3-sand']];
     jt = this.jugThrows.itemList;
-    row = firstColor || 0;
+    //row = firstColor || 0;
     for (j=0; j<jt.length; j++) {
 	col = 0;
 	for (k=0; k<jt[j].length; k++) {
-	    jt[j][k].w3Color = colorTable[row][col];
-	    col = 1 - col; // brighten
+	    //jt[j][k].w3Color = colorTable[row][col];
+	    jt[j][k].w3Color = colorTable[this.cpm.getItem(j)][col];
+	    col = 1 - col; // alternate brightness for multipex
 	}
-	row = 1 - row; // alternate hue
+	//row = 1 - row; // alternate hue
     }
     return this;
 };
@@ -371,11 +389,14 @@ JPRO.JugThrowSeq.prototype.getMultiplex = function() {
  * @return {Number} add this number to the total number of props juggled
  */
 JPRO.JugThrowSeq.prototype.translateRow = function(offset) {
-    var j,k,tm,jt,njt;
+    var j,k,tm,jt,njt,idx,pd1;
     var offset1 = (offset === undefined) ? 1 : offset; // default to 1
     var mslots = this.getMultiplex();
     njt = [];
     jt = this.jugThrows.itemList;
+    if (jt[0][0].destRow < 0) {
+	njt.push(jt.shift());
+    }
     for (j=0; j<jt.length; j++) {
 	idx = (j + offset1 + jt.length) % jt.length;
 	tm = jt[idx];
@@ -474,6 +495,45 @@ JPRO.JugThrowSeq.prototype.cleanList = function(mt) {
     //console.log('cleanList returns ' + rv);
     //console.log(rv);
     return rv;
+};
+
+/**
+* Adjusts MHN+ pattern delayed by specified phase
+* A split beat may be used to delay the first beat.
+*/
+JPRO.JugThrowSeq.prototype.phaseAdjust = function(ph) {
+    var r,pd,k,nr,njts,beat1,t;
+    if (ph === 0) return;
+    nr = [];
+    njts = [];
+    r = this.clock.rhythm.itemList[0].itemList;
+    // get total period by summing
+    pd = 0;
+    for (k=0; k<r.length; k++) {
+	pd += r[k];
+    }
+    // place phase within total period
+    ph = ph % pd;
+    // find the first beat
+    k = 0;
+    while (ph < pd) {
+	ph += r[k++];
+    }
+    ph -= pd;
+    beat1 = k;
+    // rotate rhythm and mhn pattern to 1st beat
+    for (k=0; k<r.length; k++) {
+	t = (k+beat1) % r.length;
+	nr.push(r[t]);
+	njts.push(this.jugThrows.itemList[t]);
+	// TODO: cpm -> ncpm
+    }
+    nr.unshift(-ph); // negative indicates split (last) beat
+    nr[nr.length-1] = ph - nr[nr.length-1];
+    njts.unshift([new JPRO.JugThrow(-1,0)]);
+    this.clock.rhythm = JPRO.HierRptSeq.create(nr, -1);
+    this.jugThrows = new JPRO.RptSeq(njts, -1);
+    this.w3Colorize();
 };
 
 /**
