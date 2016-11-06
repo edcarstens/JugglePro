@@ -250,7 +250,7 @@
 		    p2c[pd].mhnRows = [i];
 		    this.clocks.push(p2c[pd]);
 		}
-		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, p2c[pd], i, this.cpMapper[i].itemList[0]);
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, p2c[pd], i, this.cpMapper[i]);
 		this.jugThrowSeqs.push(jts);
 	    }
 	    //console.log('jugThrowSeqs');
@@ -270,7 +270,7 @@
 	    this.clocks.push(clk);
 	    for (i=0; i<this.rows; i++) {
 		clk.mhnRows.push(i);
-		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clk, i, this.cpMapper[i].itemList[0]);
+		jts = new JPRO.JugThrowSeq(mhn[i], dim, iters, clk, i, this.cpMapper[i]);
 		this.jugThrowSeqs.push(jts);
 	    }
 	}
