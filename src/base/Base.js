@@ -65,10 +65,10 @@
 	skip.constructor = 1; // always skip constructor
 	pFuncs = pFuncs || {};
 	callBacks = callBacks || [];
-	x = JPRO.ID[this.className];
+	//x = JPRO.ID[this.className];
 	obj = cFunc.call(this);
-	JPRO.ID[this.className] = x;
-	obj.name = this.name + '_copy';
+	//JPRO.ID[this.className] = x;
+	//obj.name = this.name + '_copy';
 	objHash[this.name] = obj;
 	objHash[obj.name] = this;
 	for (p in this) {
@@ -136,6 +136,7 @@
 	}
 	for (x in objects) {
 	    p = objects[x];
+	    //console.log(this[p]);
 	    obj[p] = this[p].copy(objHash);
 	}
 	return obj;
