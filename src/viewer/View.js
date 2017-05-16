@@ -18,7 +18,7 @@
 (function () {
 "use strict";
 
-JPRO.View = function(viewer) {
+JPRO.View = function(viewer, name) {
 
     /**
      * Pointer to the Viewer object
@@ -27,8 +27,13 @@ JPRO.View = function(viewer) {
      * @type Viewer
      */
     this.viewer = viewer;
-
-    this.name = "view";
+    
+    if (name === undefined) {
+	this.name = "view";
+    }
+    else {
+	this.name = name;
+    }
     
     /**
      * Width of view screen
@@ -154,7 +159,7 @@ JPRO.View.prototype.copy = function(objHash) {
 };
 
 /**
- * Transform 3D vector to this view
+ * Transform 3D position vector to this view
  *
  * @method transform
  * @param v {Vec} vector to be transformed
@@ -162,6 +167,39 @@ JPRO.View.prototype.copy = function(objHash) {
 */
 JPRO.View.prototype.transform = function(v) {
     return this.rot.xVec(v).acc(this.translation);
+};
+
+/**
+ * Transform 3D position vector back from this view
+ *
+ * @method inverseTransform
+ * @param v {Vec} vector to be transformed
+ * @return {Vec} result of rotation and translation
+*/
+JPRO.View.prototype.inverseTransform = function(v) {
+    return this.rot.transpose().xVec(v.acc(this.translation.neg());
+};
+
+/**
+ * Transform 3D velocity vector to this view
+ *
+ * @method transformVel
+ * @param v {Vec} vector to be transformed
+ * @return {Vec} result of rotation
+*/
+JPRO.View.prototype.transformVel = function(v) {
+    return this.rot.xVec(v);
+};
+
+/**
+ * Transform 3D velocity vector back from this view
+ *
+ * @method inverseTransformVel
+ * @param v {Vec} vector to be transformed
+ * @return {Vec} result of rotation
+*/
+JPRO.View.prototype.inverseTransformVel = function(v) {
+    return this.rot.transpose().xVec(v);
 };
 
 /**

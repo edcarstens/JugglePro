@@ -13,7 +13,7 @@
  * @constructor
  * @param itemList {Array} array of sequences
  * @param iters {Number} total number of iterations
- * @param entryExit {Boolean}
+ * @param entryExit {Number} number of items in entry and exit lists
  * @param name
  */
 JPRO.ID.HierRptSeq = 0;
@@ -265,7 +265,7 @@ JPRO.HierRptSeq.prototype._replaceFirstItems = function(items) {
 	    return this.entrySeq.concat(items.slice(sz0));
 	}
     }
-    return items;
+    return this.itemListCopy(items);
 };
 
 JPRO.HierRptSeq.prototype._replaceLastItems = function(items) {
@@ -275,7 +275,7 @@ JPRO.HierRptSeq.prototype._replaceLastItems = function(items) {
 	szx = this.exitSeq.length;
 	return items.slice(0, sz-szx).concat(this.exitSeq);
     }
-    return items;
+    return this.itemListCopy(items);
 };
 
 JPRO.HierRptSeq.prototype._getItems = function(d, idx) {

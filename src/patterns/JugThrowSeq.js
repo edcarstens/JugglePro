@@ -49,7 +49,7 @@ JPRO.JugThrowSeq = function(mhn, dim, iters, clock,
      * @property cpm
      * @type HierRptSeq
      */
-    this.cpm = cpm || JPRO.HierRptSeq.create([0,1], -1);
+    this.cpm = cpm || JPRO.HierRptSeq.create([0,1]);
     
     //this.w3Colorize(cpm ? cpm.getItem(0) : 0);
     this.w3Colorize();

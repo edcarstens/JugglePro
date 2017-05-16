@@ -10,16 +10,16 @@
  *
  * @class ControlPointMapper
  * @constructor
- * @param cpSeqs {Array} list of (rows) cpSeq's
+ * @param cpSeq {HierRptSeq} list of control points
  */
 JPRO.ID.ControlPointMapper = 0;
-JPRO.ControlPointMapper = function(cpSeqs, name) {
+JPRO.ControlPointMapper = function(cpSeq, name) {
 
     // Call superclass
     this.className = this.className || 'ControlPointMapper';
     JPRO.Base.call(this, name);
 
-    this.cpSeqs = cpSeqs || [];
+    this.cpSeq = cpSeq || JPRO.HierRptSeq.create([0]);
 
     // Calculate reverse lookup
     var i;
@@ -94,11 +94,11 @@ JPRO.ControlPointMapper.create = function(performance, sync) {
     var jugglers = performance.jugglers;
     cpSeqs = [];
     for (i=0; i<this.jugglers.length; i++) {
-	var lh = new JPRO.ControlPoint(viewer, jugglers[i], 0);
-	var rh = new JPRO.ControlPoint(viewer, jugglers[i], 1);
+	//var lh = new JPRO.ControlPoint(viewer, jugglers[i], 0);
+	//var rh = new JPRO.ControlPoint(viewer, jugglers[i], 1);
 	if (sync) {
-	    cpSeqs.push(JPRO.HierRptSeq.create([lh])); // sync
-	    cpSeqs.push(JPRO.HierRptSeq.create([rh])); // sync
+	    cpSeqs.push(JPRO.HierRptSeq.create([0])); // sync
+	    cpSeqs.push(JPRO.HierRptSeq.create([1])); // sync
 	}
 	else {
 	    cpSeqs.push(JPRO.HierRptSeq.create([lh, rh])); // async

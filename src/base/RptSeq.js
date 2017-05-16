@@ -205,7 +205,7 @@ JPRO.RptSeq.prototype._replaceItemList = function() {
 	    rv = rv.slice(0, sz-szx).concat(this.exitSeq);
 	}
     }
-    return rv;
+    return this.itemListCopy(rv);
 };
 
 /**

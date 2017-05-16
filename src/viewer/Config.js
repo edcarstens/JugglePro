@@ -68,36 +68,6 @@ JPRO.Config.prototype.setDefaults = function() {
     }
     
     /**
-     * Dwell ratio
-     *
-     * @property dwellRatio
-     * @type {Number}
-     */
-    if (this.dwellRatio === undefined) { this.dwellRatio = 0.5; }
-
-    /**
-     * Base period for beat scheduler
-     *
-     * @property basePeriod
-     * @type {Number}
-     */
-    if (this.basePeriod === undefined) { this.basePeriod = 40; }
-
-    /**
-     * Clock provides timing of throws
-     *
-     * @property clock
-     * @type {Clock}
-     */
-    if (this.clock === undefined) {
-	this.clock = new JPRO.Clock(this.basePeriod);
-    }
-    else {
-	this.basePeriod = this.clock.basePeriod;
-    }
-    this.minThrowTime = (this.clock.basePeriod >> 1) + 1; // 1/2 smallest beat period
-
-    /**
      * Acceleration of gravity vector
      *
      * @property gravity
@@ -141,9 +111,6 @@ JPRO.Config.prototype.setDefaults = function() {
 
     if (this.zoomDistance === undefined) { this.zoomDistance = 4500; }
     
-    if (this.jugglers === undefined) {
-	this.jugglers = [new JPRO.Juggler(this)];
-    }
 
     /**
      * Juggling routine
@@ -152,13 +119,20 @@ JPRO.Config.prototype.setDefaults = function() {
      * @type {Routine}
      */
     if (this.routine === undefined) {
-	var rhMap = new JPRO.RowHandMapper(null,
-					   [[this.jugglers[0].hands[0], this.jugglers[0].hands[1]]]);
-	//console.log('rhMap=' + rhMap);
-	//console.log('rhMap.tpm=' + rhMap.tpm[0][0]);
-	//console.log('rhMap.entryTpm=' + rhMap.entryTpm[0][1]);
-	var pat = new JPRO.Pattern([[ [[0,3]] ]], rhMap, 1, 'pat');
-	this.routine = new JPRO.Routine([pat], -1, 'topRoutine');
+	var J0L = new JPRO.ControlPoint(this, 'J0L');
+	var J0R = new JPRO.ControlPoint(this, 'J0R');
+	J0L.getPos = function(t, beat) {
+	    var pa = this.jugglers[0].hands[0].hFunc.getPos(t, beat);
+	    return pa[0];
+	};
+	J0R.getPos = function(t, beat) {
+	    var pa = this.jugglers[0].hands[1].hFunc.getPos(t, beat);
+	    return pa[0];
+	};
+	var cpSeq = JPRO.HierRptSeq.createSeq([J0L, J0R], -1);
+	var cpMap = new JPRO.ControlPointMapper([cpSeq], 'cpMap');
+	var pat = new JPRO.JugPattern(3, 1, cpMap, 'pat');
+	this.routine = new JPRO.HierRptSeq([pat], -1, 1, 'topRoutine');
     }
 
 };

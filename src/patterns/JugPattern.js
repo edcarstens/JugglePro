@@ -119,6 +119,7 @@
 	 */
 	//this.selections = 0;
 
+	this.throwRep = 0; // 1=show flight times, 0=show beats.dbeats.offset
 	this.states = [];
 	this.undoIdx = 0;
 	// inherit some stuff from JugThrowSeq
@@ -143,6 +144,7 @@
 	 */
 	this.props = this.calcProps();
 	//this.props = JPRO.JugPattern.prototype.calcProps.call(this);
+	this.calcFlightTimes();
     };
 
     JPRO.JugPattern.prototype = Object.create( JPRO.Base.prototype );
@@ -437,6 +439,37 @@
     JPRO.JugPattern.prototype.getJugThrows = function(row, col) {
 	return this.jugThrowSeqs[row].jugThrows.itemList[col];
     };
+
+    JPRO.JugPattern.prototype.calcFlightTime = function(loc1, jt) {
+	//console.log('calcFlightTime called..');
+	var r1 = loc1[0];
+	var t1 = loc1[1];
+	var p1 = jt || this.getJugThrow(r1, t1, loc1[2]);
+	var p1SyncOffset = p1.syncOffset || 0;
+	if (this.jugThrowSeqs[r1].clock.rhythm.getItem(0) < 0)
+	    t1--; // this row starts with a split beat
+	var p1r = p1.destRow;
+	var p1t = p1.fltBeats - p1.destBeats + t1; // absolute sync/dest beat
+	var p1td = p1.destBeats; // plus destination beats
+	var p1tt = this.jugThrowSeqs[r1].clock.getInterval(0, p1t) + p1SyncOffset; // p1t converted to base time
+	var s = this.jugThrowSeqs[p1r].clock.findSync(p1tt);
+	var p1s = s.b; // src-dest sync point in dest beats
+	var p1dta = p1s + p1td; // absolute dest beat
+	var p1dtt = this.jugThrowSeqs[p1r].clock.getInterval(0, p1dta) + s.ofs; // p1dta converted to base time
+	//var p1dtt = this.jugThrowSeqs[p1r].clock.getInterval(0, p1dta); // p1dta converted to base time
+
+	// calculate flight time
+	p1.fltTime = p1dtt - this.jugThrowSeqs[r1].clock.getInterval(0, t1);
+	return p1.fltTime;
+    };
+    
+    JPRO.JugPattern.prototype.calcFlightTimes = function() {
+	var h = {};
+	h.JugPatternObj = this;
+	this.forIJK(h, function(h) {
+	    h.JugPatternObj.calcFlightTime([h.i, h.j, h.k], h.jtjk);
+	});
+    };
     
     /**
      * Swap two throws in MHN+ matrix
@@ -462,9 +495,9 @@
 	//console.log('p1=');
 	//console.log(p1);
 	if (this.jugThrowSeqs[r1].clock.rhythm.getItem(0) < 0)
-	    t1--;
+	    t1--; // this row starts with a split beat
 	if (this.jugThrowSeqs[r2].clock.rhythm.getItem(0) < 0)
-	    t2--;
+	    t2--; // this row starts with a split beat
 	var p1r = p1.destRow;
 	var p1t = p1.fltBeats - p1.destBeats + t1; // absolute sync/dest beat
 	var p1td = p1.destBeats; // plus destination beats
@@ -486,7 +519,7 @@
 	    var p1dtt = this.jugThrowSeqs[p1r].clock.getInterval(0, p1dta) + s.ofs; // p1dta converted to base time
 	    // if destination is the same clock as loc2's row (r2)
 	    if (this.jugThrowSeqs[r2].clock === this.jugThrowSeqs[p1r].clock) {
-		console.log('same clock2');
+		//console.log('same clock2');
 		p2.destBeats = 0;
 		s = this.jugThrowSeqs[r2].clock.findSync(p1dtt);
 		p2.fltBeats = s.b - t2;
@@ -498,9 +531,9 @@
 		p2.destBeats = x.dBeats;
 		p2.fltBeats = x.sBeats - t2 + x.dBeats;
 		p2.syncOffset = x.sOffset;
-		console.log('t2=' + t2);
-		console.log(x);
-		console.log(p2);
+		//console.log('t2=' + t2);
+		//console.log(x);
+		//console.log(p2);
 	    }
 	    
 	    var p2tt = this.jugThrowSeqs[r2].clock.getInterval(0, p2t) + p2SyncOffset; // p2t converted to base time
@@ -511,7 +544,7 @@
 	    //console.log('p2tt=' + p2tt + ' p2s=' + p2s + ' p2dta=' + p2dta + ' p2dtt=' + p2dtt);
 	    // if destination is the same clock as loc1's row (r1)
 	    if (this.jugThrowSeqs[r1].clock === this.jugThrowSeqs[p2r].clock) {
-		console.log('same clock1');
+		//console.log('same clock1');
 		p1.destBeats = 0;
 		s = this.jugThrowSeqs[r1].clock.findSync(p2dtt);
 		p1.fltBeats = s.b - t1;
@@ -523,10 +556,13 @@
 		p1.destBeats = x.dBeats;
 		p1.fltBeats = x.sBeats - t1 + x.dBeats;
 		p1.syncOffset = x.sOffset;
-		console.log('t1=' + t1);
-		console.log(x);
-		console.log(p1);
+		//console.log('t1=' + t1);
+		//console.log(x);
+		//console.log(p1);
 	    }
+	    // Update flight times
+	    this.calcFlightTime(loc1, p1);
+	    this.calcFlightTime(loc2, p2);
 	}
 	else {
 	    // Old approach
@@ -678,6 +714,7 @@
      */
     JPRO.JugPattern.prototype.translateRow = function(row, offset) {
 	this.props += this.jugThrowSeqs[row].translateRow(offset);
+	this.calcFlightTimes();
 	return this;
     };
 
@@ -710,6 +747,7 @@
 	var mult1 = (mult === undefined) ? 1 : mult; // default to 1
 	jtSeq.translateThrow(loc, mult1);
 	this.props += mult1;
+	this.calcFlightTime([r, loc[0], loc[1]]);
 	return this;
     };
 
@@ -743,6 +781,7 @@
 	this.jugThrowSeqs[row1].multiplexTranslate(offset1);
 	this.props += offset1;
 	this.jugThrowSeqs[row1].w3Colorize();
+	this.calcFlightTimes();
 	return this;
     };
 
@@ -768,6 +807,7 @@
 	    h.parent.jugThrowSeqs[h.i].jugThrows.itemList = h.njt;
 	    h.parent.jugThrowSeqs[h.i].w3Colorize();
 	});
+	this.calcFlightTimes();
 	return this;
     };
 
@@ -821,6 +861,7 @@
 	    h.parent.jugThrowSeqs[h.i].jugThrows.itemList = h.njt;
 	    h.parent.jugThrowSeqs[h.i].w3Colorize();
 	});
+	this.calcFlightTimes();
 	return this;
     };
     
@@ -844,6 +885,7 @@
 	    njts[idx].row = idx;
 	}
 	this.jugThrowSeqs = njts;
+	this.calcFlightTimes();
 	return this;
     };
 
@@ -945,6 +987,7 @@
 	    this.jugThrowSeqs[row].jugThrows.itemList.pop();
 	    this.jugThrowSeqs[row].period--;
 	    this.setClock(row);
+	    this.calcFlightTimes();
 	}
 	return this;
     };
@@ -971,6 +1014,7 @@
 		this.jugThrowSeqs[row].push(msThrows);
 		this.setClock(row);
 		//console.log(this);
+		this.calcFlightTimes();
 	    }
 	    return this;
 	}
@@ -1017,6 +1061,7 @@
 
 	// Extend the clock's rhythm by one beat
 	this.clocks[0].rhythm.itemList[0].push(12);
+	this.calcFlightTimes();
 	return this;
     };
 
@@ -1049,6 +1094,7 @@
 	);
 	clk.mhnRows.push(this.rows);
 	this.rows++; // increment rows
+	this.calcFlightTimes();
 	return this;
     };
 
@@ -1068,6 +1114,7 @@
 	this.clocks = [this.jugThrowSeqs[0].clock];
 	this.jugThrowSeqs[0].preDwellRatio = 0.5;
 	this.props = 0;
+	this.calcFlightTimes();
 	//console.log(this.jugThrowSeqs);
     };
     

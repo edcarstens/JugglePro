@@ -23,7 +23,7 @@
     'use strict';
     JPRO.ID.JugThrow = 0;
     JPRO.JugThrow = function(destRow, fltBeats, destBeats,
-			     preDwellRatio, postDwellRatio,
+			     earlyDwell, lateDwell,
 			     bounces, forceThrow, earlyCatch,
 			     name) {
 	// Call superclass
@@ -50,6 +50,15 @@
 	this.fltBeats = fltBeats || 0;
 	
 	/**
+	 * Flight time in frame ticks (MHN+ throw flight time)
+	 * This is calculated by JugPattern's constructor
+	 *
+	 * @property fltTime
+	 * @type Number
+	 */
+	this.fltTime = 0;
+	
+	/**
 	 * Flight time destination beats (MHN+ destination throw-height)
 	 * This is the number of beats in fltBeats that are so-called
 	 * destination beats. If the destination MHN row has a different
@@ -63,28 +72,26 @@
 	this.destBeats = destBeats || 0;
 	
 	/**
-	 * Ratio of dwell time before destination beat
-	 * after catch to (the beat time just prior
-	 * to destination beat).
+	 * Dwell time in frame ticks from catch
+         * to destination beat
 	 * If catches are to be synchronized with the
 	 * beats in a rhythm, set this to zero.
 	 *
-	 * @property preDwellRatio
+	 * @property earlyDwell
 	 * @type Number
 	 */
-	this.preDwellRatio = preDwellRatio ? preDwellRatio : 0;
+	this.earlyDwell = earlyDwell || 0;
 
 	/**
-	 * Ratio of dwell time after current beat before this
-	 * throw to (the time interval from current beat to
-	 * the next beat).
+	 * Dwell time in frame ticks from current
+         * beat to this throw.
 	 * If throws are to be synchronized with the beats in
 	 * a rhythm, set this to zero.
 	 * 
-	 * @property postDwellRatio
+	 * @property lateDwell
 	 * @type Number
 	 */
-	this.postDwellRatio = postDwellRatio ? postDwellRatio : 0;
+	this.lateDwell = lateDwell || 0;
 
 	/**
 	 * Number of bounces off the floor for a ball from throw to catch
@@ -127,12 +134,13 @@
 	this.maxThrowHeight = 19; // red warning threshold
 
 	// Precalculated variables
-	this.pos = new JPRO.Vec();    // origin of throw
+	this.pos = [new JPRO.Vec()];  // origin of throw and bounce points
 	this.destControlPoint = null; // destination control point
 	this.dest = new JPRO.Vec();   // destination point (catch)
-	this.vel = new JPRO.Vec();    // initial velocity
-	this.timer = 0;               // time left until catch
-
+	this.vel = [new JPRO.Vec()];  // initial velocity and velocities at bounces
+	this.timer = [0];             // time left until catch (or next bounce)
+	this.countdown = 0;           // countdown timer prior to throw
+	
 	// For W3-CSS HTML
 	this.w3Color = 'w3-light-blue';
 	this.w3IsSelected = 0;
@@ -141,9 +149,19 @@
     JPRO.JugThrow.prototype = Object.create(JPRO.Base.prototype);
     JPRO.JugThrow.prototype.constructor = JPRO.JugThrow;
 
-    JPRO.JugThrow.prototype.toString = function() {
+    JPRO.JugThrow.prototype.copy = function(objHash, cFunc) {
+	var pFuncs = {};
+	var scalars = ['destRow', 'fltBeats', 'fltTime', 'destBeats',
+		       'earlyDwell', 'lateDwell', 'bounces',
+		       'forceThrow', 'earlyCatch', 'highThrowHeight',
+		       'maxThrowHeight', 'w3Color'];
+	return this.directedCopy(objHash, cFunc, pFuncs, scalars);
+    };
+
+    JPRO.JugThrow.prototype.toString = function(repType) {
 	var destBeats = '';
 	var syncOffset = '';
+	var rep = repType || 0;
 	if (this.destRow < 0) {
 	    return '-';
 	}
@@ -153,7 +171,12 @@
 	if (this.syncOffset) {
 	    syncOffset = '.' + this.syncOffset;
 	}
-	return String.fromCharCode(65 + this.destRow) + this.fltBeats + destBeats + syncOffset;
+	if (rep === 0) {
+	    return String.fromCharCode(65 + this.destRow) + this.fltBeats + destBeats + syncOffset;
+	}
+	else {
+	    return String.fromCharCode(65 + this.destRow) + this.fltTime;
+	}
     };
 
     JPRO.JugThrow.prototype.w3ToggleSelect = function() {

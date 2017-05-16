@@ -4,12 +4,15 @@
 
 // Initialize viewer
 var viewer = new JPRO.Viewer();
-viewer.basePeriod = 30;
+viewer.basePeriod = 40;
 viewer.dwellRatio = 0.5;
 viewer.setDefaults();
-viewer.routine.patterns[0].mhn = [[ [[0,5]], [[0,5]], [[0,5]] ]];
+//viewer.zoomDistance = 5000;
+//viewer.viewWidth = 800;
+//viewer.viewHeight = 600;
+viewer.routine.patterns[0].mhn = [[ [[0,3]], [[0,3]], [[0,3]] ]];
 viewer.routine.patterns[0].period = 3;
-viewer.routine.patterns[0].props = 5;
+viewer.routine.patterns[0].props = 3;
 //console.log("viewer.hands=" + viewer.hands);
 viewer.init();
 

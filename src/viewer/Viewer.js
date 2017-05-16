@@ -14,8 +14,24 @@ JPRO.ID.Viewer = 0;
 JPRO.Viewer = function(name) {
     // Call superclass
     this.className = this.className || 'Viewer';
-    JPRO.Config.call(this, name);
-    this.initVars();
+    JPRO.Base.call(this, name);
+    //this.initVars();
+
+    /**
+     * performance
+     *
+     * @property performance
+     * @type {Performance}
+     */
+    this.performance = new JPRO.Performance(this, 'performance');
+
+    /**
+     * production
+     *
+     * @property production
+     * @type {Production}
+     */
+    this.production = new JPRO.Production(this, 'production');
 
     /**
      * 
@@ -26,7 +42,7 @@ JPRO.Viewer = function(name) {
     this.testVar = 0; // for experimentation
 };
 
-JPRO.Viewer.prototype = Object.create( JPRO.Config.prototype );
+//JPRO.Viewer.prototype = Object.create( JPRO.Config.prototype );
 JPRO.Viewer.prototype.constructor = JPRO.Viewer;
 
 /**
@@ -76,13 +92,97 @@ JPRO.Viewer.prototype.initVars = function() {
     this.lookAhead = null;
     this.timeBetweenThrows = null; // array
 };
+
+JPRO.Viewer.prototype.setDefaults = function() {
+    if (this.defaultsSet) return;
+    this.defaultsSet = 1;
+    /**
+     * Production 
+     *
+     * @property production
+     * @type Production
+     */
+    if (this.production === undefined) {
+	this.production = new JPRO.Production(this);
+    }
+    this.production.setDefaults();
     
+    /**
+     * Performance list
+     *
+     * @property performances
+     * @type Array
+     */
+    if (this.performances === undefined) {
+	this.performances = [new JPRO.Performance(this)];
+    }
+    this.performances.map(function(i) {i.setDefaults();});
+    
+    /**
+     * GUI (graphical user interface)
+     *
+     * @property gui
+     * @type {Gui}
+     */
+    //if (this.gui === undefined) { this.gui = new JPRO.Gui(this); }
+
+    /**
+     * Acceleration of gravity vector
+     *
+     * @property gravity
+     * @type {Vec}
+     */
+    if (this.gravity === undefined) {
+	this.gravity = new JPRO.Vec(0,0,-8);
+    }
+
+    /**
+     * Pixi stage (background) color
+     *
+     * @property stageColor
+     * @type {Color}
+     */
+    if (this.stageColor === undefined) { this.stageColor = 0x000000; }
+
+    /**
+     * Pixi stage
+     *
+     * @property stage
+     * @type {PIXI.Stage}
+     */
+    // create a new instance of a pixi stage
+    if (this.stage === undefined) {
+	this.stage = new PIXI.Stage(this.stageColor);
+    }
+
+    /**
+     * Graphics
+     *
+     * @property grfx
+     * @type {PIXI.Graphics} 
+     */
+    if (this.grfx === undefined) {
+	this.grfx = new PIXI.Graphics();
+	this.grfx.setStageReference(this.stage);
+	this.stage.addChild(this.grfx);
+    }
+    
+    /**
+     * 
+     *
+     * @property 
+     * @type 
+     */
+
+};
+
 /**
  *
  *
  * @method init
 */
 JPRO.Viewer.prototype.init = function() {
+    this.setDefaults();
     this.initRotationMatrix();
     //this.initHands(hands);
     this.initProps();
@@ -100,9 +200,10 @@ JPRO.Viewer.prototype.init = function() {
     // Init LookAhead and precalculate first throws
     this.lookAhead = new JPRO.LookAhead(this);
     this.lookAhead.preCalculate();
-    this.timeBetweenThrows = this.lookAhead.getTimeBetweenThrows();
+    //this.timeBetweenThrows = this.lookAhead.getTimeBetweenThrows();
     //this.timeBetweenThrows = this.lookAhead.tbt[0]; // init
-    this.throwProps(this.pattern); // make first throws
+    //this.throwProps(this.pattern); // make first throws
+    this.throwProps(this.routine); // make first throws
     this.gui.init();
     this.initAnimation();
     console.log('finished init');
@@ -140,28 +241,6 @@ JPRO.Viewer.prototype.initRotationMatrix = function() {
 //    this.hands = hands;
 //    return this;
 //};
-
-/**
- *
- *
- * @method initProps
- * @return this viewer
-*/
-JPRO.Viewer.prototype.initProps = function() {
-    var i;
-    var b;
-    this.nprops = 30;
-    for (i=0; i<this.nprops; i++) {
-	b = new JPRO.Ball(this, new JPRO.Vec(),
-			  this. ballColors[i % this. ballColors.length],
-			  this.ballSize); //.caughtBy(this.hands[i % this.hands.length]);
-	this.props.push(b);
-	this.allProps.push(b);
-	this.view.pushProp(b); // push this ball to the view world list
-    }
-    this.grfx.clear();
-    return this;
-};
 
 /**
  *
@@ -210,34 +289,6 @@ JPRO.Viewer.prototype.dropProp = function(p) {
     p.inPlay = null;
     p.inHand = null;
     this.props.push(p);
-};
-    
-/**
- *
- *
- * @method updateJugglers
- * @return this viewer
-*/
-JPRO.Viewer.prototype.updateJugglers = function() {
-    var i;
-    for (i=0; i<this.jugglers.length; i++) {
-	this.jugglers[i].update(this.timeBetweenThrows);
-    }
-    return this;
-};
-
-/**
- *
- *
- * @method updateProps
- * @return this viewer
-*/
-JPRO.Viewer.prototype.updateProps = function() {
-    var i;
-    for (i=0; i<this.allProps.length; i++) {
-	this.allProps[i].update();
-    }
-    return this;
 };
 
 // This is only called on viewer copies by LookAhead
@@ -362,11 +413,26 @@ JPRO.Viewer.prototype.getBeatsToNextThrow = function(hand) {
 */
 
 /**
- *
+ * Throw all props at current beat
  *
  * @method throwProps
 */
-JPRO.Viewer.prototype.throwProps = function(pattern) {
+JPRO.Viewer.prototype.throwProps = function(routine) {
+    // NEW CODE
+    // TODO - drt (hold time from beat to throw)
+    var i,k,cp;
+    var jugThrows = routine.nextItem();
+    var cpm = routine.currentSeq.cpMapper;
+    var tm = jugThrows.throwMatrix;
+    for (i=0; i<tm.length; i++) {
+	cp = cpm.cpSeqs[i].nextItem();
+	for (k=0; k<tm[i].length; k++) {
+	    cp.throwProp(tm[k]);
+	}
+    }
+
+    // OLD CODE
+    /*
     var i,k,pairs,destRow,rowHand,unthrown;
 //    var pat,v;
     var td;
@@ -420,6 +486,7 @@ JPRO.Viewer.prototype.throwProps = function(pattern) {
 	    rowHand.dropProp(rowHand.nprops() - unthrown); // fix the problem
 	}
     }
+*/
     return this;
 };
 
@@ -432,89 +499,21 @@ JPRO.Viewer.prototype.update = function() {
     var i;
     
     this.grfx.clear(); // clear graphics
-    
-    // Update jugglers/balls
-    this.updateJugglers().updateProps();
-    
-    // Optional view rotation
-    this.rotateViewWhenEnabled(this.aerialTurn, this.zoomIn, this.zoomOut);
-    
-    // Do throws once every beat
-    if ( this.clock.update() ) {
-	this.timeBetweenThrows = this.lookAhead.getTimeBetweenThrows();
-	if (! this.pattern.nextBeat()) {
-	    this.pattern = this.routine.nextPat(this, 0);
-	    console.log('Viewer: New pattern is ' + this.pattern);
-	    // Update MHN table in html
-	    $('#div1').html(this.pattern.toHtml());
-	}
-	for (i=0; i<this.jugglers.length; i++) {
-	    this.jugglers[i].nextBeat(); // for juggler/hand movements
-	}
-	this.throwProps(this.pattern);
-    }
-    else {
-	this.lookAhead.preCalculate();
-    }
+
+    // update the juggling performance
+    this.performance.update();
+
+    // update the production (cameras, lighting, etc)
+    // when not doing a production update,
+    // use the time for calculating throws
+    this.production.update() || this.performance.calculateThrows();
     
     // render the stage
     this.renderer.render(this.stage);
     
     return this;
 };
-
-/**
- *
- *
- * @method rotateViewWhenEnabled
-*/
-JPRO.Viewer.prototype.rotateViewWhenEnabled = function(rot, zoomIn, zoomOut) {
-    if (this.rotEnable) {
-	this.rotCnt++;
-	if (this.rotCnt > this.rotPeriod) {
-	    this.rotCnt = 0;
-	    this.rotateView(rot, zoomIn, zoomOut);
-	}
-    }
-};
     
-/**
- *
- *
- * @method rotateView
-*/
-JPRO.Viewer.prototype.rotateView = function(rot, zoomIn, zoomOut) {
-    var handScaleLb,rotRad;
-    handScaleLb = 0.3;
-//    function hsbound(xx, limit) {
-//	var x = xx;
-//	if (Math.abs(x) < limit) {
-//	    x = limit;
-//	}
-//	return x;
-//    }
-    
-    this.view.translateMe(zoomIn);
-    this.view.rotateMe(rot);
-    this.view.translateMe(zoomOut);
-    this.rotDeg++;
-    if (this.rotDeg > 180) this.rotDeg -= 360;
-    rotRad = this.rotDeg * PIXI.DEG_TO_RAD; // convert to radians
-    //	for (i=0; i<this.hands.length; i++) {
-//	    this.hands[i].my_sprite.rotation = rotRad;
-//	    // Scale hands' sprites in x and y directions
-//	    x = 2*Math.abs(Math.cos(rotRad))*this.hands[i].pos_projected.z;
-//	    y = 2*Math.abs(Math.sin(rotRad))*this.hands[i].pos_projected.z;
-//	    // Avoid the paper thin disappearing hand issue when
-//	    // scale gets too close to zero
-//	    x = hsbound(x, handScaleLb);
-//	    y = hsbound(y, handScaleLb);
-//	    this.hands[i].my_sprite.scale.x = x;
-//	    this.hands[i].my_sprite.scale.y = y;
-//	} // for
-    return this;
-};
-
 /**
  * This is used to find the hand's throw period  
  *

@@ -64,6 +64,20 @@ JPRO.Seq = function(itemList, name) {
 JPRO.Seq.prototype = Object.create(JPRO.Base.prototype);
 JPRO.Seq.prototype.constructor = JPRO.Seq;
 
+JPRO.Seq.prototype.itemListCopy = function(itemList) {
+    console.log('itemListCopy called..');
+    var f;
+    var z = itemList ? itemList : this.itemList;
+    var x = typeof z[0];
+    if (z[0].constructor === Array)
+	f = JPRO.Common.copyObjMatrix;
+    else if (x === 'object')
+	f = JPRO.Common.copyObjVector;
+    else
+	return z.slice(0);
+    return f(z, {});
+};
+
 /**
  * Copies this Seq (deep copy)
  *
@@ -161,7 +175,8 @@ JPRO.Seq.prototype.nextItem = function() {
 JPRO.Seq.prototype._getItems = function(d, idx) {
     //var ni = idx + this.currentIdx + 1 - this.itemList.length;
     var ni = idx - this.itemList.length;
-    return [ni, this.itemList, 1];
+    //return [ni, this.itemList, 1];
+    return [ni, this.itemListCopy(), 1];
 };
 
 JPRO.Seq.prototype.getSeq = function() {
