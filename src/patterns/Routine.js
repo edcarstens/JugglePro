@@ -3,6 +3,11 @@
  */
 
 /**
+*** OBSOLETE ***
+*** Now just use HierRptSeq consisting of RptSeq's and Seq's of JugPattern objects
+
+
+
  * A Routine is an ordered list of Pattern's, ThrowSeq's, or Routine's.
  * Each pattern can be executed X>=0 number of times or indefinitely (X=-1)
  * Routine.iters allows multiple runs of the routine
