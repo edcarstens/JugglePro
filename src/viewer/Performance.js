@@ -124,6 +124,7 @@ JPRO.Performance.prototype.setDefaults = function() {
 	var cpm = JPRO.ControlPointMapper.create(this);
 	var pat = new JPRO.JugPattern(3, 1, cpm, 'pat');
 	this.routine = new JPRO.HierRptSeq.create([pat]);
+	this.routine.copyGetItemsFlag = null; // do not copy jugPattern's
 	this.routine.name = 'topRoutine';
     }
 
@@ -271,6 +272,13 @@ JPRO.Performance.prototype.calculateThrows = function(n) {
     }
 };
 
+/**
+ *
+ *
+ * @method calculateThrowsForRow
+ * @param n {Number} number of throws to calculate
+ * @return this viewer
+*/
 JPRO.Performance.prototype.calculateThrowsForRow = function(pat, jts) {
     var col = this.mhnIter * jts.period + this.mhnCol;
     var jtj = jts.getItem(col);
