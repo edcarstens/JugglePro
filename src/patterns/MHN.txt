@@ -40,8 +40,47 @@
 // [[[ [0,4] ]]]   (with 2 phases)
 // Yes, we changed the 2's to a single 4. It would be very hard to juggle this
 // pattern with only one hand. Thankfully, God gave us two. 
-// This is a simple of example of a multi-phase pattern, in this case there are
+// This is a simple example of a multi-phase pattern, in this case there are
 // two phases, one for each hand. But if you juggle with someone else, you now
 // have four hands and could have four phases.  Or, if you like you can have
 // three phases. You just have to agree on an order and then figure out where
 // each throw must go to execute the pattern. Oh, the possibilities!
+//
+// Slow-Fast Patterns
+// MHN+ is also capable of notating so-called slow-fast patterns, where one
+// passer's rhythm differs from the other passer's rhythm. They must at least
+// agree to one synchronization point (usually when they exchange passes).
+// While the slow-fast pattern has a period, defined as the time interval
+// between synchronization points in the repetition, the number of throws in
+// this period isn't necessarily the same for each passer. Thus, the MHN+
+// can have rows with different numbers of columns. When the MHN+ is
+// presented in JPE, JPE uses column widths to convey real time elapsed
+// between throws for each juggler. (Technically, MHN+ is no longer a matrix,
+// when its rows don't all have the same number of columns.)
+//
+// Destination Beats
+// Also to facilitate notation of slow-fast patterns, the concept of
+// destination beats is introduced. The throw-height now becomes a pair of
+// integers instead of just one integer. The first integer still expresses
+// total number of beats. The 2nd integer indicates the number of destination
+// beats that make up that total. A destination beat is a throw beat of the
+// destination control point (or hand). The destination hand can have its
+// own rhythm. Thus, a destination beat interval is not necessarily the same
+// as the throwing hand's beat interval (or self beat). The number of self
+// beats (by the throwing hand) is simply the total beats minus destination
+// beats. To calculate the real flight time, count self beats first, then adjust
+// if necessary to the nearest destination beat and count destination beats
+// from that point in time. If you landed right in between two destination
+// beats, the convention is to round up to the future-most destination beat.
+// It's recommended to use a synchronization point at the switch-over so that
+// such an ambiguity can be avoided. Non-zero destination beats are
+// separated by a period (.); for example, 5.2, indicates 5 total beats,
+// consisting of 3 self beats plus 2 destination beats.  One can have a
+// negative number of destination beats too. For example, 5.-2 indicates
+// 5 total beats, 7 self beats, -2 destination beats. (This notation may
+// arise when the catch occurs just a few desintation beats before the
+// synchronization point.) It is important there be a consistent algorithm
+// for calculating flight time, so the convention is to always count self
+// beats before destination beats. A hand's rhythm need not have the same
+// duration for all beats. Because of this, changing the order of counting beats
+// can give different results.
