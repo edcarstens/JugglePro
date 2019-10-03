@@ -4,7 +4,17 @@
 
 /**
  * Viewer is the juggling pattern viewer
- *
+ * Here is the hierarchy of objects:
+ * Viewer
+ *  performance
+ *   jugglers
+ *   controlPoints
+ *   routine
+ *  production
+ *   curView (current camera view)
+ *   cameras (camera views)
+ *   music?
+ *   lighting?
  * @class Viewer
  * @constructor
  *
