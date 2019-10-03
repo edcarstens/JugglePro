@@ -3,10 +3,10 @@
  */
 
 /**
- * A JugPattern is a juggling pattern, a periodic (repeatable) sequence
- * of throws involving one or more jugglers. It could represent a non-
- * repeatable sequence of throws, in which case the isRepeatable flag
- * is null and iters is either 0 or 1.
+ * A JugPattern is a juggling pattern, a set of  periodic (repeatable)
+ * sequences of throws involving one or more jugglers. It could represent
+ * a non-repeatable sequence of throws, in which case the isRepeatable
+ * flag is null and iters is either 0 or 1.
  *
  * @class JugPattern
  * @extends Base
