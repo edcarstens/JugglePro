@@ -3,6 +3,10 @@
  */
 
 /**
+*** OBSOLETE ***
+*** This was problematic so currently dynamic pattern modification will not be supported
+
+
  * Abstract base class for dynamic pattern modification
  * The getRoutine method can perform dynamic modification and returns a Routine.
  * The copy method is called when creating a copy for lookahead.
