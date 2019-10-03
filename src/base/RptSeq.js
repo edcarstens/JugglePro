@@ -189,7 +189,7 @@ JPRO.RptSeq.prototype.nextItem = function() {
     return this.itemList[this.currentIdx];
 };
 
-JPRO.RptSeq.prototype._replaceItemList = function() {
+JPRO.RptSeq.prototype._replaceItemList = function(copyGetItemsFlag) {
     var sz, sz0, szx, rv;
     rv = this.itemList;
     if (this.entrySeq) {
@@ -205,7 +205,7 @@ JPRO.RptSeq.prototype._replaceItemList = function() {
 	    rv = rv.slice(0, sz-szx).concat(this.exitSeq);
 	}
     }
-    return this.itemListCopy(rv);
+    return this.itemListCopy(copyGetItemsFlag, rv);
 };
 
 /**
@@ -219,7 +219,7 @@ JPRO.RptSeq.prototype._replaceItemList = function() {
  * @param idx {Number} number of items needed
  * @return {Array} [remaining,itemList,emptyFlag]
  */
-JPRO.RptSeq.prototype._getItems = function(d, idx) {
+JPRO.RptSeq.prototype._getItems = function(d, idx, copyGetItemsFlag) {
     var items = [];
     if (this.iters === 0)
 	return [idx, items, 1]; // empty
@@ -227,7 +227,7 @@ JPRO.RptSeq.prototype._getItems = function(d, idx) {
     while (idx >= 0) {
 	idx = idx - this.itemList.length;
 	//items = items.concat(this.itemList);
-	items = items.concat(this._replaceItemList());
+	items = items.concat(this._replaceItemList(copyGetItemsFlag));
 	if (this.iters > 0) {
 	    this.iterCntLA++;
 	    if (this.iterCntLA >= this.iters) {
