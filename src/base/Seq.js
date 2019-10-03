@@ -27,7 +27,6 @@ JPRO.Seq = function(itemList, name) {
      * @type Array
      */
     this.itemList = (itemList === undefined) ? [] : itemList;
-
     /**
      * Index to current item of itemList
      *
@@ -64,12 +63,14 @@ JPRO.Seq = function(itemList, name) {
 JPRO.Seq.prototype = Object.create(JPRO.Base.prototype);
 JPRO.Seq.prototype.constructor = JPRO.Seq;
 
-JPRO.Seq.prototype.itemListCopy = function(itemList) {
+JPRO.Seq.prototype.itemListCopy = function(copyGetItemsFlag, itemList) {
     console.log('itemListCopy called..');
     var f;
     var z = itemList ? itemList : this.itemList;
     var x = typeof z[0];
-    if (z[0].constructor === Array)
+    if (copyGetItemsFlag === null)
+	return z;
+    else if (z[0].constructor === Array)
 	f = JPRO.Common.copyObjMatrix;
     else if (x === 'object')
 	f = JPRO.Common.copyObjVector;
@@ -168,15 +169,16 @@ JPRO.Seq.prototype.nextItem = function() {
  * Return remaining number of items still needed
  * and itemList.
  * This is a helper function for the getItems method
+ * found in HierRptSeq.
  *
  * @method _getItems
  * @return {Array} [remaining,itemList,emptyFlag]
  */
-JPRO.Seq.prototype._getItems = function(d, idx) {
+JPRO.Seq.prototype._getItems = function(d, idx, copyGetItemsFlag) {
     //var ni = idx + this.currentIdx + 1 - this.itemList.length;
     var ni = idx - this.itemList.length;
     //return [ni, this.itemList, 1];
-    return [ni, this.itemListCopy(), 1];
+    return [ni, this.itemListCopy(copyGetItemsFlag), 1];
 };
 
 JPRO.Seq.prototype.getSeq = function() {
