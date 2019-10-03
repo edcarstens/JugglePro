@@ -3,6 +3,11 @@
  */
 
 /**
+
+*** OBSOLETE ***
+*** JugPattern replaces this as each row of MHN can now have its own clock, cpm, etc.
+
+
  * A Pattern is a periodic (repeatable) sequence of throws.
  *
  * @class Pattern
