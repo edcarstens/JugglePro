@@ -3,6 +3,10 @@
  */
 
 /**
+*** OBSOLETE ***
+*** see JugThrowSeq
+
+
  * ThrowSeq is just an MHN matrix describing throws, that may or may not
  * be a (periodic) pattern. Pattern inherits from ThrowSeq. Transition
  * sequences (linking excited state patterns to ground state ones)
