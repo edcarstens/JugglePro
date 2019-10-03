@@ -32,6 +32,14 @@ JPRO.HierRptSeq = function(itemList, iters, entryExit, name) {
      * @type Number
      */
     this.period = this.calcPeriod();
+    /**
+     * Flag to copy or not copy itemList items in returned list
+     * from getItems.
+     *
+     * @property copyGetItemsFlag
+     * @type Boolean
+     */
+    this.copyGetItemsFlag = 1; // true by default
 
     this.currentIdxLA = 0;
     this.currentSeq = null;
@@ -248,7 +256,7 @@ JPRO.HierRptSeq.prototype.getItem = function(idx) {
 	throw 'no items to get';
     }
     while (idx_items_empty[0] >= 0) {
-	idx_items_empty = this.itemList[this.currentIdxLA]._getItems(0, idx_items_empty[0]);
+	idx_items_empty = this.itemList[this.currentIdxLA]._getItems(0, idx_items_empty[0], this.copyGetItemsFlag);
 	this.lookAheadList = this.lookAheadList.concat(idx_items_empty[1]);
 	if (idx_items_empty[2]) {
 	    this.incIdxLA(); // force infinite repeat here
@@ -278,7 +286,7 @@ JPRO.HierRptSeq.prototype._replaceLastItems = function(items) {
     return this.itemListCopy(items);
 };
 
-JPRO.HierRptSeq.prototype._getItems = function(d, idx) {
+JPRO.HierRptSeq.prototype._getItems = function(d, idx, copyGetItemsFlag) {
     var idx_items_empty, rv;
     if (d > 99) throw 'more than 99 deep calls to _getItems';
     idx_items_empty = [idx, [], 1];
@@ -286,7 +294,7 @@ JPRO.HierRptSeq.prototype._getItems = function(d, idx) {
 	return idx_items_empty; // empty
     rv = [];
     while (idx_items_empty[0] >= 0) {
-	idx_items_empty = this.itemList[this.currentIdxLA]._getItems(d+1, idx_items_empty[0]);
+	idx_items_empty = this.itemList[this.currentIdxLA]._getItems(d+1, idx_items_empty[0], copyGetItemsFlag);
 	rv = rv.concat(this._replaceFirstItems(idx_items_empty[1]));
 	if (idx_items_empty[2] && this.incIdxLA()) {
 	    return [idx_items_empty[0],
